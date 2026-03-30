@@ -913,6 +913,8 @@
         #map {
           width: 100%;
           height: 280px;
+          min-height: 240px;
+          touch-action: pan-x pan-y;
           border-radius: 16px;
           overflow: hidden;
           border: 1px solid rgba(51,65,85,0.8);
@@ -922,6 +924,7 @@
 
         .map-stage {
           position: relative;
+          min-height: 240px;
           margin-bottom: 10px;
           border-radius: 18px;
           overflow: hidden;
@@ -9929,6 +9932,13 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
     }
 
+    function isMapContainerReady() {
+      const mapEl = document.getElementById("map");
+      if (!mapEl) return false;
+      const rect = mapEl.getBoundingClientRect();
+      return isMapElementVisible() && rect.width >= 180 && rect.height >= 180;
+    }
+
     function refreshMapVisuals() {
       if (!map || !mapInitialized) return;
       try {
@@ -10001,6 +10011,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     let mapVisibilityWatcherInstalled = false;
     let mapViewportWatcherInstalled = false;
+    let mapResizeObserver = null;
 
     function installMapVisibilityWatcher() {
       if (mapVisibilityWatcherInstalled) return;
@@ -10086,6 +10097,22 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       window.addEventListener("scroll", onViewportCheck, { passive: true });
       window.addEventListener("resize", onViewportCheck, { passive: true });
       setTimeout(onViewportCheck, 180);
+    }
+
+    function installMapResizeObserver() {
+      if (mapResizeObserver || !("ResizeObserver" in window)) return;
+      const mapEl = document.getElementById("map");
+      const mapStage = document.querySelector(".map-stage");
+      if (!mapEl) return;
+
+      mapResizeObserver = new ResizeObserver(() => {
+        scheduleMapReady("resize-observer", [0, 90, 240]);
+      });
+
+      try { mapResizeObserver.observe(mapEl); } catch {}
+      if (mapStage) {
+        try { mapResizeObserver.observe(mapStage); } catch {}
+      }
     }
 
     function setMapFocusMode(enabled) {
@@ -10239,6 +10266,13 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         );
         clearTimeout(bootState.retryTimer);
         if (bootState.retryCount < 15) bootState.retryTimer = setTimeout(() => bootMap(force), 700);
+        return false;
+      }
+
+      if (!isMapContainerReady()) {
+        setMapStatus("Harita alanı hazırlanıyor…", "info", false);
+        clearTimeout(bootState.retryTimer);
+        bootState.retryTimer = setTimeout(() => bootMap(force), 180);
         return false;
       }
 
@@ -11530,6 +11564,7 @@ function initMap() {
       const mapDiv = document.getElementById("map");
       if (!mapDiv) return false;
       if (typeof window.L === "undefined") return false;
+      if (!isMapContainerReady()) return false;
 
       const turkeyBounds = L.latLngBounds(
         [35.8, 25.0],
@@ -11600,6 +11635,9 @@ function initMap() {
       };
       const activeLayer = themeLayerMap[preferredTheme] || voyagerLayer;
       activeLayer.addTo(map);
+      if (activeLayer && typeof activeLayer.once === "function") {
+        activeLayer.once("load", () => scheduleMapReady("base-layer-load", [0, 120, 320, 700]));
+      }
       currentBaseLayer = activeLayer;
       window.__activeMapTheme = preferredTheme in themeLayerMap ? preferredTheme : "voyager";
 
@@ -11663,6 +11701,10 @@ function initMap() {
       setMapFocusMode(savedFocus);
       installMapVisibilityWatcher();
       installMapViewportWatcher();
+      installMapResizeObserver();
+      map.whenReady(() => {
+        scheduleMapReady("map-when-ready", [0, 120, 320, 700, 1200, 2200]);
+      });
       scheduleMapReady("initMap", [0, 120, 320, 700, 1200, 2200]);
 
       // Altın Modu: harita hareket edince akar su katmanını güncelle
@@ -17440,12 +17482,17 @@ function updateHistoryPreview(rawText) {
         langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
       }
 
-      startApp();
-      scheduleMapReady("dom-ready", [0, 220, 520, 1100, 2200]);
-      requestAnimationFrame(() => scheduleMapReady("dom-ready-raf", [0, 180, 480, 950]));
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          startApp();
+          scheduleMapReady("dom-ready", [0, 220, 520, 1100, 2200]);
+          scheduleMapReady("dom-ready-raf", [0, 180, 480, 950]);
+        });
+      });
     });
 
     window.addEventListener("load", () => {
+      if (!mapInitialized) bootMap(true);
       scheduleMapReady("window-load", [0, 180, 480, 900, 1600, 2600]);
     });
 </script>
