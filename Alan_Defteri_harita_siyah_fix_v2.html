@@ -9950,6 +9950,16 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       } catch {}
     }
 
+    let initialMapSizeFixed = false;
+    function runInitialMapSizeFix() {
+      if (initialMapSizeFixed || !mapInitialized || !map) return;
+      initialMapSizeFixed = true;
+      requestAnimationFrame(() => {
+        if (!map || !mapInitialized || !isMapElementVisible()) return;
+        try { map.invalidateSize({ animate: false, pan: false }); } catch {}
+      });
+    }
+
     function forceMapRelayout(tryCount = 0) {
       if (!map || !mapInitialized) return false;
 
@@ -10281,6 +10291,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         const ok = initMap();
         bootState.booting = false;
         if (ok !== false && mapInitialized) {
+          runInitialMapSizeFix();
           clearMapStatus();
           return true;
         }
@@ -11703,6 +11714,7 @@ function initMap() {
       installMapViewportWatcher();
       installMapResizeObserver();
       map.whenReady(() => {
+        runInitialMapSizeFix();
         scheduleMapReady("map-when-ready", [0, 120, 320, 700, 1200, 2200]);
       });
       scheduleMapReady("initMap", [0, 120, 320, 700, 1200, 2200]);
