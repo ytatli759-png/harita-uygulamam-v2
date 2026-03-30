@@ -11587,7 +11587,8 @@ function initMap() {
       map = L.map("map", {
         maxBounds: turkeyBounds,
         maxBoundsViscosity: 1.0,
-        preferCanvas: true,
+        // İlk açılışta siyah/boş render sorununu azaltmak için varsayılan SVG renderer kullan.
+        preferCanvas: false,
         zoomSnap: 0.25,
         zoomDelta: 0.25,
         wheelPxPerZoomLevel: 90,
