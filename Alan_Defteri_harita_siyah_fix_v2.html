@@ -8561,9 +8561,33 @@
                     <div class="map-hud-left">
                         <div class="map-hud-chip live" id="mapHudZoom">Yakınlık: <strong>6x</strong></div>
                         <div class="map-hud-chip" id="mapHudCount">Kayıtlı nokta: <strong>0</strong></div>
+                        <div class="map-hud-chip theme" id="mapHudTheme">Görünüm: <strong>Canlı</strong></div>
                     </div>
                 </div>
                 <div id="mapStatus" class="map-status" aria-live="polite"></div>
+            </div>
+
+            <div class="map-presets" role="group" aria-label="Harita görünümü">
+                <button type="button" id="mapPresetVoyagerBtn" class="map-preset-btn active" data-theme="voyager">
+                    <span class="kicker">Canlı</span>
+                    <span class="label">Şehir + arazi dengeli</span>
+                    <span class="hint">Önerilen</span>
+                </button>
+                <button type="button" id="mapPresetTopoBtn" class="map-preset-btn" data-theme="topo">
+                    <span class="kicker">Topo</span>
+                    <span class="label">Eğim ve kabartı</span>
+                    <span class="hint">Arazide net</span>
+                </button>
+                <button type="button" id="mapPresetSatelliteBtn" class="map-preset-btn" data-theme="satellite">
+                    <span class="kicker">Uydu</span>
+                    <span class="label">Gerçek görüntü</span>
+                    <span class="hint">Detay kontrol</span>
+                </button>
+                <button type="button" id="mapPresetDarkBtn" class="map-preset-btn" data-theme="dark">
+                    <span class="kicker">Gece</span>
+                    <span class="label">Yüksek kontrast</span>
+                    <span class="hint">Düşük ışık</span>
+                </button>
             </div>
 
             <div id="mapEvalCard" class="map-eval-card" aria-live="polite">
@@ -11650,6 +11674,34 @@ function initMap() {
       if (activeLayer && typeof activeLayer.once === "function") {
         activeLayer.once("load", () => scheduleMapReady("base-layer-load", [0, 120, 320, 700]));
       }
+      // Bazı ağlarda Carto/Esri tile endpointleri engellenebiliyor ve harita boş/siyah görünebiliyor.
+      // İlk katman yüklenmezse otomatik olarak OSM standard katmana düş.
+      let baseLayerHealthy = false;
+      let baseLayerErrors = 0;
+      let baseLayerFallbackDone = false;
+      const markBaseLayerHealthy = () => {
+        baseLayerHealthy = true;
+        if (!baseLayerFallbackDone) clearMapStatus();
+      };
+      const tryBaseLayerFallback = () => {
+        if (baseLayerFallbackDone || baseLayerHealthy) return;
+        if (window.__activeMapTheme === "standard") return;
+        baseLayerFallbackDone = true;
+        setMapStatus("Harita katmanı gecikiyor. Standart görünüme geçiliyor…", "info", false);
+        applyBaseLayerByTheme("standard");
+        scheduleMapReady("base-layer-fallback", [0, 120, 320, 700]);
+        setTimeout(() => clearMapStatus(), 1200);
+      };
+      [osmLayer, voyagerLayer, topoLayer, satelliteLayer, darkLayer].forEach((layer) => {
+        layer.on("tileload", markBaseLayerHealthy);
+      });
+      activeLayer.on("tileerror", () => {
+        baseLayerErrors += 1;
+        if (!baseLayerHealthy && baseLayerErrors >= 4) tryBaseLayerFallback();
+      });
+      setTimeout(() => {
+        if (!baseLayerHealthy) tryBaseLayerFallback();
+      }, 3800);
       currentBaseLayer = activeLayer;
       window.__activeMapTheme = preferredTheme in themeLayerMap ? preferredTheme : "voyager";
 
@@ -11805,10 +11857,16 @@ function initMap() {
         }
       });
 
+      let lastMouseLatLng = null;
+      let mouseMoveRaf = null;
       map.on("mousemove", (e) => {
-        const lat = e.latlng.lat;
-        const lon = e.latlng.lng;
-        setCoordBar(lat, lon);
+        lastMouseLatLng = e.latlng;
+        if (mouseMoveRaf) return;
+        mouseMoveRaf = requestAnimationFrame(() => {
+          mouseMoveRaf = null;
+          if (!lastMouseLatLng) return;
+          setCoordBar(lastMouseLatLng.lat, lastMouseLatLng.lng);
+        });
       });
 
       map.on("mouseout", () => {
