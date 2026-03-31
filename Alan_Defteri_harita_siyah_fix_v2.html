@@ -9169,7 +9169,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     let goldWaterLayer = null;
     let goldWaterWaysById = new Map(); // osmWayId -> L.Polyline
-    let goldTilesLoaded = new Set();   // "z/x/y"
+    let goldTilesLoaded = new Set();   // "z/x/y|waterwayRegex"
     let goldFetchQueue = [];
     let goldFetching = 0;
     let goldAbortCtrl = null;
@@ -9187,6 +9187,10 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const goldAnalysisMemo = new Map();
     const goldQuickCenterCache = new Map();
     let goldQuickCenterRequestKey = "";
+    let goldPrevSelectedWayId = null;
+    let goldDeferredBatchTimer = null;
+    let goldRefreshRunToken = 0;
+    let goldLastNeedBlueHintAt = 0;
 
     // Harita katmanlarını geri yüklemek için
     let currentBaseLayer = null;
@@ -10433,7 +10437,11 @@ function initMap() {
         // 🏞 Altın Modu açıkken: sadece mavi akar su çizgilerine dokun
         if (goldMode) {
           setGoldResult(t("gold_need_blue"));
-          showToast(t("gold_mode_toast"));
+          const now = Date.now();
+          if ((now - goldLastNeedBlueHintAt) > 1400) {
+            showToast(t("gold_mode_toast"));
+            goldLastNeedBlueHintAt = now;
+          }
           return;
         }
 
@@ -11159,9 +11167,16 @@ function initMap() {
 
     function applyGoldSelectionVisual() {
       if (!goldWaterWaysById || !goldWaterWaysById.size) return;
-      for (const [id, poly] of goldWaterWaysById.entries()) {
-        if (!poly || typeof poly.setStyle !== "function") continue;
-        const isSelected = String(id) === String(goldSelectedWayId || "");
+      const selectedId = String(goldSelectedWayId || "");
+      const prevId = String(goldPrevSelectedWayId || "");
+      const changed = selectedId !== prevId;
+      const idsToUpdate = changed ? [prevId, selectedId] : [selectedId];
+
+      idsToUpdate.forEach((id) => {
+        if (!id) return;
+        const poly = goldWaterWaysById.get(Number(id)) || goldWaterWaysById.get(id);
+        if (!poly || typeof poly.setStyle !== "function") return;
+        const isSelected = String(id) === selectedId;
         try {
           poly.setStyle({
             opacity: isSelected ? 1 : 0.96,
@@ -11169,7 +11184,15 @@ function initMap() {
           });
           if (isSelected && typeof poly.bringToFront === "function") poly.bringToFront();
         } catch {}
+      });
+
+      if (!changed && selectedId) {
+        const poly = goldWaterWaysById.get(Number(selectedId)) || goldWaterWaysById.get(selectedId);
+        if (poly && typeof poly.bringToFront === "function") {
+          try { poly.bringToFront(); } catch {}
+        }
       }
+      goldPrevSelectedWayId = selectedId || null;
     }
 
     
@@ -11312,6 +11335,8 @@ function goldResetWater() {
       // Devam eden istekleri iptal et ki eski sonuçlar karışmasın
       abortGoldNetwork();
       abortGoldAnalysisNetwork();
+      clearTimeout(goldDeferredBatchTimer);
+      goldDeferredBatchTimer = null;
       if (goldWaterLayer) goldWaterLayer.clearLayers();
       goldWaterWaysById.clear();
       goldTilesLoaded.clear();
@@ -11320,6 +11345,7 @@ function goldResetWater() {
       goldTilesInFlight.clear();
       goldLastViewportKey = "";
       goldTileCycleId++;
+      goldRefreshRunToken++;
       if (goldMode && mapInitialized) ensureGoldWaterRenderer(true);
       setGoldStatus(t('ready'));
     }
@@ -11413,6 +11439,9 @@ function goldResetWater() {
       } else {
         if (!goldMode) return;
         goldMode = false;
+        clearTimeout(goldDeferredBatchTimer);
+        goldDeferredBatchTimer = null;
+        goldRefreshRunToken++;
 
         // Ağ isteklerini iptal et
         abortGoldNetwork();
@@ -11509,6 +11538,22 @@ function goldResetWater() {
 
     function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
+    function getGoldWaterKinds(zoomNow = null) {
+      const zoom = Number.isFinite(zoomNow) ? zoomNow : (map ? map.getZoom() : 13);
+      const kinds = ["river", "stream", "canal"];
+      if (goldMicroEnabled && zoom >= 14) kinds.push("ditch", "drain");
+      if (goldMicroEnabled && zoom >= 15) kinds.push("wadi");
+      return kinds;
+    }
+
+    function buildGoldWaterRegex(zoomNow = null) {
+      return getGoldWaterKinds(zoomNow).join("|");
+    }
+
+    function makeGoldTileLoadKey(tileKey, waterRegex) {
+      return `${tileKey}|${waterRegex}`;
+    }
+
     function getVisibleTiles(z) {
       const b = map.getBounds();
       const sw = b.getSouthWest();
@@ -11572,9 +11617,7 @@ function goldResetWater() {
       if (zoomNow < GOLD_MIN_ZOOM) return false;
 
       const center = map.getCenter();
-      const kinds = ["river", "stream", "canal"];
-      if (goldMicroEnabled && zoomNow >= 15) kinds.push("ditch", "drain");
-      const wRegex = kinds.join('|');
+      const wRegex = buildGoldWaterRegex(zoomNow);
       const quickKey = makeGoldQuickCenterKey(center, zoomNow, wRegex);
 
       if (goldQuickCenterCache.has(quickKey)) {
@@ -11642,12 +11685,14 @@ out tags geom qt;`;
 
     async function goldRefreshWaterTiles(force = false, opts = {}) {
       if (!goldMode || !mapInitialized) return;
+      const refreshToken = ++goldRefreshRunToken;
 
       const zoomNow = map.getZoom();
       if (zoomNow < GOLD_MIN_ZOOM) {
         setGoldStatus("Yakınlaştır: Zoom ≥ " + GOLD_MIN_ZOOM);
         return;
       }
+      const waterRegex = buildGoldWaterRegex(zoomNow);
 
       const tZ = getWaterTileZoom();
       const viewportKey = buildGoldViewportKey(tZ);
@@ -11664,7 +11709,8 @@ out tags geom qt;`;
       const queued = new Set(goldFetchQueue.map(t => `${t.z}/${t.x}/${t.y}`));
       const missing = tiles.filter(t => {
         const k = `${t.z}/${t.x}/${t.y}`;
-        return !goldTilesLoaded.has(k) && !queued.has(k) && !goldTilesInFlight.has(k);
+        const lk = makeGoldTileLoadKey(k, waterRegex);
+        return !goldTilesLoaded.has(lk) && !queued.has(k) && !goldTilesInFlight.has(k);
       });
 
       if (!missing.length && !force) {
@@ -11702,23 +11748,26 @@ out tags geom qt;`;
 
       while (goldFetching < goldMaxConcurrentFetch() && goldFetchQueue.length) {
         const t = goldFetchQueue.shift();
-        void goldFetchTile(t, signal, tileCycleId);
+        void goldFetchTile(t, signal, tileCycleId, waterRegex);
       }
 
       if (deferredBatch.length) {
-        window.setTimeout(() => {
+        clearTimeout(goldDeferredBatchTimer);
+        goldDeferredBatchTimer = window.setTimeout(() => {
+          if (refreshToken !== goldRefreshRunToken) return;
           if (!goldMode) return;
           const liveQueued = new Set(goldFetchQueue.map(t => `${t.z}/${t.x}/${t.y}`));
           deferredBatch.forEach((tile) => {
             const key = `${tile.z}/${tile.x}/${tile.y}`;
-            if (!goldTilesLoaded.has(key) && !liveQueued.has(key)) {
+            const loadKey = makeGoldTileLoadKey(key, waterRegex);
+            if (!goldTilesLoaded.has(loadKey) && !liveQueued.has(key)) {
               goldFetchQueue.push(tile);
             }
           });
 
           while (goldFetching < goldMaxConcurrentFetch() && goldFetchQueue.length) {
             const next = goldFetchQueue.shift();
-            void goldFetchTile(next, signal, tileCycleId);
+            void goldFetchTile(next, signal, tileCycleId, waterRegex);
           }
         }, fastStart ? 120 : 30);
       }
@@ -11866,9 +11915,11 @@ out tags geom qt;`;
       return added;
     }
 
-    async function goldFetchTile(t, signal, cycleId = 0) {
+    async function goldFetchTile(t, signal, cycleId = 0, waterRegex = "") {
       const key = `${t.z}/${t.x}/${t.y}`;
-      if (goldTilesLoaded.has(key)) return;
+      const wRegex = waterRegex || buildGoldWaterRegex(map ? map.getZoom() : 13);
+      const loadKey = makeGoldTileLoadKey(key, wRegex);
+      if (goldTilesLoaded.has(loadKey)) return;
       if (goldTilesInFlight.has(key)) return;
       if (!goldWaterLayer) return;
 
@@ -11880,20 +11931,13 @@ out tags geom qt;`;
         const bb = tileBbox(t.z, t.x, t.y);
 
         const zoomNow = map ? map.getZoom() : 13;
-        const kinds = ["river", "stream", "canal"];
-
-        // Mikro dereler (ditch/drain) sadece daha yakın zoom'da yüklenir: hem performans hem okunabilirlik
-        if (goldMicroEnabled && zoomNow >= 14) kinds.push("ditch", "drain");
-        if (goldMicroEnabled && zoomNow >= 15) kinds.push("wadi");
-
-        const wRegex = kinds.join("|");
 
         // ✅ Önce cache'e bak (geri dönülen bölgelerde anında yükleme)
         const cached = goldLoadCachedTile(key, wRegex);
         if (cached && Array.isArray(cached.elements) && cached.elements.length) {
           await renderGoldWaterItems(cached.elements, zoomNow);
           scheduleGoldRepaint();
-          goldTilesLoaded.add(key);
+          goldTilesLoaded.add(loadKey);
           return;
         }
 
@@ -11944,9 +11988,10 @@ out tags geom qt;`;
         if (cacheItems.length) goldSaveCachedTile(key, wRegex, cacheItems);
 
         scheduleGoldRepaint();
-        goldTilesLoaded.add(key);
+        goldTilesLoaded.add(loadKey);
       } catch (e) {
         if (e && e.name === "AbortError") return;
+        if (cycleId && cycleId !== goldTileCycleId) return;
         setGoldStatus(goldUiText('streamLoadError'));
       } finally {
         goldTilesInFlight.delete(key);
@@ -11955,7 +12000,7 @@ out tags geom qt;`;
         // Kuyruğu devam ettir (ağ kalitesine göre dinamik)
         while (goldFetching < goldMaxConcurrentFetch() && goldFetchQueue.length) {
           const next = goldFetchQueue.shift();
-          void goldFetchTile(next, signal, cycleId);
+          void goldFetchTile(next, signal, cycleId, wRegex);
         }
 
         if (goldFetching === 0 && goldFetchQueue.length === 0 && goldMode) {
@@ -12374,6 +12419,8 @@ out tags geom qt;`;
       const intermittent = (tags.intermittent || "") === "yes";
       const locationText = `${clickLatLng.lat.toFixed(6)}, ${clickLatLng.lng.toFixed(6)}`;
       const runId = ++goldAnalysisRunId;
+      const previousPayload = goldLastAnalysisPayload;
+      const sameWayAsCurrent = previousPayload && previousPayload.osmWayId && String(previousPayload.osmWayId) === String(meta.osmWayId || "");
       goldSelectedWayId = meta.osmWayId || null;
       goldSelectedLatLng = clickLatLng;
       applyGoldSelectionVisual();
@@ -12391,16 +12438,17 @@ out tags geom qt;`;
       }
 
       setGoldStatus(goldUiText('loadingStatus'));
-      const loadingSteps = navigator.onLine
-        ? ['Akarsu verisi hazırlanıyor…']
-        : [goldUiText('loadingTextOffline')];
-      renderGoldLoadingState({
-        wName,
-        wType,
-        intermittent,
-        location: locationText,
-        loadingText: loadingSteps[0]
-      });
+      const loadingText = navigator.onLine ? 'Akarsu verisi hazırlanıyor…' : goldUiText('loadingTextOffline');
+      // Aynı su hattına yeniden dokunulduğunda paneli sıfırlama; mevcut sonucu koru.
+      if (!sameWayAsCurrent) {
+        renderGoldLoadingState({
+          wName,
+          wType,
+          intermittent,
+          location: locationText,
+          loadingText
+        });
+      }
 
       try {
         const slopePromise = getSlopePercent(meta.latlngs, clickLatLng, analysisSignal);
