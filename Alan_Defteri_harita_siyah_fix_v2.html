@@ -8762,6 +8762,7 @@ select {
     const formContainer = document.getElementById("formContainer");
     const cancelBtn = document.getElementById("cancelBtn");
     const spotForm = document.getElementById("spotForm");
+    const spotFormSaveBtn = document.querySelector("#spotForm .btn-primary");
     const spotIdInput = document.getElementById("spotId");
     const nameInput = document.getElementById("name");
     const locationInput = document.getElementById("location");
@@ -8927,6 +8928,9 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const MAP_FOCUS_STORAGE_KEY = "arazi_map_focus_v2";
     let lastMapQuickSelection = { coordText: "", noteText: "", data: null };
     let mapQuickRequestId = 0;
+    let autoHistoryRequestId = 0;
+    let formSubmitInFlight = false;
+    let suppressGoldMapClickUntil = 0;
 
     const MAP_UI_COPY = {
       tr: {
@@ -9178,6 +9182,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldMoveDebounce = null;
     let goldAnalysisRunId = 0;
     let goldActiveAnalysisKey = "";
+    let goldCurrentResultPayload = null;
+    let goldAnalysisLoading = false;
     const goldAnalysisMemo = new Map();
     const goldQuickCenterCache = new Map();
     let goldQuickCenterRequestKey = "";
@@ -10426,6 +10432,10 @@ function initMap() {
 
         // 🏞 Altın Modu açıkken: sadece mavi akar su çizgilerine dokun
         if (goldMode) {
+          // Kritik: Su hattı click'inden hemen sonra gelen map click olayını yoksay.
+          if (Date.now() < suppressGoldMapClickUntil) return;
+          // Kritik: Seçim zaten varken loading/reset mesajıyla içeriği ezme.
+          if (goldCurrentResultPayload || goldAnalysisLoading) return;
           setGoldResult(t("gold_need_blue"));
           showToast(t("gold_mode_toast"));
           return;
@@ -10451,10 +10461,12 @@ function initMap() {
         const coordText = lat.toFixed(6) + ", " + lon.toFixed(6);
         locationInput.value = coordText;
 
+        const requestId = ++autoHistoryRequestId;
         historicalNoteInput.value = t("history_searching");
 
         try {
           const result = await fetchHistoricalNoteFromInternet(coordText);
+          if (requestId !== autoHistoryRequestId) return;
           if (!result) {
             lastAutoHistoryPreview = { text: "", data: null };
             historicalNoteInput.value = "";
@@ -10481,6 +10493,7 @@ function initMap() {
             alert(t("auto_history_no_details"));
           }
         } catch {
+          if (requestId !== autoHistoryRequestId) return;
           lastAutoHistoryPreview = { text: "", data: null };
           historicalNoteInput.value = "";
           updateHistoryPreview("");
@@ -10681,12 +10694,14 @@ function initMap() {
 
     function setGoldResult(msg) {
       if (!goldResultEl) return;
+      goldCurrentResultPayload = null;
       const safe = escapeHtml(msg || "").replace(/\n/g, "<br>");
       updateGoldResultMarkup(`<div class="gold-result-shell tone-low"><div class="gold-result-plain">${safe}</div></div>`);
     }
 
     function renderGoldEmptyState() {
       if (!goldResultEl) return;
+      goldCurrentResultPayload = null;
       updateGoldResultMarkup(`
         <div class="gold-result-shell tone-low gold-empty-state">
           <div class="gold-empty-title">${escapeHtml(goldUiText('emptyTitle'))}</div>
@@ -10855,6 +10870,7 @@ function initMap() {
 
     function renderGoldErrorState(payload = {}) {
       if (!goldResultEl) return;
+      goldCurrentResultPayload = null;
       const detail = payload.detail ? `<div class="gold-result-note">${escapeHtml(payload.detail)}</div>` : '';
       const cachedNote = payload.cachedAvailable ? `<div class="gold-empty-tip">${escapeHtml(goldUiText('cachedNote'))}</div>` : `<div class="gold-empty-tip">${escapeHtml(goldUiText('retryHint'))}</div>`;
       updateGoldResultMarkup(`
@@ -10878,6 +10894,7 @@ function initMap() {
 
     function renderGoldAnalysisResult(payload) {
   if (!goldResultEl || !payload) return;
+  goldCurrentResultPayload = { ...payload, refreshingText: "" };
   const score = Number(payload.score) || 0;
   const tone = score >= 70 ? 'high' : score >= 45 ? 'mid' : 'low';
   const latNum = Number(payload.lat);
@@ -11021,6 +11038,7 @@ function initMap() {
       </div>
 
       ${payload.statusNote ? `<div class="gold-empty-tip">${escapeHtml(payload.statusNote)}</div>` : ''}
+      ${payload.refreshingText ? `<div class="gold-result-loading">${escapeHtml(payload.refreshingText)}</div>` : ''}
 
       <div class="gold-stats-row">
         <div class="gold-stat-card gold-stat-card-score tone-${tone}">
@@ -11274,6 +11292,7 @@ function initMap() {
 function goldResetWater() {
       // Devam eden istekleri iptal et ki eski sonuçlar karışmasın
       abortGoldNetwork();
+      goldAnalysisLoading = false;
       if (goldWaterLayer) goldWaterLayer.clearLayers();
       goldWaterWaysById.clear();
       goldTilesLoaded.clear();
@@ -11340,6 +11359,7 @@ function goldResetWater() {
             const layer = (e && (e.layer || e.propagatedFrom)) || e.target;
             const meta = layer && layer._goldMeta;
             if (!meta) return;
+            suppressGoldMapClickUntil = Date.now() + 420;
 
             try {
               if (e && e.originalEvent) {
@@ -11372,6 +11392,7 @@ function goldResetWater() {
       } else {
         if (!goldMode) return;
         goldMode = false;
+        goldAnalysisLoading = false;
 
         // Ağ isteklerini iptal et
         abortGoldNetwork();
@@ -12306,11 +12327,13 @@ out tags geom qt;`;
       const runId = ++goldAnalysisRunId;
       const pointCacheKey = makeGoldPointCacheKey(clickLatLng.lat, clickLatLng.lng, meta.osmWayId || "");
       goldActiveAnalysisKey = pointCacheKey;
+      goldAnalysisLoading = true;
 
       const pointCached = goldReadPointAnalysis(pointCacheKey);
       if (pointCached && isNearCachedGoldAnalysis(pointCached, clickLatLng, meta.osmWayId)) {
         renderGoldAnalysisResult({ ...pointCached, statusNote: goldUiText('cachedNote') });
         setGoldStatus(goldUiText('cachedReady'));
+        goldAnalysisLoading = false;
         recordAnalysisUse("gold");
         return;
       }
@@ -12319,13 +12342,20 @@ out tags geom qt;`;
       const loadingSteps = navigator.onLine
         ? ['Akarsu verisi hazırlanıyor…', 'Eğim verisi değerlendiriliyor…', 'Yakın çevre sinyalleri birleştiriliyor…']
         : [goldUiText('loadingTextOffline')];
-      renderGoldLoadingState({
-        wName,
-        wType,
-        intermittent,
-        location: locationText,
-        loadingText: loadingSteps[0]
-      });
+      const activeResult = goldCurrentResultPayload;
+      const sameWaterwaySelected = !!(activeResult && String(activeResult.osmWayId || "") === String(meta.osmWayId || ""));
+      if (sameWaterwaySelected) {
+        // Kritik: Paneli unmount etmeden mevcut içeriği koru, sadece küçük loading metni göster.
+        renderGoldAnalysisResult({ ...activeResult, refreshingText: loadingSteps[0] });
+      } else {
+        renderGoldLoadingState({
+          wName,
+          wType,
+          intermittent,
+          location: locationText,
+          loadingText: loadingSteps[0]
+        });
+      }
 
       try {
         const slopePromise = getSlopePercent(meta.latlngs, clickLatLng);
@@ -12335,12 +12365,20 @@ out tags geom qt;`;
         if (loadingSteps[1]) {
           setTimeout(() => {
             if (runId !== goldAnalysisRunId || !goldMode) return;
+            if (sameWaterwaySelected && goldCurrentResultPayload) {
+              renderGoldAnalysisResult({ ...goldCurrentResultPayload, refreshingText: loadingSteps[1] });
+              return;
+            }
             renderGoldLoadingState({ wName, wType, intermittent, location: locationText, loadingText: loadingSteps[1] });
           }, 280);
         }
         if (loadingSteps[2]) {
           setTimeout(() => {
             if (runId !== goldAnalysisRunId || !goldMode) return;
+            if (sameWaterwaySelected && goldCurrentResultPayload) {
+              renderGoldAnalysisResult({ ...goldCurrentResultPayload, refreshingText: loadingSteps[2] });
+              return;
+            }
             renderGoldLoadingState({ wName, wType, intermittent, location: locationText, loadingText: loadingSteps[2] });
           }, 620);
         }
@@ -12422,6 +12460,7 @@ out tags geom qt;`;
         goldSaveLastAnalysis({ ...payload, statusNote: '' });
         goldSavePointAnalysis(pointCacheKey, { ...payload, statusNote: '' });
         setGoldStatus(statusNote ? goldUiText('partialNote') : goldUiText('onlineStatus'));
+        goldAnalysisLoading = false;
         recordAnalysisUse("gold");
       } catch (err) {
         if (runId !== goldAnalysisRunId || !goldMode) return;
@@ -12440,6 +12479,8 @@ out tags geom qt;`;
           });
           setGoldStatus(goldUiText('retryHint'));
         }
+      } finally {
+        if (runId === goldAnalysisRunId) goldAnalysisLoading = false;
       }
     }
 
@@ -12668,6 +12709,24 @@ out tags geom qt;`;
       }, 120);
     }
 
+    function setFormVisibility(open, options = {}) {
+      const shouldOpen = !!open;
+      if (!formContainer) return;
+      formContainer.style.display = shouldOpen ? "block" : "none";
+      if (!shouldOpen) return;
+      const shouldFocus = options.focus !== false;
+      const isCompactViewport = !!(window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+      // Kritik: Mobilde scrollIntoView zıplamasını önlemek için otomatik kaydırma kapalı.
+      if (!isCompactViewport && options.scrollIntoView) {
+        formContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (shouldFocus) {
+        setTimeout(() => {
+          try { nameInput?.focus({ preventScroll: true }); } catch {}
+        }, 0);
+      }
+    }
+
     function openFormNew() {
       closeSpotDetail();
       normalizeViewForForm();
@@ -12679,9 +12738,7 @@ out tags geom qt;`;
       setFormPhotos([]);
       setFormTags([]);
       updateHistoryPreview("");
-      formContainer.style.display = "block";
-      formContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-      nameInput.focus();
+      setFormVisibility(true, { scrollIntoView: true, focus: true });
     }
 
     function openEdit(id) {
@@ -12699,12 +12756,11 @@ out tags geom qt;`;
       setFormTags(spot.tags || []);
       syncPhotoTagWithFormPhotos();
       updateHistoryPreview(historicalNoteInput.value);
-      formContainer.style.display = "block";
-      nameInput.focus();
+      setFormVisibility(true, { scrollIntoView: false, focus: true });
     }
 
     function closeForm() {
-      formContainer.style.display = "none";
+      setFormVisibility(false);
       setFormPhotos([]);
       setFormTags([]);
       updateHistoryPreview("");
@@ -15871,9 +15927,11 @@ function updateHistoryPreview(rawText) {
         alert("Önce haritaya tıkla ya da koordinat gir.");
         return;
       }
+      const requestId = ++autoHistoryRequestId;
       historicalNoteInput.value = "Bu konum için Türkiye içi kısa arka plan bilgisi aranıyor...";
       try {
         const result = await fetchHistoricalNoteFromInternet(locText);
+        if (requestId !== autoHistoryRequestId) return;
         if (!result) {
           lastAutoHistoryPreview = { text: "", data: null };
           historicalNoteInput.value = "";
@@ -15900,6 +15958,7 @@ function updateHistoryPreview(rawText) {
           alert("Türkiye içinde ama bu bölge için detaylı arka plan bilgisi bulunamadı.");
         }
       } catch {
+        if (requestId !== autoHistoryRequestId) return;
         lastAutoHistoryPreview = { text: "", data: null };
         historicalNoteInput.value = "";
         updateHistoryPreview("");
@@ -15917,6 +15976,7 @@ function updateHistoryPreview(rawText) {
 
     spotForm.addEventListener("submit", (e) => {
       e.preventDefault();
+      if (formSubmitInFlight) return;
       const name = nameInput.value.trim();
       const location = locationInput.value.trim();
       const historicalNote = clampHistoryText(historicalNoteInput.value.trim());
@@ -15929,7 +15989,13 @@ function updateHistoryPreview(rawText) {
         alert(t('titleEmpty'));
         return;
       }
+      formSubmitInFlight = true;
+      if (spotFormSaveBtn) {
+        spotFormSaveBtn.disabled = true;
+        spotFormSaveBtn.textContent = "Kaydediliyor…";
+      }
 
+      try {
       let spots = loadSpots();
 
       if (id) {
@@ -15965,6 +16031,13 @@ function updateHistoryPreview(rawText) {
       closeForm();
       render();
       showToast(isEdit ? ux('save_updated') : ux('save_created'), 'success');
+      } finally {
+        formSubmitInFlight = false;
+        if (spotFormSaveBtn) {
+          spotFormSaveBtn.disabled = false;
+          spotFormSaveBtn.textContent = t('save');
+        }
+      }
     });
 
     safeBindClick(photoPickBtn, "photoPickBtn", () => photoInput && photoInput.click());
