@@ -6215,18 +6215,6 @@ select {
       shape-rendering: geometricPrecision;
       filter: drop-shadow(0 0 1px rgba(125, 211, 252, 0.85));
     }
-    .leaflet-pane.gold-water-pane svg path.gold-water-line.gold-water-river {
-      stroke: #0ea5e9 !important;
-    }
-    .leaflet-pane.gold-water-pane svg path.gold-water-line.gold-water-stream {
-      stroke: #38bdf8 !important;
-    }
-    .leaflet-pane.gold-water-pane svg path.gold-water-line.gold-water-canal {
-      stroke: #60a5fa !important;
-    }
-    .leaflet-pane.gold-water-pane svg path.gold-water-line.gold-water-minor {
-      stroke: #7dd3fc !important;
-    }
 
 
   .icon-core {
@@ -9449,6 +9437,9 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const TILE_BUFFER = 1;             // ek tile buffer (panning için)
     const MAX_CONCURRENT_FETCH = 3;    // üst sınır (ağ kalitesine göre dinamik düşürülür)
 
+    const GOLD_WATER_BASE_BLUE = "#1d9bf0";
+    const GOLD_WATER_RENDER_BATCH = 48;
+
     function isPhoneViewport() {
       try {
         return window.matchMedia("(max-width: 768px)").matches;
@@ -9484,7 +9475,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         pane = map.createPane("goldWaterPane");
       }
       if (pane) {
-        pane.style.zIndex = "680";
+        pane.style.zIndex = "760";
         pane.style.pointerEvents = "auto";
         pane.classList.add("gold-water-pane");
       }
@@ -10425,7 +10416,10 @@ function initMap() {
         updateMapHud();
         // Zoom değişince su katmanını mutlaka yeniden çağır:
         // Kullanıcı sadece yakınlaştırdıysa bile mavi akar sular beklemeden gelsin.
-        if (goldMode) scheduleGoldRefresh(true, { fastStart: true });
+        if (goldMode) {
+          refreshGoldWaterVisualsForZoom();
+          scheduleGoldRefresh(true, { fastStart: true });
+        }
       });
 
       map.on("click", async (e) => {
@@ -11165,6 +11159,27 @@ function initMap() {
       });
     }
 
+    function refreshGoldWaterVisualsForZoom() {
+      if (!map || !goldWaterWaysById || !goldWaterWaysById.size) return;
+      const zoomNow = map.getZoom();
+      for (const poly of goldWaterWaysById.values()) {
+        if (!poly || !poly._goldMeta) continue;
+        const style = waterStyleFor(poly._goldMeta.tags || {});
+        const weightBoost = (zoomNow >= 15 ? 0.92 : zoomNow >= 14 ? 0.98 : 1.08);
+        const visibleWeight = Math.max(3.2, (style.weight || 3) * weightBoost);
+        try {
+          poly.setStyle({
+            color: style.color,
+            opacity: Math.max(0.94, style.opacity || 1),
+            dashArray: style.dashArray || null,
+            weight: visibleWeight
+          });
+        } catch {}
+      }
+      applyGoldSelectionVisual();
+      scheduleGoldRepaint();
+    }
+
     function applyGoldSelectionVisual() {
       if (!goldWaterWaysById || !goldWaterWaysById.size) return;
       const selectedId = String(goldSelectedWayId || "");
@@ -11300,13 +11315,13 @@ function initMap() {
 
     function simplifyLatLngsForZoom(latlngs, zoomNow) {
       // Basit distance-based sadeleştirme: yakın noktaları ele (performans için)
-      if (!Array.isArray(latlngs) || latlngs.length < 3) return latlngs;
+      if (!Array.isArray(latlngs) || latlngs.length < 4) return latlngs;
 
-      let minMeters = 20;
-      if (zoomNow >= 15) minMeters = 6;
-      else if (zoomNow >= 14) minMeters = 10;
-      else if (zoomNow >= 13) minMeters = 16;
-      else minMeters = 26;
+      let minMeters = 14;
+      if (zoomNow >= 15) minMeters = 4;
+      else if (zoomNow >= 14) minMeters = 7;
+      else if (zoomNow >= 13) minMeters = 10;
+      else minMeters = 14;
 
       const out = [];
       let last = L.latLng(latlngs[0][0], latlngs[0][1]);
@@ -11781,19 +11796,19 @@ out tags geom qt;`;
       let weight = 4.6;
       let opacity = 1;
       let dashArray = null;
-      let color = "#1d9bf0";
+      let color = GOLD_WATER_BASE_BLUE;
       let className = "gold-water-line";
 
       if (w === "river") {
-        weight = 6.8; opacity = 1; color = "#0ea5e9"; className += " gold-water-river";
+        weight = 6.8; opacity = 1; color = GOLD_WATER_BASE_BLUE; className += " gold-water-river";
       } else if (w === "stream") {
-        weight = 4.9; opacity = 0.99; color = "#38bdf8"; className += " gold-water-stream";
+        weight = 4.9; opacity = 1; color = GOLD_WATER_BASE_BLUE; className += " gold-water-stream";
       } else if (w === "canal") {
-        weight = 4.2; opacity = 0.97; color = "#60a5fa"; dashArray = "7 7"; className += " gold-water-canal";
+        weight = 4.4; opacity = 1; color = GOLD_WATER_BASE_BLUE; dashArray = "7 7"; className += " gold-water-canal";
       } else if (w === "ditch" || w === "drain" || w === "wadi") {
-        weight = 3.8; opacity = 0.94; color = "#7dd3fc"; dashArray = w === "wadi" ? "2 6" : "4 6"; className += " gold-water-minor";
+        weight = 4.0; opacity = 0.98; color = GOLD_WATER_BASE_BLUE; dashArray = w === "wadi" ? "2 6" : "4 6"; className += " gold-water-minor";
       } else {
-        weight = 4.1; opacity = 0.98; color = "#38bdf8"; className += " gold-water-stream";
+        weight = 4.3; opacity = 1; color = GOLD_WATER_BASE_BLUE; className += " gold-water-stream";
       }
 
       // Intermittent (mevsimsel) su yollarını kesikli yap ama görünürlüğü çok düşürme
@@ -11854,6 +11869,7 @@ out tags geom qt;`;
       const renderer = ensureGoldWaterRenderer();
       let added = 0;
 
+      const toAdd = [];
       for (const it of items) {
         const id = it && it.id;
         if (!id || goldWaterWaysById.has(id)) continue;
@@ -11866,44 +11882,48 @@ out tags geom qt;`;
         const weightBoost = (zoomNow >= 15 ? 0.92 : zoomNow >= 14 ? 0.98 : 1.08);
         const visibleWeight = Math.max(3.2, (style.weight || 3) * weightBoost);
 
-        const halo = L.polyline(latlngs, {
-          color: "#e0f2fe",
-          opacity: Math.max(0.46, Math.min(0.76, (style.opacity || 1) * 0.62)),
-          weight: visibleWeight + 3.2,
-          smoothFactor: 1.2,
-          interactive: false,
-          className: "gold-water-halo",
-          pane: "goldWaterPane",
-          lineCap: "round",
-          lineJoin: "round",
-          renderer: renderer || undefined
-        });
+        toAdd.push({ id, tags, latlngs, style, visibleWeight });
+      }
 
-        const poly = L.polyline(latlngs, {
-          ...style,
-          weight: visibleWeight,
-          opacity: Math.max(0.94, style.opacity || 1),
-          smoothFactor: 1.15,
-          interactive: interactiveNow,
-          pane: "goldWaterPane",
-          renderer: renderer || undefined
-        });
+      for (let i = 0; i < toAdd.length; i += GOLD_WATER_RENDER_BATCH) {
+        const chunk = toAdd.slice(i, i + GOLD_WATER_RENDER_BATCH);
+        for (const entry of chunk) {
+          const halo = L.polyline(entry.latlngs, {
+            color: "#dbeafe",
+            opacity: Math.max(0.52, Math.min(0.8, (entry.style.opacity || 1) * 0.66)),
+            weight: entry.visibleWeight + 3.2,
+            smoothFactor: 1.2,
+            interactive: false,
+            className: "gold-water-halo",
+            pane: "goldWaterPane",
+            lineCap: "round",
+            lineJoin: "round",
+            renderer: renderer || undefined
+          });
 
-        poly._goldMeta = {
-          osmWayId: id,
-          tags,
-          latlngs
-        };
+          const poly = L.polyline(entry.latlngs, {
+            ...entry.style,
+            weight: entry.visibleWeight,
+            opacity: Math.max(0.94, entry.style.opacity || 1),
+            smoothFactor: 1.15,
+            interactive: interactiveNow,
+            pane: "goldWaterPane",
+            renderer: renderer || undefined
+          });
 
-        goldWaterLayer.addLayer(halo);
-        goldWaterLayer.addLayer(poly);
-        goldWaterWaysById.set(id, poly);
+          poly._goldMeta = {
+            osmWayId: entry.id,
+            tags: entry.tags,
+            latlngs: entry.latlngs
+          };
 
-        added++;
-        if (added % 24 === 0) {
-          scheduleGoldRepaint();
-          await yieldToUI();
+          goldWaterLayer.addLayer(halo);
+          goldWaterLayer.addLayer(poly);
+          goldWaterWaysById.set(entry.id, poly);
+          added++;
         }
+        scheduleGoldRepaint();
+        await yieldToUI();
       }
 
       if (added) {
@@ -11949,6 +11969,7 @@ out tags geom qt;`;
 out tags geom qt;`;
 
         const data = await runOverpass(query, signal);
+        if (signal && signal.aborted) return;
         if (cycleId && cycleId !== goldTileCycleId) return;
         const elements = (data && data.elements) ? data.elements : [];
 
@@ -11984,8 +12005,8 @@ out tags geom qt;`;
         // Çizimi parça parça yap (UI donmasın)
         await renderGoldWaterItems(cacheItems, zoomNow);
 
-        // Cache'e yaz (hızlı tekrar yükleme)
-        if (cacheItems.length) goldSaveCachedTile(key, wRegex, cacheItems);
+        // Cache'e yaz (boş tile'ları da saklıyoruz; gereksiz tekrar istek olmaz)
+        goldSaveCachedTile(key, wRegex, cacheItems);
 
         scheduleGoldRepaint();
         goldTilesLoaded.add(loadKey);
