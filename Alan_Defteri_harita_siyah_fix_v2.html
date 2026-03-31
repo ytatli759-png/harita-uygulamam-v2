@@ -9178,6 +9178,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldMoveDebounce = null;
     let goldAnalysisRunId = 0;
     let goldActiveAnalysisKey = "";
+    let goldSelectedWayId = null;
+    let goldSelectedLatLng = null;
+    let goldAnalysisAbortCtrl = null;
+    let goldLastViewportKey = "";
+    let goldTileCycleId = 0;
+    let goldLastAnalysisPayload = null;
     const goldAnalysisMemo = new Map();
     const goldQuickCenterCache = new Map();
     let goldQuickCenterRequestKey = "";
@@ -10878,6 +10884,7 @@ function initMap() {
 
     function renderGoldAnalysisResult(payload) {
   if (!goldResultEl || !payload) return;
+  goldLastAnalysisPayload = payload;
   const score = Number(payload.score) || 0;
   const tone = score >= 70 ? 'high' : score >= 45 ? 'mid' : 'low';
   const latNum = Number(payload.lat);
@@ -11114,6 +11121,21 @@ function initMap() {
       return null;
     }
 
+    function abortGoldAnalysisNetwork() {
+      if (goldAnalysisAbortCtrl) {
+        try { goldAnalysisAbortCtrl.abort(); } catch {}
+      }
+      goldAnalysisAbortCtrl = null;
+    }
+
+    function getGoldAnalysisSignal(forceNew = false) {
+      if (forceNew || !goldAnalysisAbortCtrl) {
+        abortGoldAnalysisNetwork();
+        goldAnalysisAbortCtrl = new AbortController();
+      }
+      return goldAnalysisAbortCtrl.signal;
+    }
+
     function getGoldNetworkSignal(forceNew = false) {
       if (forceNew || !goldAbortCtrl) {
         if (goldAbortCtrl) {
@@ -11133,6 +11155,21 @@ function initMap() {
           if (typeof goldWaterLayer.invoke === 'function') goldWaterLayer.invoke('redraw');
         } catch {}
       });
+    }
+
+    function applyGoldSelectionVisual() {
+      if (!goldWaterWaysById || !goldWaterWaysById.size) return;
+      for (const [id, poly] of goldWaterWaysById.entries()) {
+        if (!poly || typeof poly.setStyle !== "function") continue;
+        const isSelected = String(id) === String(goldSelectedWayId || "");
+        try {
+          poly.setStyle({
+            opacity: isSelected ? 1 : 0.96,
+            weight: isSelected ? Math.max(4.8, (poly.options?.weight || 4.2) + 1.3) : (poly.options?.weight || 4.2)
+          });
+          if (isSelected && typeof poly.bringToFront === "function") poly.bringToFront();
+        } catch {}
+      }
     }
 
     
@@ -11274,12 +11311,15 @@ function initMap() {
 function goldResetWater() {
       // Devam eden istekleri iptal et ki eski sonuçlar karışmasın
       abortGoldNetwork();
+      abortGoldAnalysisNetwork();
       if (goldWaterLayer) goldWaterLayer.clearLayers();
       goldWaterWaysById.clear();
       goldTilesLoaded.clear();
       goldFetchQueue = [];
       goldFetching = 0;
       goldTilesInFlight.clear();
+      goldLastViewportKey = "";
+      goldTileCycleId++;
       if (goldMode && mapInitialized) ensureGoldWaterRenderer(true);
       setGoldStatus(t('ready'));
     }
@@ -11351,6 +11391,7 @@ function goldResetWater() {
           });
         }
         if (!map.hasLayer(goldWaterLayer)) goldWaterLayer.addTo(map);
+        applyGoldSelectionVisual();
 
         // Arka plan (uydu) – gerçekçilik için
         goldSetBackground(goldBgEnabled);
@@ -11375,6 +11416,7 @@ function goldResetWater() {
 
         // Ağ isteklerini iptal et
         abortGoldNetwork();
+        abortGoldAnalysisNetwork();
 
         // Water layer'ı kaldır (temizlemeden kaldırıyoruz, tekrar açınca hızlı gelsin)
         if (goldWaterLayer && map.hasLayer(goldWaterLayer)) map.removeLayer(goldWaterLayer);
@@ -11422,6 +11464,23 @@ function goldResetWater() {
           }
         }, 1100);
       }, wait);
+    }
+
+    function buildGoldViewportKey(zoom = null) {
+      if (!map) return "";
+      const z = Number.isFinite(zoom) ? zoom : map.getZoom();
+      const b = map.getBounds();
+      const c = map.getCenter();
+      return [
+        z,
+        b.getSouth().toFixed(3),
+        b.getWest().toFixed(3),
+        b.getNorth().toFixed(3),
+        b.getEast().toFixed(3),
+        c.lat.toFixed(3),
+        c.lng.toFixed(3),
+        goldMicroEnabled ? 1 : 0
+      ].join("|");
     }
 
     // Web Mercator tile helpers
@@ -11591,7 +11650,16 @@ out tags geom qt;`;
       }
 
       const tZ = getWaterTileZoom();
+      const viewportKey = buildGoldViewportKey(tZ);
+      if (!force && viewportKey && viewportKey === goldLastViewportKey) return;
+      if (viewportKey && goldLastViewportKey && viewportKey !== goldLastViewportKey) {
+        abortGoldNetwork();
+        goldFetchQueue = [];
+      }
+      goldLastViewportKey = viewportKey;
+
       const tiles = getVisibleTiles(tZ);
+      const tileCycleId = ++goldTileCycleId;
 
       const queued = new Set(goldFetchQueue.map(t => `${t.z}/${t.x}/${t.y}`));
       const missing = tiles.filter(t => {
@@ -11634,7 +11702,7 @@ out tags geom qt;`;
 
       while (goldFetching < goldMaxConcurrentFetch() && goldFetchQueue.length) {
         const t = goldFetchQueue.shift();
-        void goldFetchTile(t, signal);
+        void goldFetchTile(t, signal, tileCycleId);
       }
 
       if (deferredBatch.length) {
@@ -11650,7 +11718,7 @@ out tags geom qt;`;
 
           while (goldFetching < goldMaxConcurrentFetch() && goldFetchQueue.length) {
             const next = goldFetchQueue.shift();
-            void goldFetchTile(next, signal);
+            void goldFetchTile(next, signal, tileCycleId);
           }
         }, fastStart ? 120 : 30);
       }
@@ -11790,6 +11858,7 @@ out tags geom qt;`;
       }
 
       if (added) {
+        applyGoldSelectionVisual();
         scheduleGoldRepaint();
         try { goldWaterLayer.bringToFront(); } catch {}
       }
@@ -11797,7 +11866,7 @@ out tags geom qt;`;
       return added;
     }
 
-    async function goldFetchTile(t, signal) {
+    async function goldFetchTile(t, signal, cycleId = 0) {
       const key = `${t.z}/${t.x}/${t.y}`;
       if (goldTilesLoaded.has(key)) return;
       if (goldTilesInFlight.has(key)) return;
@@ -11836,6 +11905,7 @@ out tags geom qt;`;
 out tags geom qt;`;
 
         const data = await runOverpass(query, signal);
+        if (cycleId && cycleId !== goldTileCycleId) return;
         const elements = (data && data.elements) ? data.elements : [];
 
         // Network -> Cache formatına dönüştür (küçült + sadeleştir)
@@ -11880,12 +11950,12 @@ out tags geom qt;`;
         setGoldStatus(goldUiText('streamLoadError'));
       } finally {
         goldTilesInFlight.delete(key);
-        goldFetching--;
+        goldFetching = Math.max(0, goldFetching - 1);
 
         // Kuyruğu devam ettir (ağ kalitesine göre dinamik)
         while (goldFetching < goldMaxConcurrentFetch() && goldFetchQueue.length) {
           const next = goldFetchQueue.shift();
-          void goldFetchTile(next, signal);
+          void goldFetchTile(next, signal, cycleId);
         }
 
         if (goldFetching === 0 && goldFetchQueue.length === 0 && goldMode) {
@@ -12089,7 +12159,7 @@ out tags geom qt;`;
       return 0;
     }
 
-    async function getSlopePercent(latlngs, clickLatLng) {
+    async function getSlopePercent(latlngs, clickLatLng, signal = null) {
       // Click çevresinde iki yönden nokta seçip Open-Meteo elevation ile eğim tahmini
       if (!latlngs || latlngs.length < 4) return null;
 
@@ -12113,7 +12183,7 @@ out tags geom qt;`;
 
       try {
         const url = `${OPEN_METEO_ELEV_URL}?latitude=${encodeURIComponent(lats)}&longitude=${encodeURIComponent(lons)}`;
-        const res = await fetchWithTimeout(url, {}, 12000);
+        const res = await fetchWithTimeout(url, { signal }, 12000);
         if (!res.ok) return null;
         const js = await res.json();
         const elev = js && js.elevation;
@@ -12129,7 +12199,7 @@ out tags geom qt;`;
       }
     }
 
-    async function queryMrdsAuNearby(clickLatLng, radiusKm = 50) {
+    async function queryMrdsAuNearby(clickLatLng, radiusKm = 50, signal = null) {
       // USGS MRDS (OGC API Features) – bbox + CQL2 filter (code_list contains AU)
       // Not: servis yoğun olursa boş dönebilir.
       const dLat = radiusKm / 110.574; // approx
@@ -12144,7 +12214,7 @@ out tags geom qt;`;
       const url = `${MRDS_ITEMS_URL}?f=geojson&limit=200&bbox=${encodeURIComponent(bbox)}&filter-lang=cql2-text&filter=${encodeURIComponent(filter)}`;
 
       try {
-        const res = await fetchWithTimeout(url, {}, 20000);
+        const res = await fetchWithTimeout(url, { signal }, 20000);
         if (!res.ok) return { ok: false, count: 0, nearestKm: null, samples: [] };
         const js = await res.json();
         const feats = (js && js.features) ? js.features : [];
@@ -12304,6 +12374,11 @@ out tags geom qt;`;
       const intermittent = (tags.intermittent || "") === "yes";
       const locationText = `${clickLatLng.lat.toFixed(6)}, ${clickLatLng.lng.toFixed(6)}`;
       const runId = ++goldAnalysisRunId;
+      goldSelectedWayId = meta.osmWayId || null;
+      goldSelectedLatLng = clickLatLng;
+      applyGoldSelectionVisual();
+      abortGoldAnalysisNetwork();
+      const analysisSignal = getGoldAnalysisSignal(true);
       const pointCacheKey = makeGoldPointCacheKey(clickLatLng.lat, clickLatLng.lng, meta.osmWayId || "");
       goldActiveAnalysisKey = pointCacheKey;
 
@@ -12317,7 +12392,7 @@ out tags geom qt;`;
 
       setGoldStatus(goldUiText('loadingStatus'));
       const loadingSteps = navigator.onLine
-        ? ['Akarsu verisi hazırlanıyor…', 'Eğim verisi değerlendiriliyor…', 'Yakın çevre sinyalleri birleştiriliyor…']
+        ? ['Akarsu verisi hazırlanıyor…']
         : [goldUiText('loadingTextOffline')];
       renderGoldLoadingState({
         wName,
@@ -12328,22 +12403,9 @@ out tags geom qt;`;
       });
 
       try {
-        const slopePromise = getSlopePercent(meta.latlngs, clickLatLng);
-        const mrdsPromise = queryMrdsAuNearby(clickLatLng, 50);
-        const reversePromise = reverseGeocode(clickLatLng.lat, clickLatLng.lng);
-
-        if (loadingSteps[1]) {
-          setTimeout(() => {
-            if (runId !== goldAnalysisRunId || !goldMode) return;
-            renderGoldLoadingState({ wName, wType, intermittent, location: locationText, loadingText: loadingSteps[1] });
-          }, 280);
-        }
-        if (loadingSteps[2]) {
-          setTimeout(() => {
-            if (runId !== goldAnalysisRunId || !goldMode) return;
-            renderGoldLoadingState({ wName, wType, intermittent, location: locationText, loadingText: loadingSteps[2] });
-          }, 620);
-        }
+        const slopePromise = getSlopePercent(meta.latlngs, clickLatLng, analysisSignal);
+        const mrdsPromise = queryMrdsAuNearby(clickLatLng, 50, analysisSignal);
+        const reversePromise = reverseGeocode(clickLatLng.lat, clickLatLng.lng, analysisSignal);
 
         const [slopeRes, mrdsRes, reverseRes] = await Promise.allSettled([slopePromise, mrdsPromise, reversePromise]);
 
@@ -12424,6 +12486,7 @@ out tags geom qt;`;
         setGoldStatus(statusNote ? goldUiText('partialNote') : goldUiText('onlineStatus'));
         recordAnalysisUse("gold");
       } catch (err) {
+        if (err && err.name === "AbortError") return;
         if (runId !== goldAnalysisRunId || !goldMode) return;
 
         const cached = goldReadLastAnalysis();
@@ -13199,7 +13262,7 @@ out tags geom qt;`;
       return nominatimQueue;
     }
 
-    async function reverseGeocode(lat, lon) {
+    async function reverseGeocode(lat, lon, signal = null) {
       try {
         const key = `${lat.toFixed(5)},${lon.toFixed(5)}`;
         const cached = nominatimCacheGet(key);
@@ -13212,9 +13275,10 @@ out tags geom qt;`;
             `&lon=${encodeURIComponent(lon)}` +
             `&zoom=14&addressdetails=1`;
 
-          const res = await fetch(url, {
-            headers: { "Accept-Language": "tr" }
-          });
+          const res = await fetchWithTimeout(url, {
+            headers: { "Accept-Language": "tr" },
+            signal
+          }, 12000);
 
           if (!res.ok) return null;
 
