@@ -43,8 +43,82 @@
       display: flex;
       justify-content: center;
     }
+    body.modal-open {
+      overflow: hidden;
+      touch-action: none;
+    }
 
-    #app { display: block; }
+    #app {
+      display: block;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .24s ease, transform .24s ease;
+    }
+    #app.is-ready {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 4200;
+      display: grid;
+      place-items: center;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      background:
+        radial-gradient(circle at 14% 18%, rgba(56,189,248,0.20), transparent 40%),
+        radial-gradient(circle at 84% 78%, rgba(34,197,94,0.18), transparent 44%),
+        linear-gradient(180deg, rgba(2,6,23,0.98), rgba(2,6,23,1));
+      opacity: 1;
+      visibility: visible;
+      transition: opacity .34s ease, visibility .34s ease;
+    }
+    .splash-screen.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-card {
+      width: min(100%, 360px);
+      border-radius: 24px;
+      border: 1px solid rgba(71,85,105,0.62);
+      padding: 22px 18px;
+      text-align: center;
+      background: rgba(15,23,42,0.9);
+      box-shadow: 0 26px 50px rgba(2,6,23,0.58), inset 0 1px 0 rgba(255,255,255,0.08);
+      transform: translateY(8px) scale(.985);
+      opacity: 0;
+      animation: splashIn .36s cubic-bezier(.22, .8, .28, 1) .06s forwards;
+    }
+    .splash-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      margin: 0 auto 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: linear-gradient(135deg, rgba(56,189,248,0.28), rgba(34,197,94,0.24));
+      border: 1px solid rgba(148,163,184,0.4);
+      box-shadow: 0 12px 24px rgba(2,6,23,0.34);
+    }
+    .splash-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #f8fafc;
+      margin-bottom: 5px;
+    }
+    .splash-subtitle {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+    @keyframes splashIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
     .app-shell {
       width: 100%;
@@ -92,6 +166,9 @@
     }
 
     button { cursor: pointer; }
+    button:active {
+      transform: scale(0.98);
+    }
 
     #addBtn,
     #goldGuideBtn {
@@ -1140,6 +1217,14 @@
       transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
       overflow: hidden;
     }
+    .item.item-enter {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: itemEnter .22s ease forwards;
+    }
+    @keyframes itemEnter {
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .item::before {
       content: "";
@@ -1380,16 +1465,22 @@
       position: fixed;
       inset: 0;
       z-index: 1400;
-      display: none;
+      display: flex;
       align-items: flex-end;
       justify-content: center;
       padding: 18px;
       background: rgba(2,6,23,0.66);
       backdrop-filter: blur(8px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .2s ease, visibility .2s ease;
     }
 
     .spot-detail-modal.show {
-      display: flex;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .spot-detail-card {
@@ -1402,6 +1493,13 @@
       background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,1));
       box-shadow: 0 26px 60px rgba(2,6,23,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
       overflow: hidden;
+      transform: translateY(12px) scale(.985);
+      opacity: 0;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    .spot-detail-modal.show .spot-detail-card {
+      transform: translateY(0) scale(1);
+      opacity: 1;
     }
 
     .spot-detail-top {
@@ -3122,6 +3220,17 @@
 @media (max-width: 520px) {
   .history-preview-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
   
@@ -6782,6 +6891,14 @@ select {
 </head>
 <body>
 
+  <div id="splashScreen" class="splash-screen" aria-hidden="true">
+    <div class="splash-card">
+      <div class="splash-icon">🧭</div>
+      <div class="splash-title">Alan Defteri</div>
+      <div class="splash-subtitle">Harita, saha notu ve işaret yönetimi</div>
+    </div>
+  </div>
+
   <!-- ✅ Toast -->
   <div id="toast"></div>
 
@@ -8514,6 +8631,9 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const countEl = document.getElementById("count");
 
     const appContainer = document.getElementById("app");
+    const splashScreen = document.getElementById("splashScreen");
+    const splashStartedAt = Date.now();
+    let splashClosed = false;
 
     const autoHistoryBtn = document.getElementById("autoHistoryBtn");
 
@@ -9234,6 +9354,24 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }, delay);
     }
 
+    function revealMainApp() {
+      if (!appContainer) return;
+      appContainer.classList.add("is-ready");
+    }
+
+    function closeSplash(force = false) {
+      if (splashClosed) return;
+      const minVisibleMs = force ? 900 : 1100;
+      const elapsed = Date.now() - splashStartedAt;
+      const wait = Math.max(0, minVisibleMs - elapsed);
+      setTimeout(() => {
+        if (splashClosed) return;
+        splashClosed = true;
+        splashScreen?.classList.add("is-hidden");
+        revealMainApp();
+      }, wait);
+    }
+
     function askConfirm({ title, message, okText, cancelText }) {
       return new Promise((resolve) => {
         if (!confirmSheetEl) {
@@ -9431,6 +9569,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!spotDetailModal) return;
       spotDetailModal.classList.remove("show");
       spotDetailModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
     }
 
     function openSpotDetail(id) {
@@ -9490,7 +9629,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         `Etiket sayısı: ${tags.length}`
       ];
       spotDetailMeta.classList.remove("is-empty");
-      spotDetailMeta.innerHTML = metaLines.map((line) => `<div>${escapeHtml(line)}</div>`).join("");
+      spotDetailMeta.replaceChildren();
+      metaLines.forEach((line) => {
+        const row = document.createElement("div");
+        row.textContent = line;
+        spotDetailMeta.appendChild(row);
+      });
 
       spotDetailVisitBtn.onclick = () => {
         markVisitedToday(spot.id);
@@ -9513,6 +9657,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
       spotDetailModal.classList.add("show");
       spotDetailModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
     }
 
     function renderFormPhotoPreview() {
@@ -11968,6 +12113,7 @@ out tags geom qt;`;
         const marker = L.marker([lat, lon], {
           icon: markerIconForSpot(spot)
         }).bindPopup(popupHtml);
+        marker.on("click", () => openSpotDetail(spot.id));
 
         spotMarkersById.set(String(spot.id), marker);
         markersLayer.addLayer(marker);
@@ -12053,7 +12199,7 @@ out tags geom qt;`;
 
       allSpots.forEach((spot) => {
         const li = document.createElement("li");
-        li.className = "item";
+        li.className = "item item-enter";
         li.dataset.id = spot.id;
         if (selectedSpotId && String(selectedSpotId) === String(spot.id)) li.classList.add("is-selected");
 
@@ -15751,6 +15897,7 @@ function updateHistoryPreview(rawText) {
       safeAction("updateMapToolTexts", updateMapToolTexts)();
       safeAction("updateMapToolStates", updateMapToolStates)();
       safeAction("render", render)();
+      closeSplash(false);
     }
 
     window.addEventListener("error", (event) => {
@@ -15773,7 +15920,10 @@ function updateHistoryPreview(rawText) {
       }
 
       startApp();
+      requestAnimationFrame(() => closeSplash(false));
     });
+    window.addEventListener("load", () => closeSplash(true));
+    setTimeout(() => closeSplash(true), 1800);
   </script>
 <script>
     // 📱 Android klavye açıldığında görünür alan yüksekliğini doğru hesapla
