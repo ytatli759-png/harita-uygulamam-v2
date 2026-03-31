@@ -16557,5 +16557,147 @@ function updateHistoryPreview(rawText) {
   .gold-warning-banner { border-color: var(--warning-soft) !important; color: #f5ddac !important; background: linear-gradient(180deg, rgba(94,64,25,0.24), rgba(13,23,41,0.82)) !important; }
 </style>
 
+<style id="contrast-readability-upgrade-v3">
+  :root {
+    --light-surface-title: #0f172a;
+    --light-surface-body: #1f2937;
+    --light-surface-muted: #334155;
+    --dark-surface-title: #f8fafc;
+    --dark-surface-body: #dbe5f3;
+    --dark-surface-muted: #9fb0c9;
+    --light-surface-border: rgba(15, 23, 42, 0.22);
+  }
+
+  /* Açık yüzeylerde metin: koyu ve güçlü hiyerarşi */
+  #addBtn,
+  #goldGuideBtn {
+    color: var(--light-surface-body) !important;
+    border-color: var(--light-surface-border) !important;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18) !important;
+  }
+
+  #addBtn {
+    background: linear-gradient(140deg, #c3e6ff 0%, #9fd1ff 52%, #d9efff 100%) !important;
+  }
+
+  #goldGuideBtn {
+    background: linear-gradient(140deg, #f6d777 0%, #e8be54 54%, #f9e6b0 100%) !important;
+  }
+
+  #addBtn::before,
+  #goldGuideBtn::before {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)) !important;
+  }
+
+  #addBtn .hero-btn-title,
+  #goldGuideBtn .hero-btn-title {
+    color: var(--light-surface-title) !important;
+    font-weight: 820 !important;
+    letter-spacing: -0.015em;
+  }
+
+  #addBtn .hero-btn-subtitle,
+  #goldGuideBtn .hero-btn-subtitle {
+    color: var(--light-surface-body) !important;
+    opacity: 0.96 !important;
+    font-weight: 640 !important;
+    line-height: 1.42 !important;
+  }
+
+  #addBtn .hero-btn-icon,
+  #goldGuideBtn .hero-btn-icon {
+    color: var(--light-surface-title) !important;
+    background: rgba(255, 255, 255, 0.36) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56), 0 6px 14px rgba(15, 23, 42, 0.14) !important;
+  }
+
+  #addBtn:hover,
+  #goldGuideBtn:hover,
+  #addBtn:focus-visible,
+  #goldGuideBtn:focus-visible {
+    filter: saturate(1.03) !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22) !important;
+    border-color: rgba(15, 23, 42, 0.34) !important;
+  }
+
+  /* Üst başlık ve arama/aksiyon metinleri */
+  h1 {
+    color: var(--dark-surface-title) !important;
+    letter-spacing: -0.032em;
+  }
+
+  .subtitle {
+    color: var(--dark-surface-muted) !important;
+  }
+
+  .search-shell,
+  .compact-search-shell {
+    border-color: rgba(148, 163, 184, 0.3) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 20px rgba(2,6,23,0.18) !important;
+  }
+
+  #searchInput {
+    color: var(--dark-surface-body) !important;
+    font-weight: 560;
+  }
+
+  #searchInput::placeholder {
+    color: #90a4bf !important;
+  }
+
+  .search-toggle-btn,
+  #settingsBtn.header-settings-btn {
+    color: #e6edf8 !important;
+    font-weight: 760 !important;
+  }
+
+  /* Alt bilgi paneli ve premium durum metinleri */
+  .analysis-usage-title {
+    color: var(--dark-surface-title) !important;
+    font-weight: 860 !important;
+  }
+
+  .analysis-usage-sub {
+    color: var(--dark-surface-body) !important;
+  }
+
+  .analysis-usage-pill,
+  #analysisAdBtn,
+  #analysisPremiumBtn {
+    font-weight: 760 !important;
+    letter-spacing: -0.01em;
+  }
+
+  #analysisUsagePill,
+  .analysis-usage-pill.premium {
+    color: #e8fff2 !important;
+  }
+
+  .analysis-plan-card {
+    border-color: rgba(148,163,184,0.44) !important;
+  }
+
+  .analysis-plan-name,
+  .analysis-plan-sub,
+  .analysis-plan-points,
+  .analysis-plan-check {
+    color: #e5ecf8 !important;
+  }
+
+  @media (max-width: 520px) {
+    #addBtn .hero-btn-title,
+    #goldGuideBtn .hero-btn-title {
+      font-size: 14px !important;
+      line-height: 1.22 !important;
+    }
+
+    #addBtn .hero-btn-subtitle,
+    #goldGuideBtn .hero-btn-subtitle {
+      font-size: 11px !important;
+      line-height: 1.34 !important;
+    }
+  }
+</style>
+
 </body>
 </html>
