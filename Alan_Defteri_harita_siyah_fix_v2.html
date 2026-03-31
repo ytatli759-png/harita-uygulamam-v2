@@ -165,9 +165,32 @@
       color: #9ca3af;
     }
 
-    button { cursor: pointer; }
+    :root {
+      --ease-premium: cubic-bezier(.22,.78,.26,1);
+      --ease-smooth-out: cubic-bezier(.2,.72,.22,1);
+    }
+
+    button {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
     button:active {
-      transform: scale(0.98);
+      transform: scale(0.978);
+      transition-duration: .12s;
+    }
+    button:focus-visible {
+      outline: 2px solid rgba(96,165,250,0.62);
+      outline-offset: 2px;
+    }
+
+    .ui-card-reveal {
+      opacity: 0;
+      transform: translateY(7px);
+      animation: cardReveal .22s var(--ease-premium) forwards;
+      animation-delay: var(--card-delay, 0ms);
+    }
+    @keyframes cardReveal {
+      to { opacity: 1; transform: translateY(0); }
     }
 
     #addBtn,
@@ -875,10 +898,13 @@
       justify-content: center;
       padding: 18px;
       z-index: 3500;
+      opacity: 0;
+      transition: opacity .22s var(--ease-premium);
     }
 
     .photo-lightbox.show {
       display: flex;
+      opacity: 1;
     }
 
     .photo-lightbox-card {
@@ -1490,7 +1516,7 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity .2s ease, visibility .2s ease;
+      transition: opacity .24s var(--ease-premium), visibility .24s var(--ease-premium);
     }
 
     .spot-detail-modal.show {
@@ -1509,13 +1535,17 @@
       background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,1));
       box-shadow: 0 26px 60px rgba(2,6,23,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
       overflow: hidden;
-      transform: translateY(12px) scale(.985);
+      transform: translateY(12px) scale(.986);
       opacity: 0;
-      transition: transform .22s ease, opacity .22s ease;
+      transition: transform .26s var(--ease-premium), opacity .22s var(--ease-premium);
     }
     .spot-detail-modal.show .spot-detail-card {
       transform: translateY(0) scale(1);
       opacity: 1;
+    }
+    .spot-detail-modal.is-closing .spot-detail-card {
+      transform: translateY(8px) scale(.992);
+      opacity: 0;
     }
 
     .spot-detail-top {
@@ -1925,6 +1955,20 @@
       border: 1px solid #1f2937;
       padding: 10px;
       background: radial-gradient(circle at top, rgba(30,64,175,0.8), #020617 70%);
+      opacity: 0;
+      transform: translateY(8px) scale(.992);
+      transition: opacity .2s var(--ease-smooth-out), transform .2s var(--ease-smooth-out);
+      will-change: transform, opacity;
+    }
+    #goldPanel.is-open,
+    #settingsPanel.is-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    #goldPanel.is-closing,
+    #settingsPanel.is-closing {
+      opacity: 0;
+      transform: translateY(5px) scale(.994);
     }
     .gallery-header {
       display: flex;
@@ -2288,8 +2332,8 @@
     #toast {
       position: fixed;
       left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(8px) scale(.992);
       min-width: 170px;
       max-width: min(92vw, 420px);
       padding: 10px 14px;
@@ -2303,13 +2347,17 @@
       box-shadow: 0 16px 38px rgba(0,0,0,0.45);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-      z-index: 1200;
+      transition: opacity .22s var(--ease-premium), transform .22s var(--ease-premium);
+      z-index: 1600;
       backdrop-filter: blur(10px);
     }
     #toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(-4px);
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    #toast.is-leaving {
+      opacity: 0;
+      transform: translateX(-50%) translateY(6px) scale(.992);
     }
     #toast.success {
       border-color: rgba(34,197,94,0.35);
@@ -2334,7 +2382,7 @@
       background: rgba(2,6,23,0.55);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.18s ease;
+      transition: opacity .22s var(--ease-premium);
       z-index: 1250;
       backdrop-filter: blur(4px);
     }
@@ -2349,11 +2397,17 @@
       border: 1px solid rgba(148,163,184,0.18);
       background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.98));
       box-shadow: 0 22px 52px rgba(0,0,0,0.42);
-      transform: translateY(14px);
-      transition: transform 0.18s ease;
+      transform: translateY(12px) scale(.988);
+      opacity: 0;
+      transition: transform .24s var(--ease-premium), opacity .22s var(--ease-premium);
     }
     .confirm-sheet.show .confirm-card {
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    .confirm-sheet.is-closing .confirm-card {
+      transform: translateY(8px) scale(.992);
+      opacity: 0;
     }
     .confirm-kicker {
       margin-bottom: 8px;
@@ -2400,6 +2454,17 @@
       background: linear-gradient(135deg, #ef4444, #dc2626);
       color: white;
       box-shadow: 0 12px 28px rgba(220,38,38,0.28);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
 
     @media (max-width: 600px) {
@@ -8653,6 +8718,7 @@ select {
 
     const goldPanel = document.getElementById("goldPanel");
     const settingsPanel = document.getElementById("settingsPanel");
+    const PANEL_ANIMATION_MS = 220;
 
     const goldCloseBtn = document.getElementById("goldCloseBtn");
     const mapWrapper = document.querySelector(".map-wrapper");
@@ -8721,6 +8787,23 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const splashScreen = document.getElementById("splashScreen");
     const splashStartedAt = Date.now();
     let splashClosed = false;
+
+    function openSurfacePanel(panel) {
+      if (!panel) return;
+      panel.classList.remove("is-closing");
+      panel.style.display = "block";
+      requestAnimationFrame(() => panel.classList.add("is-open"));
+    }
+
+    function closeSurfacePanel(panel) {
+      if (!panel) return;
+      panel.classList.remove("is-open");
+      panel.classList.add("is-closing");
+      setTimeout(() => {
+        panel.classList.remove("is-closing");
+        panel.style.display = "none";
+      }, PANEL_ANIMATION_MS);
+    }
 
     const autoHistoryBtn = document.getElementById("autoHistoryBtn");
 
@@ -9430,16 +9513,41 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return out;
     }
 
-    function showToast(msg, type = "info", delay = 1600) {
+    function showToast(msg, type = "info", delay = 1700) {
       if (!toastEl) return;
-      toastEl.textContent = msg;
-      toastEl.classList.remove("success", "error", "info");
-      toastEl.classList.add(type || "info");
-      toastEl.classList.add("show");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => {
-        toastEl.classList.remove("show", "success", "error", "info");
-      }, delay);
+      const now = Date.now();
+      const item = { msg: String(msg || ""), type: type || "info", delay: Math.max(1200, delay | 0) };
+      if (!item.msg) return;
+      if (showToast._last && showToast._last.msg === item.msg && (now - showToast._last.at) < 900) return;
+      showToast._last = { msg: item.msg, at: now };
+      showToast._queue = showToast._queue || [];
+      if (showToast._queue.length >= 3) showToast._queue.shift();
+      showToast._queue.push(item);
+      if (showToast._busy) return;
+
+      const playNext = () => {
+        const next = showToast._queue.shift();
+        if (!next) {
+          showToast._busy = false;
+          return;
+        }
+        showToast._busy = true;
+        toastEl.textContent = next.msg;
+        toastEl.classList.remove("success", "error", "info", "is-leaving");
+        toastEl.classList.add(next.type, "show");
+        clearTimeout(showToast._hideTimer);
+        clearTimeout(showToast._doneTimer);
+        showToast._hideTimer = setTimeout(() => {
+          toastEl.classList.remove("show");
+          toastEl.classList.add("is-leaving");
+        }, next.delay);
+        showToast._doneTimer = setTimeout(() => {
+          toastEl.classList.remove("success", "error", "info", "is-leaving");
+          playNext();
+        }, next.delay + 230);
+      };
+
+      playNext();
     }
 
     function revealMainApp() {
@@ -9471,17 +9579,22 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         confirmMessageEl.textContent = message || ux('confirm_message');
         confirmOkBtn.textContent = okText || ux('confirm_ok');
         confirmCancelBtn.textContent = cancelText || ux('confirm_cancel');
+        confirmSheetEl.classList.remove('is-closing');
         confirmSheetEl.classList.add('show');
         confirmSheetEl.setAttribute('aria-hidden', 'false');
 
         const cleanup = (value) => {
+          confirmSheetEl.classList.add('is-closing');
           confirmSheetEl.classList.remove('show');
-          confirmSheetEl.setAttribute('aria-hidden', 'true');
           confirmCancelBtn.onclick = null;
           confirmOkBtn.onclick = null;
           confirmSheetEl.onclick = null;
           window.removeEventListener('keydown', onKey);
-          resolve(value);
+          setTimeout(() => {
+            confirmSheetEl.classList.remove('is-closing');
+            confirmSheetEl.setAttribute('aria-hidden', 'true');
+            resolve(value);
+          }, 220);
         };
 
         const onKey = (e) => {
@@ -9636,15 +9749,20 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!photoLightbox || !photoLightboxImg || !photoLightboxCaption) return;
       photoLightboxImg.src = dataUrl;
       photoLightboxCaption.textContent = caption;
+      photoLightbox.classList.remove("is-closing");
       photoLightbox.classList.add("show");
       photoLightbox.setAttribute("aria-hidden", "false");
     }
 
     function closePhotoLightbox() {
       if (!photoLightbox || !photoLightboxImg) return;
+      photoLightbox.classList.add("is-closing");
       photoLightbox.classList.remove("show");
-      photoLightbox.setAttribute("aria-hidden", "true");
-      photoLightboxImg.src = "";
+      setTimeout(() => {
+        photoLightbox.classList.remove("is-closing");
+        photoLightbox.setAttribute("aria-hidden", "true");
+        photoLightboxImg.src = "";
+      }, 220);
     }
 
 
@@ -9655,9 +9773,13 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function closeSpotDetail() {
       activeDetailSpotId = null;
       if (!spotDetailModal) return;
+      spotDetailModal.classList.add("is-closing");
       spotDetailModal.classList.remove("show");
-      spotDetailModal.setAttribute("aria-hidden", "true");
-      document.body.classList.remove("modal-open");
+      setTimeout(() => {
+        spotDetailModal.classList.remove("is-closing");
+        spotDetailModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+      }, 240);
     }
 
     function openSpotDetail(id) {
@@ -9743,6 +9865,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         await removeSpot(spot.id);
       };
 
+      spotDetailModal.classList.remove("is-closing");
       spotDetailModal.classList.add("show");
       spotDetailModal.setAttribute("aria-hidden", "false");
       document.body.classList.add("modal-open");
@@ -12404,8 +12527,8 @@ out tags geom qt;`;
     }
 
     function normalizeViewForForm() {
-      if (goldPanel) goldPanel.style.display = "none";
-      if (settingsPanel) settingsPanel.style.display = "none";
+      if (goldPanel) closeSurfacePanel(goldPanel);
+      if (settingsPanel) closeSurfacePanel(settingsPanel);
       setGoldMode(false);
       setTimeout(() => {
         try { map && map.invalidateSize(true); } catch {}
@@ -15876,8 +15999,8 @@ function updateHistoryPreview(rawText) {
       if (!goldPanel) return;
       formContainer.style.display = "none";
       resetMapEvaluationCard();
-      goldPanel.style.display = "block";
-      if (settingsPanel) settingsPanel.style.display = "none";
+      openSurfacePanel(goldPanel);
+      if (settingsPanel) closeSurfacePanel(settingsPanel);
       setGoldMode(true);
       setTimeout(() => {
         try { map && map.invalidateSize(true); } catch {}
@@ -15885,7 +16008,7 @@ function updateHistoryPreview(rawText) {
       }, 120);
     });
     safeBindClick(goldCloseBtn, "goldCloseBtn", () => {
-      if (goldPanel) goldPanel.style.display = "none";
+      if (goldPanel) closeSurfacePanel(goldPanel);
       setGoldMode(false);
     });
 
@@ -15910,15 +16033,15 @@ function updateHistoryPreview(rawText) {
       formContainer.style.display = "none";
       resetMapEvaluationCard();
       setGoldMode(false);
-      settingsPanel.style.display = "block";
-      goldPanel.style.display = "none";
+      openSurfacePanel(settingsPanel);
+      closeSurfacePanel(goldPanel);
       renderHistoryVerificationSummary();
       setTimeout(() => {
         try { map && map.invalidateSize(true); } catch {}
       }, 120);
     });
     safeBindClick(settingsCloseBtn, "settingsCloseBtn", () => {
-      settingsPanel.style.display = "none";
+      closeSurfacePanel(settingsPanel);
     });
 
     renderHistoryVerificationSummary();
@@ -15989,12 +16112,24 @@ function updateHistoryPreview(rawText) {
     safeBindClick(mapPresetSatelliteBtn, "mapPresetSatelliteBtn", () => applyBaseLayerByTheme("satellite"));
     safeBindClick(mapPresetDarkBtn, "mapPresetDarkBtn", () => applyBaseLayerByTheme("dark"));
 
+    function applyInitialCardReveal() {
+      const nodes = document.querySelectorAll(
+        ".map-header-card, .map-stage, .records-toolbar, #list .item, #formContainer, .search-shell, .empty-state-card"
+      );
+      nodes.forEach((node, index) => {
+        if (!node || node.classList.contains("ui-card-reveal")) return;
+        node.style.setProperty("--card-delay", `${Math.min(index, 4) * 26}ms`);
+        node.classList.add("ui-card-reveal");
+      });
+    }
+
     function startApp() {
       if (appContainer) appContainer.style.display = "block";
       bootMap();
       safeAction("updateMapToolTexts", updateMapToolTexts)();
       safeAction("updateMapToolStates", updateMapToolStates)();
       safeAction("render", render)();
+      requestAnimationFrame(applyInitialCardReveal);
       closeSplash(false);
     }
 
