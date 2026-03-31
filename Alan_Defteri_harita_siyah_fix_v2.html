@@ -9158,6 +9158,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldWaterLayer = null;
     let goldWaterWaysById = new Map(); // osmWayId -> L.Polyline
     let goldTilesLoaded = new Set();   // "z/x/y|waterwayRegex"
+    let goldTilesVerified = new Set(); // cache'ten çizilen tile'ların bu oturumda ağ ile doğrulandığı set
     let goldFetchQueue = [];
     let goldFetching = 0;
     let goldAbortCtrl = null;
@@ -9462,10 +9463,11 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     }
 
     // ✅ Altın Modu su ağı cache (hızlı tekrar yükleme için)
-    const GOLD_WATER_CACHE_PREFIX = "ai_gold_water_tile_v1:";
-    const GOLD_WATER_CACHE_INDEX_KEY = "ai_gold_water_tile_index_v1";
+    const GOLD_WATER_CACHE_PREFIX = "ai_gold_water_tile_v2:";
+    const GOLD_WATER_CACHE_INDEX_KEY = "ai_gold_water_tile_index_v2";
     const GOLD_WATER_CACHE_MAX = 28;           // cihazda tutulacak tile sayısı (yaklaşık)
     const GOLD_WATER_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 gün
+    const GOLD_WATER_CACHE_SCHEMA = 2;
     const GOLD_LAST_RESULT_CACHE_KEY = "ai_gold_last_result_v1";
     const GOLD_LAST_RESULT_TTL_MS = 1000 * 60 * 60 * 6; // 6 saat
     const GOLD_POINT_RESULT_CACHE_PREFIX = "ai_gold_point_result_v2:";
@@ -11378,7 +11380,8 @@ function initMap() {
           return {
             elements: Array.isArray(it.data && it.data.elements) ? it.data.elements : [],
             _cacheTs: it.ts,
-            _isStale: (Date.now() - it.ts) > GOLD_CACHE_SOFT_TTL_MS
+            _isStale: (Date.now() - it.ts) > GOLD_CACHE_SOFT_TTL_MS,
+            _schema: Number(it.data && it.data.schema) || 1
           };
         }
         goldSessionTileCache.delete(ckey);
@@ -11390,18 +11393,24 @@ function initMap() {
         if (!raw) return null;
         const obj = JSON.parse(raw);
         if (!obj || !obj.ts || !Array.isArray(obj.elements)) return null;
+        const schema = Number(obj.schema) || 1;
+        if (schema !== GOLD_WATER_CACHE_SCHEMA) {
+          try { localStorage.removeItem(ckey); } catch {}
+          return null;
+        }
         if ((Date.now() - obj.ts) > maxAge) {
           if (!allowStale) {
             try { localStorage.removeItem(ckey); } catch {}
           }
           return null;
         }
-        const data = { elements: obj.elements };
+        const data = { elements: obj.elements, schema };
         goldSessionTileCache.set(ckey, { ts: obj.ts, data });
         return {
           elements: obj.elements,
           _cacheTs: obj.ts,
-          _isStale: (Date.now() - obj.ts) > GOLD_CACHE_SOFT_TTL_MS
+          _isStale: (Date.now() - obj.ts) > GOLD_CACHE_SOFT_TTL_MS,
+          _schema: schema
         };
       } catch {
         return null;
@@ -11410,10 +11419,10 @@ function initMap() {
 
     function goldSaveCachedTile(tileKey, wRegex, elements) {
       const ckey = goldMakeTileCacheKey(tileKey, wRegex);
-      const payload = { ts: Date.now(), elements };
+      const payload = { ts: Date.now(), elements, schema: GOLD_WATER_CACHE_SCHEMA };
 
       // Session
-      goldSessionTileCache.set(ckey, { ts: payload.ts, data: { elements } });
+      goldSessionTileCache.set(ckey, { ts: payload.ts, data: { elements, schema: GOLD_WATER_CACHE_SCHEMA } });
 
       // localStorage + basit LRU
       try {
@@ -11491,6 +11500,7 @@ function goldResetWater() {
       if (goldWaterLayer) goldWaterLayer.clearLayers();
       goldWaterWaysById.clear();
       goldTilesLoaded.clear();
+      goldTilesVerified.clear();
       goldFetchQueue = [];
       goldFetching = 0;
       goldTilesInFlight.clear();
@@ -11537,6 +11547,8 @@ function goldResetWater() {
       if (on) {
         if (goldMode) return;
         goldMode = true;
+        // Her açılışta temiz bir yükleme oturumu başlat: "zaten yüklü" flag'leri kilitlemesin.
+        goldResetWater();
 
         // Önceki katman durumlarını sakla
         goldPrevBaseLayer = currentBaseLayer;
@@ -11868,7 +11880,8 @@ out tags geom qt;`;
         const lk = makeGoldTileLoadKey(k, waterRegex);
         const cooldownKey = makeGoldTileLoadKey(k, waterRegex);
         const coolingDown = (goldTileFailureCooldownUntil.get(cooldownKey) || 0) > nowTs;
-        return !goldTilesLoaded.has(lk) && !queued.has(k) && !goldTilesInFlight.has(lk) && !coolingDown;
+        const alreadyLoaded = goldTilesLoaded.has(lk);
+        return (force || !alreadyLoaded) && !queued.has(k) && !goldTilesInFlight.has(lk) && !coolingDown;
       });
 
       if (!missing.length && !force) {
@@ -12121,7 +12134,8 @@ out tags geom qt;`;
           await renderGoldWaterItems(cached.elements, zoomNow);
           scheduleGoldRepaint();
           goldTilesLoaded.add(loadKey);
-          if (!cached._isStale) return;
+          // Cache-first + verify-after: her tile en az bir kez ağdan doğrulanır.
+          if (!cached._isStale && goldTilesVerified.has(loadKey)) return;
         }
 
         const query = `
@@ -12173,6 +12187,7 @@ out tags geom qt;`;
 
         scheduleGoldRepaint();
         goldTilesLoaded.add(loadKey);
+        goldTilesVerified.add(loadKey);
       } catch (e) {
         if (e && e.name === "AbortError") return;
         if (cycleId && cycleId !== goldTileCycleId) return;
