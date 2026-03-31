@@ -7280,7 +7280,8 @@ select {
           </div>
           <div class="analysis-usage-actions">
             <div id="analysisUsagePill" class="analysis-usage-pill">10 hak kaldı</div>
-                        <button type="button" id="analysisPremiumBtn" class="analysis-usage-btn">Premium</button>
+            <button type="button" id="analysisAdBtn" class="analysis-usage-btn ad">🎬 Reklam</button>
+            <button type="button" id="analysisPremiumBtn" class="analysis-usage-btn">Premium</button>
           </div>
         </div>
 
@@ -8822,6 +8823,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const analysisUsageTitle = document.getElementById("analysisUsageTitle");
     const analysisUsageSub = document.getElementById("analysisUsageSub");
     const analysisUsagePill = document.getElementById("analysisUsagePill");
+    const analysisAdBtn = document.getElementById("analysisAdBtn");
     const analysisPremiumBtn = document.getElementById("analysisPremiumBtn");
     const analysisPremiumModal = document.getElementById("analysisPremiumModal");
     const analysisPremiumModalTitle = document.getElementById("analysisPremiumModalTitle");
@@ -8999,6 +9001,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
           analysisUsagePill.textContent = "Sınırsız kullanım";
           analysisUsagePill.className = "analysis-usage-pill premium";
         }
+        if (analysisAdBtn) analysisAdBtn.textContent = "Reklamsız";
         if (analysisPremiumBtn) analysisPremiumBtn.textContent = "Premium açık";
         return;
       }
@@ -9009,6 +9012,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         analysisUsagePill.textContent = `${remaining} hak kaldı`;
         analysisUsagePill.className = `analysis-usage-pill${low ? ' low' : ''}`;
       }
+      if (analysisAdBtn) analysisAdBtn.textContent = remaining > 0 ? "🎬 Reklam" : "🎬 +1 hak";
       if (analysisPremiumBtn) analysisPremiumBtn.textContent = remaining > 0 ? "Premium" : "Kilidi aç";
     }
 
@@ -15559,6 +15563,13 @@ function updateHistoryPreview(rawText) {
     });
 
     safeBindClick(analysisPremiumBtn, "analysisPremiumBtn", () => openAnalysisPremiumModal("manual"));
+    safeBindClick(analysisAdBtn, "analysisAdBtn", () => {
+      if (isPremiumUnlocked()) {
+        showToast("Premium açıkken reklam gösterimi kapalıdır.", "info", 1700);
+        return;
+      }
+      showToast("Reklam ödülü özelliği yakında aktif olacak.", "info", 2000);
+    });
     safeBindClick(analysisPremiumLaterBtn, "analysisPremiumLaterBtn", closeAnalysisPremiumModal);
     safeBindClick(analysisPremiumCloseBtn, "analysisPremiumCloseBtn", closeAnalysisPremiumModal);
     analysisPlanCards.forEach((card) => {
@@ -15906,6 +15917,152 @@ function updateHistoryPreview(rawText) {
     transform: translateY(-1px);
     border-color: rgba(254, 202, 202, 0.98) !important;
     box-shadow: 0 0 0 1px rgba(254, 202, 202, 0.20), 0 18px 36px rgba(153, 27, 27, 0.42) !important;
+  }
+</style>
+
+<style id="mobile-stability-patch-v1">
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .app-shell,
+  #goldPanel,
+  #settingsPanel,
+  #formContainer,
+  .analysis-premium-card,
+  .map-eval-card,
+  .item,
+  .records-toolbar,
+  .search-shell,
+  .map-stage {
+    max-width: 100%;
+  }
+
+  .analysis-usage-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  #analysisUsagePill,
+  #analysisAdBtn,
+  #analysisPremiumBtn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #analysisAdBtn.ad {
+    background: linear-gradient(180deg, rgba(8, 47, 73, 0.95), rgba(12, 74, 110, 0.95));
+    border-color: rgba(56, 189, 248, 0.34);
+    color: #e0f2fe;
+  }
+
+  @media (max-width: 768px) {
+    .analysis-usage-actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #analysisUsagePill {
+      grid-column: span 2;
+      text-align: center;
+    }
+
+    #map {
+      height: clamp(300px, 43vh, 440px);
+      min-height: 300px;
+    }
+
+    .map-hud {
+      top: 10px;
+      left: 10px;
+      right: 10px;
+    }
+
+    .map-hud-left {
+      max-width: calc(100% - 6px);
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .map-hud-chip {
+      max-width: 100%;
+      font-size: 11px;
+    }
+
+    .map-tools,
+    .map-tools.secondary,
+    .map-eval-actions,
+    .form-buttons,
+    .spot-detail-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .map-tools .btn-small,
+    .map-tools.secondary .btn-small,
+    .map-eval-actions button,
+    .form-buttons button,
+    .spot-detail-actions .btn-small {
+      width: 100%;
+      min-height: 46px;
+    }
+
+    #coordBar {
+      word-break: break-word;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .app-shell {
+      padding-inline: 10px;
+    }
+
+    .primary-actions #addBtn,
+    .primary-actions #goldGuideBtn {
+      min-height: 64px;
+      padding: 12px;
+    }
+
+    .hero-btn-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 19px;
+    }
+
+    .hero-btn-title {
+      font-size: 15px;
+    }
+
+    .hero-btn-subtitle {
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .analysis-usage-actions,
+    .map-tools,
+    .map-tools.secondary,
+    .map-eval-actions,
+    .form-buttons,
+    .spot-detail-actions {
+      grid-template-columns: 1fr;
+    }
+
+    #analysisUsagePill {
+      grid-column: auto;
+    }
+
+    .search-toggle-btn,
+    .settings-data-actions button,
+    .btn-small,
+    .btn-primary,
+    .btn-secondary,
+    .analysis-usage-btn,
+    .analysis-premium-actions button {
+      min-height: 48px;
+    }
   }
 </style>
 
