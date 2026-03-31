@@ -5354,6 +5354,8 @@ select {
     --space-5: 24px;
     --shadow-polish: 0 18px 44px rgba(2, 6, 23, 0.30);
     --shadow-card: 0 14px 34px rgba(2, 6, 23, 0.22);
+    --hero-overlay: linear-gradient(180deg, rgba(2, 6, 23, 0.08), rgba(2, 6, 23, 0.40));
+    --copy-shadow: 0 1px 2px rgba(2, 6, 23, 0.54);
   }
 
   body {
@@ -5481,26 +5483,35 @@ select {
     padding: 14px 16px;
     border-radius: 20px;
     box-shadow: var(--shadow-card);
-    border: 1px solid rgba(255,255,255,0.10);
+    border: 1px solid rgba(203, 213, 225, 0.16);
     gap: 12px;
+    position: relative;
+    isolation: isolate;
   }
 
   #addBtn::before,
   #goldGuideBtn::before {
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+    background: var(--hero-overlay);
   }
 
   #addBtn {
-    background: linear-gradient(135deg, rgba(21, 128, 61, 0.98), rgba(34, 197, 94, 0.92));
-    color: #f0fdf4;
+    background:
+      radial-gradient(circle at 88% 14%, rgba(74, 222, 128, 0.16), transparent 42%),
+      linear-gradient(135deg, #0f3a3f 0%, #14524d 48%, #1a6a5d 100%);
+    color: #e6fff5;
   }
 
   #goldGuideBtn {
     background:
-      radial-gradient(circle at top right, rgba(250, 204, 21, 0.18), transparent 36%),
-      linear-gradient(135deg, rgba(25, 31, 46, 0.98), rgba(17, 24, 39, 0.98));
-    color: var(--text-primary);
-    border-color: rgba(250, 204, 21, 0.18);
+      radial-gradient(circle at top right, rgba(250, 204, 21, 0.12), transparent 34%),
+      linear-gradient(135deg, #2f2a1f 0%, #3f3828 52%, #53472d 100%);
+    color: #f6f3e8;
+    border-color: rgba(250, 204, 21, 0.22);
   }
 
   #goldGuideBtn .hero-btn-title {
@@ -5532,12 +5543,16 @@ select {
     font-size: 16px;
     font-weight: 800;
     letter-spacing: -0.02em;
+    color: #f5f8ff;
+    text-shadow: var(--copy-shadow);
   }
 
   .hero-btn-subtitle {
     font-size: 12px;
     line-height: 1.45;
-    opacity: 0.82;
+    opacity: 1;
+    color: rgba(226, 232, 240, 0.88);
+    text-shadow: 0 1px 1px rgba(2, 6, 23, 0.46);
   }
 
   .records-toolbar {
@@ -5549,8 +5564,8 @@ select {
     padding: 12px 14px;
     border-radius: 20px;
     border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(9, 16, 28, 0.88);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    background: linear-gradient(180deg, rgba(8, 14, 25, 0.94), rgba(6, 11, 21, 0.98));
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.26), inset 0 1px 0 rgba(255,255,255,0.03);
   }
 
   .search-icon {
@@ -5564,10 +5579,12 @@ select {
 
   #searchInput {
     font-size: 15px;
+    color: #edf3ff;
+    font-weight: 550;
   }
 
   #searchInput::placeholder {
-    color: #8ea0b5;
+    color: #9fb0c6;
   }
 
   #count,
@@ -5890,8 +5907,8 @@ select {
     padding: 22px;
     border: 1px solid rgba(148,163,184,0.16);
     background:
-      radial-gradient(circle at top right, rgba(56,189,248,0.08), transparent 36%),
-      linear-gradient(180deg, rgba(9, 16, 28, 0.98), rgba(4, 9, 18, 0.98));
+      radial-gradient(circle at top right, rgba(56,189,248,0.06), transparent 36%),
+      linear-gradient(180deg, rgba(9, 16, 28, 0.98), rgba(5, 10, 20, 0.98));
     box-shadow: 0 28px 60px rgba(2,6,23,0.46);
   }
 
@@ -5921,9 +5938,10 @@ select {
     padding: 12px 14px;
     border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(9, 16, 28, 0.88);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    background: linear-gradient(180deg, rgba(10, 18, 32, 0.94), rgba(6, 11, 21, 0.98));
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.24), inset 0 1px 0 rgba(255,255,255,0.03);
     font-size: 13px;
+    color: #e9effc;
   }
 
   .mobile-quickbar {
@@ -6866,17 +6884,18 @@ select {
   }
 
   .analysis-usage-kicker {
-    font-size: 9px !important;
+    font-size: 10px !important;
     letter-spacing: 0.10em !important;
   }
 
   .analysis-usage-title {
-    font-size: 15px !important;
+    font-size: 16px !important;
     line-height: 1.25 !important;
   }
 
   .analysis-usage-sub {
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
+    line-height: 1.45 !important;
   }
 
   .analysis-usage-actions {
@@ -6888,15 +6907,15 @@ select {
   }
 
   .analysis-usage-pill {
-    min-height: 30px !important;
-    padding: 6px 9px !important;
-    font-size: 10px !important;
+    min-height: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
   }
 
   .analysis-usage-btn {
-    min-height: 34px !important;
-    padding: 0 11px !important;
-    font-size: 11px !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
     border-radius: 12px !important;
     flex: 0 0 auto !important;
   }
@@ -7044,8 +7063,8 @@ select {
   #goldGuideBtn,
   .primary-actions #addBtn,
   .primary-actions #goldGuideBtn {
-    min-height: 56px !important;
-    padding: 10px 11px !important;
+    min-height: 64px !important;
+    padding: 12px 12px !important;
   }
 
   .hero-btn-icon {
@@ -7056,11 +7075,13 @@ select {
   }
 
   .hero-btn-title {
-    font-size: 13px !important;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
   }
 
   .hero-btn-subtitle {
-    font-size: 10px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
   }
 
   #map {
