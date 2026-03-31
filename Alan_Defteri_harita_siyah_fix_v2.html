@@ -6099,6 +6099,67 @@ select {
       stroke: #7dd3fc !important;
     }
 
+
+  .icon-core {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45em;
+    height: 1.45em;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(148,163,184,0.22), rgba(15,23,42,0.16));
+    border: 1px solid rgba(148,163,184,0.28);
+    font-size: .95em;
+    line-height: 1;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+  }
+
+  .hero-btn-icon .icon-core {
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.24);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  .gold-result-level-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .gold-level-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(71,85,105,0.56);
+    background: rgba(15,23,42,0.58);
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #cbd5e1;
+    line-height: 1.35;
+  }
+
+  .gold-level-chip strong {
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .gold-level-chip.tone-high strong { color: #facc15; }
+  .gold-level-chip.tone-mid strong { color: #93c5fd; }
+  .gold-level-chip.tone-low strong { color: #e2e8f0; }
+  .gold-level-chip.high strong { color: #22c55e; }
+  .gold-level-chip.mid strong { color: #93c5fd; }
+  .gold-level-chip.low strong { color: #fda4af; }
+
+  @media (max-width: 540px) {
+    .gold-result-level-row { grid-template-columns: 1fr; }
+  }
+
 </style>
 
   <style id="compact-sticky-search-override">
@@ -7000,24 +7061,24 @@ select {
             </div>
           </div>
           <button type="button" id="settingsBtn" class="header-settings-btn" aria-label="Ayarlar ve veri">
-            <span class="icon">⚙️</span>
+            <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
             <span class="settings-btn-text">Ayarlar</span>
           </button>
         </div>
-        <h1><span class="icon">💎</span>Nokta ve saha notları</h1>
+        <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
       </div>
 
       <div class="header-actions">
         <div class="primary-actions">
           <button type="button" id="addBtn">
-            <span class="hero-btn-icon">＋</span>
+            <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">＋</span></span>
             <span class="hero-btn-copy">
               <span class="hero-btn-title">Yeni nokta ekle</span>
               <span class="hero-btn-subtitle">Haritada seç, kısa bilgi ekle, kaydet</span>
             </span>
           </button>
           <button type="button" id="goldGuideBtn">
-            <span class="hero-btn-icon">✦</span>
+            <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">✦</span></span>
             <span class="hero-btn-copy">
               <span class="hero-btn-title">Hızlı saha analizi</span>
               <span class="hero-btn-subtitle">Su hattı ve nokta potansiyelini hızlı gör</span>
@@ -7082,7 +7143,7 @@ select {
             <span id="goldStatus" class="gold-toolbar-status">Hazır</span>
           </div>
 
-          <div id="goldResult"></div>
+          <div id="goldResult" role="status" aria-live="polite" aria-atomic="false"></div>
         </div>
       </div>
 
@@ -7155,7 +7216,7 @@ select {
       <div id="settingsPanel">
         <div class="gallery-header">
           <div class="gallery-title">
-            <span class="icon">⚙️</span>
+            <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
             <span id="settingsPanelTitle">Ayarlar ve veri bilgisi</span>
           </div>
           <button id="settingsCloseBtn">Kapat</button>
@@ -8446,7 +8507,7 @@ select {
       const hype = document.querySelector('.hype-strip');
       if (hype) hype.innerHTML = `<span class="spark">⚡</span> ${t('hype')} <span class="spark">⚡</span>`;
       const h1 = document.querySelector('h1');
-      if (h1) h1.innerHTML = `<span class="icon">💎</span>${t('h1')}`;
+      if (h1) h1.innerHTML = `<span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>${t('h1')}`;
       const sub = document.querySelector('.subtitle');
       if (sub) sub.textContent = t('subtitle');
 
@@ -8458,11 +8519,11 @@ select {
       const renderHeroBtn = (btn, icon, titleKey, subtitleKey) => {
         if (!btn) return;
         const subtitle = maybeT(subtitleKey);
-        btn.innerHTML = `<span class="hero-btn-icon">${icon}</span><span class="hero-btn-copy"><span class="hero-btn-title">${t(titleKey)}</span>${subtitle ? `<span class="hero-btn-subtitle">${subtitle}</span>` : ''}</span>`;
+        btn.innerHTML = `<span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">${icon}</span></span><span class="hero-btn-copy"><span class="hero-btn-title">${t(titleKey)}</span>${subtitle ? `<span class="hero-btn-subtitle">${subtitle}</span>` : ''}</span>`;
       };
       renderHeroBtn(addBtn, '＋', 'addPoint', 'addPointSub');
       renderHeroBtn(goldGuideBtn, '✦', 'goldGuide', 'goldGuideSub');
-      if (settingsBtn) { settingsBtn.innerHTML = `<span class="icon">⚙️</span><span class="settings-btn-text">${t('settings')}</span>`; settingsBtn.setAttribute('aria-label', t('settings')); settingsBtn.title = t('settings'); }
+      if (settingsBtn) { settingsBtn.innerHTML = `<span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span><span class="settings-btn-text">${t('settings')}</span>`; settingsBtn.setAttribute('aria-label', t('settings')); settingsBtn.title = t('settings'); }
       if (exportBtn) exportBtn.innerHTML = `<span class="icon">⬇️</span>${t('export')}`;
       if (importBtn) importBtn.innerHTML = `<span class="icon">⬆️</span>${t('import')}`;
 
@@ -8939,6 +9000,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const goldMicroToggleBtn = document.getElementById("goldMicroToggleBtn");
     const goldStatusEl = document.getElementById("goldStatus");
     const goldResultEl = document.getElementById("goldResult");
+    let goldLastMarkup = "";
     const analysisUsageBanner = document.getElementById("analysisUsageBanner");
     const analysisUsageTitle = document.getElementById("analysisUsageTitle");
     const analysisUsageSub = document.getElementById("analysisUsageSub");
@@ -10401,6 +10463,8 @@ function initMap() {
 
     function updateGoldResultMarkup(html) {
       if (!goldResultEl) return;
+      if (goldLastMarkup === html) return;
+      goldLastMarkup = html;
       const isMobileView = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
       const mapAnchorEl = document.querySelector('.map-stage') || document.querySelector('.map-wrapper') || document.getElementById('map');
       const shouldPreserveMapViewport = !!(isMobileView && goldMode && mapAnchorEl);
@@ -10630,7 +10694,9 @@ function initMap() {
   if (!goldResultEl || !payload) return;
   const score = Number(payload.score) || 0;
   const tone = score >= 70 ? 'high' : score >= 45 ? 'mid' : 'low';
-  const locText = `${payload.lat.toFixed(6)}, ${payload.lng.toFixed(6)}`;
+  const latNum = Number(payload.lat);
+  const lngNum = Number(payload.lng);
+  const locText = Number.isFinite(latNum) && Number.isFinite(lngNum) ? `${latNum.toFixed(6)}, ${lngNum.toFixed(6)}` : '—';
   const hasSlope = typeof payload.slope === 'number';
   const hasMrds = !!(payload.mrds && payload.mrds.ok);
   const isLimited = !!payload.statusNote;
@@ -10687,7 +10753,8 @@ function initMap() {
     ? goldUiText('dataFull')
     : ((hasSlope || hasMrds) ? goldUiText('dataPartial') : goldUiText('dataLimited'));
 
-  const statusLabel = score >= 70 ? 'Öncelikli kontrol' : score >= 45 ? 'Kontrol edilebilir' : 'Düşük öncelik';
+  const statusLabel = score >= 78 ? 'Yüksek potansiyel' : score >= 52 ? 'Orta potansiyel' : 'Düşük potansiyel';
+  const riskLabel = confidenceScore >= 74 ? 'Düşük belirsizlik' : confidenceScore >= 56 ? 'Orta belirsizlik' : 'Yüksek belirsizlik';
   let shortComment = 'Bu noktada güçlü sinyal görünmüyor.';
   if (payload.morphology?.transportDelta <= -10) shortComment = 'Akış güçlü; birikim ihtimali sınırlı görünüyor.';
   else if (payload.morphology?.confluenceBonus >= 10) shortComment = 'Birleşim cebi etkisi dikkat çekiyor.';
@@ -10735,7 +10802,7 @@ function initMap() {
   const detailItems = [
     t('goldSelWater').replace('{name}', payload.wName),
     t('goldTypeLine').replace('{type}', payload.wType).replace('{seasonal}', payload.intermittent ? t('goldSeasonal') : ''),
-    t('goldLoc').replace('{lat}', payload.lat.toFixed(6)).replace('{lng}', payload.lng.toFixed(6)),
+    t('goldLoc').replace('{lat}', Number.isFinite(latNum) ? latNum.toFixed(6) : '—').replace('{lng}', Number.isFinite(lngNum) ? lngNum.toFixed(6) : '—'),
     regionLabel ? `Bölgesel profil: ${regionLabel}` : 'Bölgesel profil: Genel konum',
     payload.locationSignals ? `Mikro profil: ${payload.locationSignals.microLabel}` : 'Mikro profil: Genel',
     payload.channelSignal ? `Kanal sinyali: ${payload.channelSignal.label}` : 'Kanal sinyali: Genel',
@@ -10781,6 +10848,10 @@ function initMap() {
           <div class="gold-summary-value">${escapeHtml(statusLabel)}</div>
           <div class="gold-summary-text">${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</div>
           <div class="gold-summary-text">Konum: ${escapeHtml(locText)}</div>
+          <div class="gold-result-level-row">
+            <div class="gold-level-chip tone-${tone}"><span>Potansiyel sınıfı</span><strong>${escapeHtml(statusLabel)}</strong></div>
+            <div class="gold-level-chip ${confidenceBand}"><span>Risk seviyesi</span><strong>${escapeHtml(riskLabel)}</strong></div>
+          </div>
         </div>
       </div>
 
@@ -15776,10 +15847,11 @@ function updateHistoryPreview(rawText) {
     updateSelectedAnalysisPlanUi();
     updateAnalysisUsageUi();
     safeBindClick(goldGuideBtn, "goldGuideBtn", () => {
+      if (!goldPanel) return;
       formContainer.style.display = "none";
       resetMapEvaluationCard();
       goldPanel.style.display = "block";
-      settingsPanel.style.display = "none";
+      if (settingsPanel) settingsPanel.style.display = "none";
       setGoldMode(true);
       setTimeout(() => {
         try { map && map.invalidateSize(true); } catch {}
@@ -15787,7 +15859,7 @@ function updateHistoryPreview(rawText) {
       }, 120);
     });
     safeBindClick(goldCloseBtn, "goldCloseBtn", () => {
-      goldPanel.style.display = "none";
+      if (goldPanel) goldPanel.style.display = "none";
       setGoldMode(false);
     });
 
