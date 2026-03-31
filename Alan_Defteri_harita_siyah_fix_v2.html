@@ -9173,6 +9173,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldFetchQueue = [];
     let goldFetching = 0;
     let goldAbortCtrl = null;
+    let goldTilesInFlight = new Set();
+    let goldRepaintRaf = 0;
     let goldMoveDebounce = null;
     let goldAnalysisRunId = 0;
     let goldActiveAnalysisKey = "";
@@ -10946,11 +10948,16 @@ function initMap() {
   else if (score >= 70) shortComment = 'Konumsal sinyaller güçlü görünüyor.';
   else if (score >= 45) shortComment = 'Kısa saha kontrolü için uygun görünüyor.';
 
+  const signedDelta = (value) => `${value >= 0 ? '+' : ''}${value}`;
   const quickReasons = [];
   if (payload.morphology?.primaryLabel) quickReasons.push(`Akış: ${payload.morphology.primaryLabel}`);
   if (payload.locationSignals?.historyDensityLabel) quickReasons.push(`Bölge: ${payload.locationSignals.historyDensityLabel}`);
   if (payload.channelSignal?.label) quickReasons.push(`Kanal: ${payload.channelSignal.label}`);
   if (payload.locationSignals?.water?.label) quickReasons.push(`Su hattı: ${payload.locationSignals.water.label}`);
+  if (Array.isArray(payload.scoreBreakdown?.components) && payload.scoreBreakdown.components.length) {
+    const dominant = payload.scoreBreakdown.components[0];
+    quickReasons.push(`${dominant.label}: ${signedDelta(dominant.value)}`);
+  }
   if (!quickReasons.length && payload.wType) quickReasons.push(`Su tipi: ${payload.wType}`);
   const visibleQuickReasons = getMapReasonItems(quickReasons);
 
@@ -10960,7 +10967,6 @@ function initMap() {
   else nextSteps.push('Gerekirse not al ve işaretle');
   nextSteps.push(payload.confluence ? 'Birleşim çevresini kısa kontrol et' : 'Yakın çevreyi hızlı karşılaştır');
 
-  const signedDelta = (value) => `${value >= 0 ? '+' : ''}${value}`;
   const whyItems = [];
   if (payload.morphology) {
     whyItems.push(`Akış profili: ${payload.morphology.primaryLabel}`);
@@ -10979,6 +10985,11 @@ function initMap() {
   }
   if (hasSlope) whyItems.push(`Eğim: ${payload.slope.toFixed(2)}%`);
   if (hasMrds) whyItems.push(`Yakın kayıtlar: ${payload.mrds.count}`);
+  if (Array.isArray(payload.scoreBreakdown?.components) && payload.scoreBreakdown.components.length) {
+    payload.scoreBreakdown.components.slice(0, 3).forEach((item) => {
+      whyItems.push(`Skor katkısı: ${item.label} (${signedDelta(item.value)})`);
+    });
+  }
   if (payload.intermittent) whyItems.push(goldUiText('whySeasonal'));
   if (!whyItems.length) whyItems.push('Bu sonuç temel konumsal sinyallerle üretildi.');
 
@@ -11098,8 +11109,30 @@ function initMap() {
       if (goldAbortCtrl) {
         try { goldAbortCtrl.abort(); } catch {}
       }
-      goldAbortCtrl = new AbortController();
+      goldAbortCtrl = null;
+      goldTilesInFlight.clear();
+      return null;
+    }
+
+    function getGoldNetworkSignal(forceNew = false) {
+      if (forceNew || !goldAbortCtrl) {
+        if (goldAbortCtrl) {
+          try { goldAbortCtrl.abort(); } catch {}
+        }
+        goldAbortCtrl = new AbortController();
+      }
       return goldAbortCtrl.signal;
+    }
+
+    function scheduleGoldRepaint() {
+      if (!map || !goldWaterLayer || !goldMode) return;
+      if (goldRepaintRaf) return;
+      goldRepaintRaf = requestAnimationFrame(() => {
+        goldRepaintRaf = 0;
+        try {
+          if (typeof goldWaterLayer.invoke === 'function') goldWaterLayer.invoke('redraw');
+        } catch {}
+      });
     }
 
     
@@ -11246,6 +11279,7 @@ function goldResetWater() {
       goldTilesLoaded.clear();
       goldFetchQueue = [];
       goldFetching = 0;
+      goldTilesInFlight.clear();
       if (goldMode && mapInitialized) ensureGoldWaterRenderer(true);
       setGoldStatus(t('ready'));
     }
@@ -11373,7 +11407,7 @@ function goldResetWater() {
       if (!goldMode || !mapInitialized) return;
 
       if (goldMoveDebounce) clearTimeout(goldMoveDebounce);
-      const wait = force ? 0 : (isPhoneViewport() ? 120 : 220);
+      const wait = force ? 0 : (isPhoneViewport() ? 150 : 260);
       goldMoveDebounce = setTimeout(() => {
         goldRefreshWaterTiles(force, opts);
 
@@ -11488,7 +11522,7 @@ function goldResetWater() {
         const cached = goldQuickCenterCache.get(quickKey);
         if (Array.isArray(cached) && cached.length) {
           await renderGoldWaterItems(cached, zoomNow);
-          try { map.invalidateSize(false); } catch {}
+          scheduleGoldRepaint();
           return true;
         }
       }
@@ -11531,7 +11565,7 @@ out tags geom qt;`;
         if (quickItems.length) {
           goldQuickCenterCache.set(quickKey, quickItems);
           await renderGoldWaterItems(quickItems, zoomNow);
-          try { map.invalidateSize(false); } catch {}
+          scheduleGoldRepaint();
           return true;
         }
       } catch (e) {
@@ -11562,7 +11596,7 @@ out tags geom qt;`;
       const queued = new Set(goldFetchQueue.map(t => `${t.z}/${t.x}/${t.y}`));
       const missing = tiles.filter(t => {
         const k = `${t.z}/${t.x}/${t.y}`;
-        return !goldTilesLoaded.has(k) && !queued.has(k);
+        return !goldTilesLoaded.has(k) && !queued.has(k) && !goldTilesInFlight.has(k);
       });
 
       if (!missing.length && !force) {
@@ -11591,7 +11625,7 @@ out tags geom qt;`;
       setGoldStatus(`Akar sular yükleniyor… (${Math.max(1, totalPlanned)} bölge)`);
 
       // Aynı anda az sayıda istek (ağ kalitesine göre dinamik)
-      const signal = abortGoldNetwork();
+      const signal = getGoldNetworkSignal(force);
 
       const visibleCountNow = goldWaterLayer ? Object.keys(goldWaterLayer._layers || {}).length : 0;
       if (fastStart || force || visibleCountNow < 4) {
@@ -11746,27 +11780,33 @@ out tags geom qt;`;
 
         goldWaterLayer.addLayer(halo);
         goldWaterLayer.addLayer(poly);
-        try { halo.bringToFront(); } catch {}
-        try { poly.bringToFront(); } catch {}
         goldWaterWaysById.set(id, poly);
 
         added++;
-        if (added % 36 === 0) {
-          try { map && map.invalidateSize(false); } catch {}
+        if (added % 24 === 0) {
+          scheduleGoldRepaint();
           await yieldToUI();
         }
+      }
+
+      if (added) {
+        scheduleGoldRepaint();
+        try { goldWaterLayer.bringToFront(); } catch {}
       }
 
       return added;
     }
 
     async function goldFetchTile(t, signal) {
-      goldFetching++;
       const key = `${t.z}/${t.x}/${t.y}`;
+      if (goldTilesLoaded.has(key)) return;
+      if (goldTilesInFlight.has(key)) return;
+      if (!goldWaterLayer) return;
+
+      goldTilesInFlight.add(key);
+      goldFetching++;
 
       try {
-        if (goldTilesLoaded.has(key)) return;
-        if (!goldWaterLayer) return;
 
         const bb = tileBbox(t.z, t.x, t.y);
 
@@ -11783,7 +11823,7 @@ out tags geom qt;`;
         const cached = goldLoadCachedTile(key, wRegex);
         if (cached && Array.isArray(cached.elements) && cached.elements.length) {
           await renderGoldWaterItems(cached.elements, zoomNow);
-          try { map && map.invalidateSize(false); } catch {}
+          scheduleGoldRepaint();
           goldTilesLoaded.add(key);
           return;
         }
@@ -11833,12 +11873,13 @@ out tags geom qt;`;
         // Cache'e yaz (hızlı tekrar yükleme)
         if (cacheItems.length) goldSaveCachedTile(key, wRegex, cacheItems);
 
-        try { map && map.invalidateSize(false); } catch {}
+        scheduleGoldRepaint();
         goldTilesLoaded.add(key);
       } catch (e) {
         if (e && e.name === "AbortError") return;
         setGoldStatus(goldUiText('streamLoadError'));
       } finally {
+        goldTilesInFlight.delete(key);
         goldFetching--;
 
         // Kuyruğu devam ettir (ağ kalitesine göre dinamik)
@@ -12171,46 +12212,83 @@ out tags geom qt;`;
       return { label: "Düşük", range: "0–0.5 mg / tava (örnek)", cls: "dusuk" };
     }
 
-    function scoreGoldWaterPoint({ wType = "", curveScore = 0, morphology = null, slope = null, mrds = null, intermittent = false, locationSignals = null, channelSignal = null } = {}) {
-      let score = 14;
+    function scoreGoldWaterPoint({ wType = "", curveScore = 0, morphology = null, slope = null, mrds = null, intermittent = false, locationSignals = null, channelSignal = null, lat = null, lng = null } = {}) {
+      let score = 24;
+      const components = [];
+      const pushComponent = (label, value) => {
+        if (!Number.isFinite(value) || value === 0) return;
+        components.push({ label, value: Math.round(value) });
+      };
 
-      if (wType === "river") score += 10;
-      else if (wType === "stream") score += 8;
-      else if (wType === "canal") score += 0;
-      else score += 4;
+      const typeDelta = wType === "river" ? 11 : wType === "stream" ? 8 : wType === "canal" ? -2 : 3;
+      score += typeDelta;
+      pushComponent('Su yolu tipi', typeDelta);
 
-      score += Math.round(curveScore * 0.55);
-      score += Math.round((morphology?.totalDelta || 0) * 1.1);
-      score += Number.isFinite(channelSignal?.delta) ? channelSignal.delta : 0;
+      const curveDelta = clamp(Math.round(curveScore * 0.52), -6, 13);
+      score += curveDelta;
+      pushComponent('Kıvrım etkisi', curveDelta);
+
+      const morphologyDelta = clamp(Math.round((morphology?.totalDelta || 0) * 1.05), -16, 22);
+      score += morphologyDelta;
+      pushComponent('Akış morfolojisi', morphologyDelta);
+
+      const channelDelta = Number.isFinite(channelSignal?.delta) ? clamp(channelSignal.delta, -14, 14) : 0;
+      score += channelDelta;
+      pushComponent('Kanal sinyali', channelDelta);
 
       if (typeof slope === "number") {
-        if (slope < 0.18) score += 13;
-        else if (slope < 0.42) score += 10;
-        else if (slope < 0.85) score += 5;
-        else if (slope < 1.35) score += 0;
-        else if (slope < 1.9) score -= 5;
-        else score -= 11;
+        const slopeDelta = slope < 0.18 ? 14
+          : slope < 0.42 ? 11
+          : slope < 0.85 ? 6
+          : slope < 1.35 ? 0
+          : slope < 1.9 ? -7
+          : -13;
+        score += slopeDelta;
+        pushComponent('Eğim etkisi', slopeDelta);
       }
 
       if (mrds && mrds.ok && typeof mrds.nearestKm === "number") {
-        if (mrds.nearestKm <= 8) score += 18;
-        else if (mrds.nearestKm <= 20) score += 12;
-        else if (mrds.nearestKm <= 40) score += 6;
-        else score += 1;
+        const mrdsDelta = mrds.nearestKm <= 8 ? 16
+          : mrds.nearestKm <= 20 ? 10
+          : mrds.nearestKm <= 40 ? 5
+          : 0;
+        score += mrdsDelta;
+        pushComponent('Yakın kayıt etkisi', mrdsDelta);
       }
 
       if (locationSignals) {
-        score += Math.round((locationSignals.historyDensityScore - 50) * 0.10);
-        score += Math.round((locationSignals.stonePotentialScore - 50) * 0.03);
-        score += Math.round((locationSignals.microDelta || 0) * 0.55);
-        score += Math.round((locationSignals.corridorDelta || 0) * 0.25);
-        score += Math.round((locationSignals.water?.bonus || 0) * 0.75);
-        score += Math.round((locationSignals.settlementDelta || 0) * 0.35);
+        const historyDelta = Math.round((locationSignals.historyDensityScore - 50) * 0.12);
+        const stoneDelta = Math.round((locationSignals.stonePotentialScore - 50) * 0.05);
+        const microDelta = Math.round((locationSignals.microDelta || 0) * 0.72);
+        const corridorDelta = Math.round((locationSignals.corridorDelta || 0) * 0.30);
+        const waterDelta = Math.round((locationSignals.water?.bonus || 0) * 0.95);
+        const settlementDelta = Math.round((locationSignals.settlementDelta || 0) * 0.42);
+        const locationDelta = historyDelta + stoneDelta + microDelta + corridorDelta + waterDelta + settlementDelta;
+        score += locationDelta;
+        pushComponent('Bölgesel sinyal', locationDelta);
       }
 
-      if (intermittent) score -= 6;
+      if (intermittent) {
+        score -= 7;
+        pushComponent('Mevsimsel akış', -7);
+      }
 
-      return clamp(Math.round(score), 0, 100);
+      // Aynı sinyale sahip noktalarda tekdüze puanları kırmak için deterministik mikro ayrım.
+      const latSeed = Number.isFinite(lat) ? Math.round(Math.abs(lat) * 1000) : 0;
+      const lngSeed = Number.isFinite(lng) ? Math.round(Math.abs(lng) * 1000) : 0;
+      const entropy = ((latSeed ^ (lngSeed << 1)) % 7) - 3;
+      const diversity = components.reduce((sum, item) => sum + Math.abs(item.value), 0);
+      const diversityBoost = clamp(Math.round((diversity - 30) / 12), -2, 4);
+      score += entropy + diversityBoost;
+
+      const finalScore = clamp(Math.round(score), 0, 100);
+      components.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+      return {
+        score: finalScore,
+        components,
+        entropy,
+        diversityBoost
+      };
     }
 
     async function handleGoldWaterClick(evt, meta) {
@@ -12238,20 +12316,36 @@ out tags geom qt;`;
       }
 
       setGoldStatus(goldUiText('loadingStatus'));
+      const loadingSteps = navigator.onLine
+        ? ['Akarsu verisi hazırlanıyor…', 'Eğim verisi değerlendiriliyor…', 'Yakın çevre sinyalleri birleştiriliyor…']
+        : [goldUiText('loadingTextOffline')];
       renderGoldLoadingState({
         wName,
         wType,
         intermittent,
         location: locationText,
-        loadingText: navigator.onLine ? goldUiText('loadingText') : goldUiText('loadingTextOffline')
+        loadingText: loadingSteps[0]
       });
 
       try {
-        const [slopeRes, mrdsRes, reverseRes] = await Promise.allSettled([
-          getSlopePercent(meta.latlngs, clickLatLng),
-          queryMrdsAuNearby(clickLatLng, 50),
-          reverseGeocode(clickLatLng.lat, clickLatLng.lng)
-        ]);
+        const slopePromise = getSlopePercent(meta.latlngs, clickLatLng);
+        const mrdsPromise = queryMrdsAuNearby(clickLatLng, 50);
+        const reversePromise = reverseGeocode(clickLatLng.lat, clickLatLng.lng);
+
+        if (loadingSteps[1]) {
+          setTimeout(() => {
+            if (runId !== goldAnalysisRunId || !goldMode) return;
+            renderGoldLoadingState({ wName, wType, intermittent, location: locationText, loadingText: loadingSteps[1] });
+          }, 280);
+        }
+        if (loadingSteps[2]) {
+          setTimeout(() => {
+            if (runId !== goldAnalysisRunId || !goldMode) return;
+            renderGoldLoadingState({ wName, wType, intermittent, location: locationText, loadingText: loadingSteps[2] });
+          }, 620);
+        }
+
+        const [slopeRes, mrdsRes, reverseRes] = await Promise.allSettled([slopePromise, mrdsPromise, reversePromise]);
 
         if (runId !== goldAnalysisRunId || !goldMode) return;
 
@@ -12279,7 +12373,7 @@ out tags geom qt;`;
         const morphology = deriveGoldMicroMorphology(meta.latlngs, clickLatLng, slope, confluence);
         const channelSignal = deriveGoldLocalChannelSignal(meta.latlngs, clickLatLng, morphology);
 
-        const score = scoreGoldWaterPoint({
+        const scored = scoreGoldWaterPoint({
           wType,
           curveScore,
           morphology,
@@ -12287,8 +12381,11 @@ out tags geom qt;`;
           mrds,
           intermittent,
           locationSignals,
-          channelSignal
+          channelSignal,
+          lat: clickLatLng.lat,
+          lng: clickLatLng.lng
         });
+        const score = scored.score;
         const label = scoreToLabel(score);
 
         const statusNote = (!navigator.onLine || slopeRes.status !== 'fulfilled' || mrdsRes.status !== 'fulfilled' || !(mrds && mrds.ok))
@@ -12315,7 +12412,8 @@ out tags geom qt;`;
           confluence,
           slope,
           mrds,
-          statusNote
+          statusNote,
+          scoreBreakdown: scored
         };
 
         if (runId !== goldAnalysisRunId || !goldMode) return;
@@ -16039,7 +16137,6 @@ function updateHistoryPreview(rawText) {
       setGoldMode(true);
       setTimeout(() => {
         try { map && map.invalidateSize(true); } catch {}
-        try { goldPanel?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {}
       }, 120);
     });
     safeBindClick(goldCloseBtn, "goldCloseBtn", () => {
@@ -16217,11 +16314,12 @@ function updateHistoryPreview(rawText) {
         const t = e.target;
         if (!t) return;
         const tag = (t.tagName || '').toUpperCase();
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-          setTimeout(function () {
-            try { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
-          }, 250);
-        }
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') return;
+        const inForm = !!t.closest('#formContainer');
+        if (!inForm) return;
+        setTimeout(function () {
+          try { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
+        }, 250);
       });
     })();
   </script>
@@ -16287,7 +16385,6 @@ function updateHistoryPreview(rawText) {
       guide() {
         document.getElementById('goldGuideBtn')?.click();
         setTimeout(() => {
-          document.getElementById('goldPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           syncActiveSection();
         }, 180);
       },
