@@ -371,6 +371,22 @@
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
       contain: layout paint;
+      padding-right: 2px;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148,163,184,0.5) rgba(15,23,42,0.35);
+    }
+    #goldResult::-webkit-scrollbar {
+      width: 9px;
+    }
+    #goldResult::-webkit-scrollbar-track {
+      background: rgba(15,23,42,0.35);
+      border-radius: 999px;
+    }
+    #goldResult::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(148,163,184,0.62), rgba(100,116,139,0.64));
+      border-radius: 999px;
+      border: 2px solid rgba(15,23,42,0.45);
     }
     #goldResult .gold-result-shell {
       min-height: 100%;
@@ -1934,16 +1950,18 @@
       background: rgba(15,23,42,0.9);
       color: #9ca3af;
       font-size: 11px;
-      padding: 4px 8px;
+      padding: 6px 10px;
+      min-height: 36px;
     }
     .gallery-sub {
       font-size: 11px;
       color: #e5e7eb;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
+      line-height: 1.5;
     }
     .guide-howto {
-      margin: 10px 0 12px;
-      padding: 10px 12px;
+      margin: 8px 0 10px;
+      padding: 11px 12px;
       border-radius: 14px;
       border: 1px solid rgba(148,163,184,0.28);
       background: rgba(2,6,23,0.38);
@@ -2070,17 +2088,22 @@
     }
 
     .compact-guide {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       background: linear-gradient(180deg, rgba(10,22,46,.88), rgba(5,12,28,.82));
       border-color: rgba(74, 222, 128, 0.16);
     }
 
     .compact-guide-list {
       margin-bottom: 0;
+      display: grid;
+      gap: 6px;
     }
 
     .compact-gold-map-card {
       margin-top: 0;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
     }
 
     .gallery-section-title {
@@ -5983,12 +6006,17 @@ select {
       #goldPanel .gallery-title {
         font-size: 15px;
       }
+      #goldPanel #goldCloseBtn {
+        min-height: 42px;
+        min-width: 74px;
+        padding: 8px 14px;
+      }
       #goldPanel .gallery-sub {
         font-size: 12px;
         line-height: 1.45;
       }
       #goldPanel .guide-howto {
-        padding: 11px;
+        padding: 12px;
         border-radius: 14px;
       }
       #goldPanel .guide-howto-title {
@@ -6005,8 +6033,9 @@ select {
         line-height: 1.45;
       }
       .compact-gold-map-card {
-        padding: 12px;
+        padding: 13px;
         border-radius: 16px;
+        gap: 10px;
       }
       .gold-toolbar .btn-small {
         min-height: 38px;
@@ -7125,15 +7154,12 @@ select {
             <li><strong>Mavi dere/nehir çizgisine dokun.</strong> Sistem eğim ve açık veriye göre kısa analiz çıkarır.</li>
             <li>Beğendiğin yeri <strong>Yeni nokta ekle</strong> ile kaydet.</li>
           </ol>
-          <div class="guide-howto-note">
-            Not: Bu rehber gözlem ve eğitim amaçlıdır.
-          </div>
         </div>
 
         <div class="gem-card compact-gold-map-card">
           <div class="gem-desc">
-            Haritadaki <strong>mavi çizgiler</strong> akar suları gösterir. Dokunduğunda sonuç kutusunda
-            <strong>tahmini altın tozu potansiyeli</strong> görünür.
+            Sonuç kartında puan, güven ve kısa saha adımı birlikte gösterilir.
+            Uygun gördüğün noktayı doğrudan <strong>Yeni nokta ekle</strong> ile kaydedebilirsin.
           </div>
 
           <div class="gold-toolbar">
@@ -10754,7 +10780,7 @@ function initMap() {
     : ((hasSlope || hasMrds) ? goldUiText('dataPartial') : goldUiText('dataLimited'));
 
   const statusLabel = score >= 78 ? 'Yüksek potansiyel' : score >= 52 ? 'Orta potansiyel' : 'Düşük potansiyel';
-  const riskLabel = confidenceScore >= 74 ? 'Düşük belirsizlik' : confidenceScore >= 56 ? 'Orta belirsizlik' : 'Yüksek belirsizlik';
+  const riskLabel = confidenceScore >= 74 ? 'Analiz netliği yüksek' : confidenceScore >= 56 ? 'Analiz netliği orta' : 'Analiz netliği sınırlı';
   let shortComment = 'Bu noktada güçlü sinyal görünmüyor.';
   if (payload.morphology?.transportDelta <= -10) shortComment = 'Akış güçlü; birikim ihtimali sınırlı görünüyor.';
   else if (payload.morphology?.confluenceBonus >= 10) shortComment = 'Birleşim cebi etkisi dikkat çekiyor.';
@@ -10850,7 +10876,7 @@ function initMap() {
           <div class="gold-summary-text">Konum: ${escapeHtml(locText)}</div>
           <div class="gold-result-level-row">
             <div class="gold-level-chip tone-${tone}"><span>Potansiyel sınıfı</span><strong>${escapeHtml(statusLabel)}</strong></div>
-            <div class="gold-level-chip ${confidenceBand}"><span>Risk seviyesi</span><strong>${escapeHtml(riskLabel)}</strong></div>
+            <div class="gold-level-chip ${confidenceBand}"><span>Değerlendirme netliği</span><strong>${escapeHtml(riskLabel)}</strong></div>
           </div>
         </div>
       </div>
