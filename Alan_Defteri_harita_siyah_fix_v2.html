@@ -9161,7 +9161,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldFetchQueue = [];
     let goldFetching = 0;
     let goldAbortCtrl = null;
-    let goldTilesInFlight = new Set();
+    let goldTilesInFlight = new Set(); // loadKey bazlı (tile + regex)
     let goldRepaintRaf = 0;
     let goldMoveDebounce = null;
     let goldAnalysisRunId = 0;
@@ -9183,6 +9183,9 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const GOLD_TILE_RETRY_COOLDOWN_MS = 12000;
     const GOLD_NETWORK_RETRY_BASE_MS = 450;
     const GOLD_OVERPASS_TIMEOUT_MS = 26000;
+    const GOLD_CACHE_SOFT_TTL_MS = 1000 * 60 * 45; // 45 dk sonra arka planda yenile
+    const GOLD_PRUNE_PAD_RATIO = 0.42; // viewport dışı çizgileri temizle
+    const GOLD_MAX_WAYS_MOBILE = 1800;
 
     // Harita katmanlarını geri yüklemek için
     let currentBaseLayer = null;
@@ -9490,7 +9493,11 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }
 
       if (!goldWaterRenderer) {
-        goldWaterRenderer = L.svg({ pane: "goldWaterPane", padding: 1.0 });
+        // Mobilde/yoğun çizimde canvas daha akıcı olur, masaüstünde SVG seçim netliği iyi.
+        const preferCanvas = isPhoneViewport() || getGoldNetworkProfile() === "slow";
+        goldWaterRenderer = preferCanvas
+          ? L.canvas({ pane: "goldWaterPane", padding: 0.9 })
+          : L.svg({ pane: "goldWaterPane", padding: 1.0 });
       }
       return goldWaterRenderer;
     }
@@ -11215,11 +11222,13 @@ function initMap() {
     function refreshGoldWaterVisualsForZoom() {
       if (!map || !goldWaterWaysById || !goldWaterWaysById.size) return;
       const zoomNow = map.getZoom();
+      const haloWeightByWay = new Map();
       for (const poly of goldWaterWaysById.values()) {
         if (!poly || !poly._goldMeta) continue;
         const style = waterStyleFor(poly._goldMeta.tags || {});
         const weightBoost = (zoomNow >= 15 ? 0.92 : zoomNow >= 14 ? 0.98 : 1.08);
         const visibleWeight = Math.max(3.2, (style.weight || 3) * weightBoost);
+        haloWeightByWay.set(poly._goldMeta.osmWayId, visibleWeight + 3.2);
         try {
           poly.setStyle({
             color: style.color,
@@ -11229,7 +11238,67 @@ function initMap() {
           });
         } catch {}
       }
+      const layers = Object.values((goldWaterLayer && goldWaterLayer._layers) || {});
+      for (const layer of layers) {
+        if (!layer || layer.options?.className !== "gold-water-halo") continue;
+        const haloWeight = haloWeightByWay.get(layer._goldWayId);
+        if (!Number.isFinite(haloWeight)) continue;
+        try { layer.setStyle({ weight: haloWeight }); } catch {}
+      }
       applyGoldSelectionVisual();
+      scheduleGoldRepaint();
+    }
+
+    function removeGoldWayById(wayId) {
+      if (!goldWaterLayer || !wayId) return;
+      const poly = goldWaterWaysById.get(Number(wayId)) || goldWaterWaysById.get(wayId);
+      if (poly) {
+        try { goldWaterLayer.removeLayer(poly); } catch {}
+      }
+      const layers = Object.values(goldWaterLayer._layers || {});
+      for (const layer of layers) {
+        if (layer && layer._goldWayId === wayId) {
+          try { goldWaterLayer.removeLayer(layer); } catch {}
+        }
+      }
+      goldWaterWaysById.delete(Number(wayId));
+      goldWaterWaysById.delete(String(wayId));
+    }
+
+    function pruneGoldWaterOutsideViewport() {
+      if (!map || !goldWaterLayer || !goldWaterWaysById.size) return;
+      const keepBounds = map.getBounds().pad(GOLD_PRUNE_PAD_RATIO);
+      const isMobile = isPhoneViewport();
+      const maxWays = isMobile ? GOLD_MAX_WAYS_MOBILE : Infinity;
+      const removeIds = [];
+
+      for (const [id, poly] of goldWaterWaysById.entries()) {
+        if (!poly || typeof poly.getBounds !== "function") continue;
+        const b = poly.getBounds();
+        if (!b || !b.isValid || !b.isValid()) continue;
+        if (!keepBounds.intersects(b) && String(id) !== String(goldSelectedWayId || "")) {
+          removeIds.push(id);
+        }
+      }
+
+      // Mobilde katman çok büyürse en uzakları azalt (kaydırma akıcılığı için).
+      if (goldWaterWaysById.size - removeIds.length > maxWays) {
+        const center = map.getCenter();
+        const candidates = [];
+        for (const [id, poly] of goldWaterWaysById.entries()) {
+          if (removeIds.includes(id)) continue;
+          if (String(id) === String(goldSelectedWayId || "")) continue;
+          const c = poly && poly.getBounds ? poly.getBounds().getCenter() : null;
+          if (!c) continue;
+          candidates.push({ id, d: haversineMeters(center, c) });
+        }
+        candidates.sort((a, b) => b.d - a.d);
+        const extra = Math.max(0, (goldWaterWaysById.size - removeIds.length) - maxWays);
+        for (let i = 0; i < extra; i++) removeIds.push(candidates[i].id);
+      }
+
+      if (!removeIds.length) return;
+      removeIds.forEach((id) => removeGoldWayById(id));
       scheduleGoldRepaint();
     }
 
@@ -11305,7 +11374,13 @@ function initMap() {
       // 1) Session cache (en hızlı)
       if (goldSessionTileCache.has(ckey)) {
         const it = goldSessionTileCache.get(ckey);
-        if (it && (Date.now() - it.ts) < maxAge) return it.data;
+        if (it && (Date.now() - it.ts) < maxAge) {
+          return {
+            elements: Array.isArray(it.data && it.data.elements) ? it.data.elements : [],
+            _cacheTs: it.ts,
+            _isStale: (Date.now() - it.ts) > GOLD_CACHE_SOFT_TTL_MS
+          };
+        }
         goldSessionTileCache.delete(ckey);
       }
 
@@ -11323,7 +11398,11 @@ function initMap() {
         }
         const data = { elements: obj.elements };
         goldSessionTileCache.set(ckey, { ts: obj.ts, data });
-        return data;
+        return {
+          elements: obj.elements,
+          _cacheTs: obj.ts,
+          _isStale: (Date.now() - obj.ts) > GOLD_CACHE_SOFT_TTL_MS
+        };
       } catch {
         return null;
       }
@@ -11789,10 +11868,11 @@ out tags geom qt;`;
         const lk = makeGoldTileLoadKey(k, waterRegex);
         const cooldownKey = makeGoldTileLoadKey(k, waterRegex);
         const coolingDown = (goldTileFailureCooldownUntil.get(cooldownKey) || 0) > nowTs;
-        return !goldTilesLoaded.has(lk) && !queued.has(k) && !goldTilesInFlight.has(k) && !coolingDown;
+        return !goldTilesLoaded.has(lk) && !queued.has(k) && !goldTilesInFlight.has(lk) && !coolingDown;
       });
 
       if (!missing.length && !force) {
+        pruneGoldWaterOutsideViewport();
         setGoldStatus(t('ready'));
         return;
       }
@@ -11848,6 +11928,7 @@ out tags geom qt;`;
             const next = goldFetchQueue.shift();
             void goldFetchTile(next, signal, tileCycleId, waterRegex);
           }
+          pruneGoldWaterOutsideViewport();
         }, fastStart ? 120 : 30);
       }
     }
@@ -11981,6 +12062,7 @@ out tags geom qt;`;
             lineJoin: "round",
             renderer: renderer || undefined
           });
+          halo._goldWayId = entry.id;
 
           const poly = L.polyline(entry.latlngs, {
             ...entry.style,
@@ -12021,10 +12103,10 @@ out tags geom qt;`;
       const wRegex = waterRegex || buildGoldWaterRegex(map ? map.getZoom() : 13);
       const loadKey = makeGoldTileLoadKey(key, wRegex);
       if (goldTilesLoaded.has(loadKey)) return;
-      if (goldTilesInFlight.has(key)) return;
+      if (goldTilesInFlight.has(loadKey)) return;
       if (!goldWaterLayer) return;
 
-      goldTilesInFlight.add(key);
+      goldTilesInFlight.add(loadKey);
       goldFetching++;
 
       try {
@@ -12039,7 +12121,7 @@ out tags geom qt;`;
           await renderGoldWaterItems(cached.elements, zoomNow);
           scheduleGoldRepaint();
           goldTilesLoaded.add(loadKey);
-          return;
+          if (!cached._isStale) return;
         }
 
         const query = `
@@ -12106,7 +12188,7 @@ out tags geom qt;`;
           if (visibleCount < 2) setGoldStatus(goldUiText('streamLoadError'));
         }
       } finally {
-        goldTilesInFlight.delete(key);
+        goldTilesInFlight.delete(loadKey);
         goldFetching = Math.max(0, goldFetching - 1);
 
         // Kuyruğu devam ettir (ağ kalitesine göre dinamik)
@@ -12116,6 +12198,7 @@ out tags geom qt;`;
         }
 
         if (goldFetching === 0 && goldFetchQueue.length === 0 && goldMode) {
+          pruneGoldWaterOutsideViewport();
           setGoldStatus(t('ready'));
         }
       }
