@@ -9090,6 +9090,11 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }
     };
     let selectedAnalysisPlan = "yearly";
+    let rewardedAdReady = false;
+    let rewardedAdInFlight = false;
+    let rewardedAdRewardConsumed = false;
+    let rewardedAdLastStartAt = 0;
+    const REWARDED_AD_CLICK_GUARD_MS = 1200;
 
 
     function getFormPhotoLimit() {
@@ -9222,7 +9227,89 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }
       if (analysisAdBtn) analysisAdBtn.textContent = remaining > 0 ? "🎬 Reklam" : "🎬 +1 hak";
       if (analysisPremiumBtn) analysisPremiumBtn.textContent = remaining > 0 ? "Premium" : "Kilidi aç";
+      refreshRewardedAdUi();
     }
+
+    function hasRewardedBridge() {
+      return Boolean(window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function");
+    }
+
+    function refreshRewardedAdUi() {
+      if (!analysisAdBtn || isPremiumUnlocked()) return;
+      if (!hasRewardedBridge()) {
+        analysisAdBtn.textContent = "🎬 Reklam yok";
+        analysisAdBtn.disabled = true;
+        return;
+      }
+      if (rewardedAdInFlight) {
+        analysisAdBtn.textContent = "🎬 Açılıyor…";
+        analysisAdBtn.disabled = true;
+        return;
+      }
+      analysisAdBtn.disabled = false;
+      analysisAdBtn.textContent = rewardedAdReady ? "🎬 +1 hak" : "🎬 Hazırlanıyor";
+    }
+
+    function grantRewardedAnalysisCredit(amount) {
+      const reward = Math.max(0, Math.floor(Number(amount) || 0));
+      if (reward <= 0 || isPremiumUnlocked()) return 0;
+      const current = readAnalysisUsageState();
+      let total = Math.max(0, Number(current.total) || 0);
+      let map = Math.max(0, Number(current.map) || 0);
+      let gold = Math.max(0, Number(current.gold) || 0);
+      let granted = 0;
+      let remainingReward = reward;
+      while (remainingReward > 0 && total > 0) {
+        if (map >= gold && map > 0) map -= 1;
+        else if (gold > 0) gold -= 1;
+        else if (map > 0) map -= 1;
+        total -= 1;
+        remainingReward -= 1;
+        granted += 1;
+      }
+      if (granted > 0) {
+        writeAnalysisUsageState({ total, map, gold });
+        updateAnalysisUsageUi();
+      }
+      return granted;
+    }
+
+    window.__updateRewardedAdAvailability = function (isReady) {
+      rewardedAdReady = isReady === true || String(isReady).toLowerCase() === "true" || Number(isReady) === 1;
+      if (!rewardedAdReady) rewardedAdInFlight = false;
+      refreshRewardedAdUi();
+    };
+
+    window.__handleRewardedAdResult = function (status, amount, reason) {
+      const safeStatus = String(status || "").toLowerCase();
+      rewardedAdInFlight = false;
+      switch (safeStatus) {
+        case "rewarded": {
+          if (rewardedAdRewardConsumed) break;
+          rewardedAdRewardConsumed = true;
+          const granted = grantRewardedAnalysisCredit(amount);
+          if (granted > 0) showToast(`+${granted} hak kazandın.`, "success", 2200);
+          else showToast("Ödül işlendi ama eklenecek hak bulunamadı.", "info", 2000);
+          break;
+        }
+        case "closed":
+          showToast("Reklam kapatıldı. Ödül için reklamı tamamlamalısın.", "info", 2200);
+          break;
+        case "failed":
+          showToast("Reklam gösterilemedi. Bağlantını kontrol edip tekrar dene.", "error", 2200);
+          break;
+        case "unavailable":
+          showToast("Reklam hazırlanıyor. Birazdan tekrar dene.", "info", 2100);
+          break;
+        case "busy":
+          showToast("Reklam zaten açılıyor. Lütfen bekle.", "info", 1800);
+          break;
+        default:
+          if (reason) showToast(`Reklam sonucu: ${reason}`, "info", 1800);
+          break;
+      }
+      refreshRewardedAdUi();
+    };
 
     function updateSelectedAnalysisPlanUi() {
       const config = ANALYSIS_PLAN_CONFIG[selectedAnalysisPlan] || ANALYSIS_PLAN_CONFIG.yearly;
@@ -15811,7 +15898,36 @@ function updateHistoryPreview(rawText) {
         showToast("Premium açıkken reklam gösterimi kapalıdır.", "info", 1700);
         return;
       }
-      showToast("Reklam ödülü özelliği yakında aktif olacak.", "info", 2000);
+      if (!hasRewardedBridge()) {
+        showToast("Bu sürümde reklam desteği bulunamadı.", "info", 2200);
+        refreshRewardedAdUi();
+        return;
+      }
+      const now = Date.now();
+      if (rewardedAdInFlight || now - rewardedAdLastStartAt < REWARDED_AD_CLICK_GUARD_MS) {
+        showToast("Reklam hazırlanıyor, lütfen bekle.", "info", 1800);
+        return;
+      }
+      if (!rewardedAdReady) {
+        showToast("Reklam hazırlanıyor. Birazdan tekrar dene.", "info", 2000);
+      }
+      rewardedAdInFlight = true;
+      rewardedAdRewardConsumed = false;
+      rewardedAdLastStartAt = now;
+      refreshRewardedAdUi();
+      try {
+        const maybeStarted = window.AndroidAds.showRewardedAd();
+        if (maybeStarted === false) {
+          rewardedAdInFlight = false;
+          refreshRewardedAdUi();
+          showToast("Reklam şu an kullanılamıyor. Birazdan tekrar dene.", "info", 2200);
+        }
+      } catch (error) {
+        rewardedAdInFlight = false;
+        refreshRewardedAdUi();
+        console.error("showRewardedAd error:", error);
+        showToast("Reklam açılırken bir hata oluştu.", "error", 2200);
+      }
     });
     safeBindClick(analysisPremiumLaterBtn, "analysisPremiumLaterBtn", closeAnalysisPremiumModal);
     safeBindClick(analysisPremiumCloseBtn, "analysisPremiumCloseBtn", closeAnalysisPremiumModal);
