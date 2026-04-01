@@ -7285,6 +7285,7 @@ select {
             <button id="goldReloadWaterBtn" class="btn-small main" type="button">🌊 Akar suları yenile</button>
             <button id="goldBgToggleBtn" class="btn-small" type="button">🛰 Arka plan: Açık</button>
             <button id="goldMicroToggleBtn" class="btn-small" type="button">🧵 Mikro dereler: Açık</button>
+            <button id="goldSelectModeBtn" class="btn-small" type="button">🎯 Akar su seçimi: Açık</button>
             <span id="goldStatus" class="gold-toolbar-status">Hazır</span>
           </div>
 
@@ -7626,6 +7627,7 @@ select {
             </div>
           </div>
           <div id="mapStatus" class="map-status" aria-live="polite"></div>
+          <div id="goldTapHint" class="gold-tap-hint" aria-live="polite" hidden>Mavi akar suya dokun. Yakındaki hat otomatik seçilir.</div>
         </div>
 
         <div id="mapEvalCard" class="map-eval-card" aria-live="polite">
@@ -7688,6 +7690,23 @@ select {
         </div>
 
         <div id="coordBar">İmleç: –</div>
+
+        <div id="goldSelectionSheet" class="gold-selection-sheet" hidden>
+          <div class="gold-selection-handle" aria-hidden="true"></div>
+          <div class="gold-selection-top">
+            <div>
+              <div class="gold-selection-kicker">Akar su seçildi</div>
+              <div id="goldSelectionTitle" class="gold-selection-title">Yakındaki hat seçildi</div>
+            </div>
+            <button type="button" id="goldSelectionCloseBtn" class="gold-selection-close" aria-label="Akar su panelini kapat">✕</button>
+          </div>
+          <div id="goldSelectionMeta" class="gold-selection-meta">Kısa analiz için “Bu noktaya göre analiz et” kullan.</div>
+          <div class="gold-selection-actions">
+            <button type="button" id="goldSelectionInspectBtn" class="btn-small">İncele</button>
+            <button type="button" id="goldSelectionAnalyzeBtn" class="btn-small main">Bu noktaya göre analiz et</button>
+            <button type="button" id="goldSelectionSaveBtn" class="btn-small">Yeni nokta olarak kaydet</button>
+          </div>
+        </div>
       </div>
 
       <ul id="list"></ul>
@@ -9171,8 +9190,17 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const goldReloadWaterBtn = document.getElementById("goldReloadWaterBtn");
     const goldBgToggleBtn = document.getElementById("goldBgToggleBtn");
     const goldMicroToggleBtn = document.getElementById("goldMicroToggleBtn");
+    const goldSelectModeBtn = document.getElementById("goldSelectModeBtn");
     const goldStatusEl = document.getElementById("goldStatus");
     const goldResultEl = document.getElementById("goldResult");
+    const goldTapHintEl = document.getElementById("goldTapHint");
+    const goldSelectionSheetEl = document.getElementById("goldSelectionSheet");
+    const goldSelectionTitleEl = document.getElementById("goldSelectionTitle");
+    const goldSelectionMetaEl = document.getElementById("goldSelectionMeta");
+    const goldSelectionCloseBtn = document.getElementById("goldSelectionCloseBtn");
+    const goldSelectionInspectBtn = document.getElementById("goldSelectionInspectBtn");
+    const goldSelectionAnalyzeBtn = document.getElementById("goldSelectionAnalyzeBtn");
+    const goldSelectionSaveBtn = document.getElementById("goldSelectionSaveBtn");
     let goldLastMarkup = "";
     const analysisUsageBanner = document.getElementById("analysisUsageBanner");
     const analysisUsageTitle = document.getElementById("analysisUsageTitle");
@@ -9192,6 +9220,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldMode = false;
     let goldBgEnabled = true;
     let goldMicroEnabled = true; // küçük akar sular (ditch/drain vb.)
+    let goldSelectModeEnabled = true;
 
     let selectedSpotId = null;
     let spotMarkersById = new Map();
@@ -9221,6 +9250,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldDeferredBatchTimer = null;
     let goldRefreshRunToken = 0;
     let goldLastNeedBlueHintAt = 0;
+    let goldLastZoomHintAt = 0;
+    let goldLastTapSuccessAt = 0;
+    let goldTapStartPoint = null;
+    let goldTapMovedPx = 0;
+    let goldTapStartAt = 0;
+    let goldSelectedMeta = null;
     const goldTileFailureCooldownUntil = new Map();
     const GOLD_TILE_RETRY_COOLDOWN_MS = 12000;
     const GOLD_NETWORK_RETRY_BASE_MS = 450;
@@ -10344,6 +10379,31 @@ function initMap() {
         tap: false
       }).setView(savedView.center, savedView.zoom);
 
+      const mapContainer = map.getContainer();
+      if (mapContainer && !mapContainer.__goldTapBound) {
+        mapContainer.__goldTapBound = true;
+        const onStart = (ev) => {
+          const pt = (ev.touches && ev.touches[0]) || ev;
+          goldTapStartPoint = { x: pt.clientX || 0, y: pt.clientY || 0 };
+          goldTapMovedPx = 0;
+          goldTapStartAt = Date.now();
+        };
+        const onMove = (ev) => {
+          if (!goldTapStartPoint) return;
+          const pt = (ev.touches && ev.touches[0]) || ev;
+          const dx = (pt.clientX || 0) - goldTapStartPoint.x;
+          const dy = (pt.clientY || 0) - goldTapStartPoint.y;
+          goldTapMovedPx = Math.max(goldTapMovedPx || 0, Math.hypot(dx, dy));
+        };
+        const onEnd = () => { setTimeout(() => { goldTapStartPoint = null; goldTapStartAt = 0; goldTapMovedPx = 0; }, 20); };
+        mapContainer.addEventListener("touchstart", onStart, { passive: true });
+        mapContainer.addEventListener("touchmove", onMove, { passive: true });
+        mapContainer.addEventListener("touchend", onEnd, { passive: true });
+        mapContainer.addEventListener("mousedown", onStart);
+        mapContainer.addEventListener("mousemove", onMove);
+        mapContainer.addEventListener("mouseup", onEnd);
+      }
+
       // ✅ Altın Modu su ağı: ayrı pane + özel renderer
       // Bazı telefonlarda Canvas çizimi yüklenip renk vermeyebildiği için
       // su katmanını güvenilir SVG renderer ile kuruyoruz.
@@ -10482,14 +10542,46 @@ function initMap() {
 
         setCoordBar(lat, lon);
 
-        // 🏞 Altın Modu açıkken: sadece mavi akar su çizgilerine dokun
+        // 🏞 Altın Modu açıkken: yakın su hattını mobil dostu şekilde seç
         if (goldMode) {
-          setGoldResult(t("gold_need_blue"));
-          const now = Date.now();
-          if ((now - goldLastNeedBlueHintAt) > 1400) {
-            showToast(t("gold_mode_toast"));
-            goldLastNeedBlueHintAt = now;
+          const zoomNow = map ? map.getZoom() : 0;
+          if (!goldSelectModeEnabled) {
+            const now = Date.now();
+            if ((now - goldLastNeedBlueHintAt) > 1800) {
+              showToast("Akar su seçimi kapalı. Araç çubuğundan açabilirsin.");
+              goldLastNeedBlueHintAt = now;
+            }
+            return;
           }
+          if (zoomNow < GOLD_MIN_ZOOM) {
+            const now = Date.now();
+            if ((now - goldLastZoomHintAt) > 1800) {
+              showToast("Seçim için biraz daha yakınlaş (Zoom 12+).");
+              goldLastZoomHintAt = now;
+            }
+            setGoldStatus("Seçim için yakınlaş: Zoom ≥ " + GOLD_MIN_ZOOM);
+            return;
+          }
+          if (!isGoldTapGestureValid()) return;
+
+          const nearest = findNearestGoldWaterAt(e.latlng);
+          if (!nearest || !nearest.meta) {
+            setGoldResult("Yakında uygun akar su bulunamadı. Çizgiye biraz daha yakın dokun.");
+            return;
+          }
+
+          openGoldSelectionSheet({
+            wName: nearest.meta.tags?.name || "İsimsiz su hattı",
+            wType: (nearest.meta.tags?.waterway || "Su hattı"),
+            distancePx: nearest.distancePx
+          });
+
+          const now = Date.now();
+          if ((now - goldLastTapSuccessAt) > 1400) {
+            showToast("Akar su seçildi ✅");
+            goldLastTapSuccessAt = now;
+          }
+          handleGoldWaterClick({ latlng: nearest.snapLatLng || e.latlng }, nearest.meta);
           return;
         }
 
@@ -11375,6 +11467,92 @@ function initMap() {
       goldPrevSelectedWayId = selectedId || null;
     }
 
+
+    function goldSelectionTolerancePx(zoomNow = null) {
+      const z = Number.isFinite(zoomNow) ? zoomNow : (map ? map.getZoom() : 13);
+      const mobile = isPhoneViewport();
+      if (z >= 16) return mobile ? 22 : 16;
+      if (z >= 15) return mobile ? 28 : 20;
+      if (z >= 14) return mobile ? 34 : 24;
+      if (z >= 13) return mobile ? 42 : 30;
+      return mobile ? 48 : 34;
+    }
+
+    function pointToSegmentDistancePx(p, a, b) {
+      const ax = a.x, ay = a.y;
+      const bx = b.x, by = b.y;
+      const vx = bx - ax, vy = by - ay;
+      const wx = p.x - ax, wy = p.y - ay;
+      const c1 = (wx * vx) + (wy * vy);
+      if (c1 <= 0) return Math.hypot(p.x - ax, p.y - ay);
+      const c2 = (vx * vx) + (vy * vy);
+      if (c2 <= c1) return Math.hypot(p.x - bx, p.y - by);
+      const t = c1 / c2;
+      const px = ax + (t * vx);
+      const py = ay + (t * vy);
+      return Math.hypot(p.x - px, p.y - py);
+    }
+
+    function findNearestGoldWaterAt(clickLatLng) {
+      if (!map || !clickLatLng || !goldWaterWaysById || !goldWaterWaysById.size) return null;
+      const tolerancePx = goldSelectionTolerancePx(map.getZoom());
+      const clickPt = map.latLngToContainerPoint(clickLatLng);
+      let best = null;
+
+      for (const poly of goldWaterWaysById.values()) {
+        const meta = poly && poly._goldMeta;
+        if (!meta || !Array.isArray(meta.latlngs) || meta.latlngs.length < 2) continue;
+        let localBest = Infinity;
+        let nearestPt = null;
+        for (let i = 0; i < meta.latlngs.length - 1; i++) {
+          const a = map.latLngToContainerPoint(L.latLng(meta.latlngs[i][0], meta.latlngs[i][1]));
+          const b = map.latLngToContainerPoint(L.latLng(meta.latlngs[i + 1][0], meta.latlngs[i + 1][1]));
+          const d = pointToSegmentDistancePx(clickPt, a, b);
+          if (d < localBest) {
+            localBest = d;
+            nearestPt = d === Infinity ? null : L.latLng((meta.latlngs[i][0] + meta.latlngs[i + 1][0]) / 2, (meta.latlngs[i][1] + meta.latlngs[i + 1][1]) / 2);
+          }
+        }
+        if (localBest <= tolerancePx && (!best || localBest < best.distancePx)) {
+          best = { meta, distancePx: localBest, snapLatLng: nearestPt || clickLatLng, tolerancePx };
+        }
+      }
+      return best;
+    }
+
+    function setGoldTapHintVisible(show, text = "") {
+      if (!goldTapHintEl) return;
+      if (show) {
+        if (text) goldTapHintEl.textContent = text;
+        goldTapHintEl.hidden = false;
+      } else {
+        goldTapHintEl.hidden = true;
+      }
+    }
+
+    function closeGoldSelectionSheet() {
+      if (!goldSelectionSheetEl) return;
+      goldSelectionSheetEl.classList.remove("is-open");
+      goldSelectionSheetEl.hidden = true;
+    }
+
+    function openGoldSelectionSheet(payload = {}) {
+      if (!goldSelectionSheetEl) return;
+      const wName = payload.wName || "İsimsiz su hattı";
+      const wType = payload.wType || "Su hattı";
+      const dist = Number.isFinite(payload.distancePx) ? `${Math.round(payload.distancePx)} px yakınlık` : "Yakın seçim";
+      if (goldSelectionTitleEl) goldSelectionTitleEl.textContent = wName;
+      if (goldSelectionMetaEl) goldSelectionMetaEl.textContent = `${wType} • ${dist}. Kısa analiz için devam et.`;
+      goldSelectionSheetEl.hidden = false;
+      requestAnimationFrame(() => goldSelectionSheetEl.classList.add("is-open"));
+    }
+
+    function isGoldTapGestureValid() {
+      if (!goldTapStartAt) return true;
+      const elapsed = Date.now() - goldTapStartAt;
+      return elapsed < 420 && (goldTapMovedPx || 0) <= 11;
+    }
+
     
     function goldMaxConcurrentFetch() {
       const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -11550,6 +11728,8 @@ function goldResetWater() {
       goldTileCycleId++;
       goldRefreshRunToken++;
       if (goldMode && mapInitialized) ensureGoldWaterRenderer(true);
+      goldSelectedMeta = null;
+      closeGoldSelectionSheet();
       setGoldStatus(t('ready'));
     }
 
@@ -11607,6 +11787,7 @@ function goldResetWater() {
           goldWaterLayer = L.featureGroup();
 
           goldWaterLayer.on("click", (e) => {
+            if (!goldSelectModeEnabled || !isGoldTapGestureValid()) return;
             // Çocuk layer'dan gelen event'i yakala
             const layer = (e && (e.layer || e.propagatedFrom)) || e.target;
             const meta = layer && layer._goldMeta;
@@ -11618,6 +11799,11 @@ function goldResetWater() {
                 L.DomEvent.stop(e.originalEvent);
               }
             } catch {}
+            openGoldSelectionSheet({
+              wName: meta.tags?.name || "İsimsiz su hattı",
+              wType: meta.tags?.waterway || "Su hattı",
+              distancePx: 0
+            });
             handleGoldWaterClick(e, meta);
           });
         }
@@ -11630,6 +11816,10 @@ function goldResetWater() {
         if (goldMicroToggleBtn) {
           goldMicroToggleBtn.textContent = goldMicroEnabled ? t("microOn") : t("microOff");
         }
+        if (goldSelectModeBtn) {
+          goldSelectModeBtn.textContent = goldSelectModeEnabled ? "🎯 Akar su seçimi: Açık" : "🎯 Akar su seçimi: Kapalı";
+        }
+        setGoldTapHintVisible(true, "Mavi akar suya dokun. Yakındaki hat otomatik seçilir.");
 
         // İlk bilgi
         renderGoldLastOrEmptyState();
@@ -11675,6 +11865,8 @@ function goldResetWater() {
         if (markersLayer && goldPrevMarkersVisible && !map.hasLayer(markersLayer)) map.addLayer(markersLayer);
         if (freeMarkersLayer && goldPrevFreeMarkersVisible && !map.hasLayer(freeMarkersLayer)) map.addLayer(freeMarkersLayer);
 
+        setGoldTapHintVisible(false);
+        closeGoldSelectionSheet();
         setGoldStatus(t('ready'));
       }
     }
@@ -12674,7 +12866,17 @@ out tags geom qt;`;
       const sameWayAsCurrent = previousPayload && previousPayload.osmWayId && String(previousPayload.osmWayId) === String(meta.osmWayId || "");
       goldSelectedWayId = meta.osmWayId || null;
       goldSelectedLatLng = clickLatLng;
+      goldSelectedMeta = meta || null;
       applyGoldSelectionVisual();
+      const selectedPoly = goldWaterWaysById.get(Number(goldSelectedWayId)) || goldWaterWaysById.get(goldSelectedWayId);
+      if (selectedPoly && typeof selectedPoly.setStyle === "function") {
+        try {
+          selectedPoly.setStyle({ opacity: 1, weight: Math.max(5.2, (selectedPoly.options?.weight || 4.4) + 1.8), color: "#60a5fa" });
+          setTimeout(() => {
+            try { applyGoldSelectionVisual(); } catch {}
+          }, 900);
+        } catch {}
+      }
       abortGoldAnalysisNetwork();
       const analysisSignal = getGoldAnalysisSignal(true);
       const pointCacheKey = makeGoldPointCacheKey(clickLatLng.lat, clickLatLng.lng, meta.osmWayId || "");
@@ -16912,6 +17114,35 @@ function updateHistoryPreview(rawText) {
       scheduleGoldRefresh(true);
     });
 
+
+    safeBindClick(goldSelectModeBtn, "goldSelectModeBtn", () => {
+      goldSelectModeEnabled = !goldSelectModeEnabled;
+      if (goldSelectModeBtn) goldSelectModeBtn.textContent = goldSelectModeEnabled ? "🎯 Akar su seçimi: Açık" : "🎯 Akar su seçimi: Kapalı";
+      if (goldSelectModeEnabled) {
+        setGoldTapHintVisible(true, "Mavi akar suya dokun. Yakındaki hat otomatik seçilir.");
+      } else {
+        closeGoldSelectionSheet();
+        setGoldTapHintVisible(false);
+      }
+    });
+
+    safeBindClick(goldSelectionCloseBtn, "goldSelectionCloseBtn", closeGoldSelectionSheet);
+    safeBindClick(goldSelectionInspectBtn, "goldSelectionInspectBtn", () => {
+      if (goldPanel) openSurfacePanel(goldPanel);
+      const resultEl = document.getElementById("goldResult");
+      try { resultEl && resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch {}
+    });
+    safeBindClick(goldSelectionAnalyzeBtn, "goldSelectionAnalyzeBtn", () => {
+      if (!goldSelectedMeta || !goldSelectedLatLng) return;
+      handleGoldWaterClick({ latlng: goldSelectedLatLng }, goldSelectedMeta);
+    });
+    safeBindClick(goldSelectionSaveBtn, "goldSelectionSaveBtn", () => {
+      if (!goldSelectedLatLng) return;
+      openFormNew();
+      if (locationInput) locationInput.value = `${goldSelectedLatLng.lat.toFixed(6)}, ${goldSelectedLatLng.lng.toFixed(6)}`;
+      showToast("Seçilen akar su noktası forma aktarıldı.", "success", 1600);
+    });
+
     safeBindClick(settingsBtn, "settingsBtn", () => {
       formContainer.style.display = "none";
       resetMapEvaluationCard();
@@ -17545,6 +17776,78 @@ function updateHistoryPreview(rawText) {
       line-height: 1.34 !important;
     }
   }
+
+
+.gold-tap-hint {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 910;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(96,165,250,0.4);
+  background: rgba(8,17,34,0.86);
+  color: #dbeafe;
+  font-size: 12px;
+  line-height: 1.35;
+  box-shadow: 0 10px 22px rgba(2,6,23,0.44);
+}
+.gold-selection-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 10px);
+  transform: translateX(-50%) translateY(16px);
+  width: min(94vw, 520px);
+  z-index: 3600;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,0.32);
+  background: rgba(9,17,32,0.96);
+  box-shadow: 0 16px 34px rgba(2,6,23,0.58);
+  padding: 10px 12px 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .2s ease;
+}
+.gold-selection-sheet.is-open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.gold-selection-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.58);
+  margin: 0 auto 8px;
+}
+.gold-selection-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gold-selection-kicker { font-size: 11px; color: #93c5fd; }
+.gold-selection-title { font-size: 14px; font-weight: 700; color: #f8fafc; margin-top: 2px; }
+.gold-selection-meta { margin-top: 7px; color: #cbd5e1; font-size: 12px; line-height: 1.4; }
+.gold-selection-close {
+  border: 1px solid rgba(148,163,184,0.4);
+  background: rgba(15,23,42,0.95);
+  color: #e2e8f0;
+  border-radius: 10px;
+  width: 32px;
+  height: 30px;
+}
+.gold-selection-actions {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+.gold-selection-actions .btn-small { min-height: 36px; font-size: 12px; }
+@media (max-width: 480px) {
+  .gold-selection-sheet { width: calc(100vw - 14px); bottom: calc(env(safe-area-inset-bottom) + 6px); }
+  .gold-selection-actions { grid-template-columns: 1fr; }
+}
 </style>
 
 </body>
