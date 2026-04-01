@@ -3266,6 +3266,34 @@
   gap: 8px;
   margin-top: 2px;
 }
+.history-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.history-breakdown-item {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(71,85,105,0.78);
+  background: rgba(2,6,23,0.62);
+  display: grid;
+  gap: 4px;
+}
+.history-breakdown-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.history-breakdown-score {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.history-breakdown-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
 .history-tag {
   padding: 6px 9px;
   border-radius: 999px;
@@ -3342,6 +3370,9 @@
 }
 @media (max-width: 520px) {
   .history-preview-grid {
+    grid-template-columns: 1fr;
+  }
+  .history-breakdown-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -7524,30 +7555,39 @@ select {
   </div>
 
   <div class="history-summary-box">
-    <div class="history-summary-title">Arazi özeti</div>
+    <div class="history-summary-title">Kısa özet</div>
     <div id="historySummaryText" class="history-summary-text">Konuma göre kısa özet burada görünür.</div>
-    <div id="historyTagList" class="history-tag-list"></div>
+  </div>
+
+  <div class="history-note-box">
+    <div class="history-summary-title">Neden böyle?</div>
+    <ul id="historyWhyList" class="map-eval-list"></ul>
   </div>
 
   <div class="history-gem-box">
-    <div class="history-gem-title">💎 Bölgesel taş sinyali</div>
-    <div id="historyGemText" class="history-gem-text">Bölgesel taş sinyali burada görünür.</div>
+    <div class="history-gem-title">Uygarlık / dönem katmanı</div>
+    <div id="historyLayerList" class="history-tag-list"></div>
+  </div>
+
+  <div class="history-note-box">
+    <div class="history-summary-title">Ayrıntılı puanlar</div>
+    <div id="historyScoreBreakdown" class="history-breakdown-grid"></div>
   </div>
 
   <div class="history-note-box">
     <div class="history-meter-top">
-      <div class="history-meter-label">Bölgesel yoğunluk profili</div>
+      <div class="history-meter-label">Veri güven düzeyi</div>
       <div id="historyDefineValue" class="history-meter-value">%0</div>
     </div>
     <div class="history-meter-track">
       <div id="historyDefineFill" class="history-meter-fill"></div>
     </div>
     <div class="history-meter-scale">
-      <span>Düşük</span>
-      <span>Orta</span>
-      <span>Yüksek</span>
+      <span>Düşük güven</span>
+      <span>Orta güven</span>
+      <span>Yüksek güven</span>
     </div>
-    <div id="historyDefineNote" class="history-meter-note">Bu alan, bölgesel tarih, yerleşim ve taş sinyallerinin birleşik profilini özetler.</div>
+    <div id="historyDefineNote" class="history-meter-note">Veri güven düzeyi; kaynak kapsamı ve konum eşleşmesine göre üretilir.</div>
   </div>
 
   <div id="historyPreviewFootnote" class="history-preview-sub">Bu kart, skorun bölgesel tarih yoğunluğu, ilçe içi mikro profil, yerleşim yapısı ve konum sinyallerine göre değiştiği ön değerlendirmeyi gösterir.</div>
@@ -8789,7 +8829,6 @@ select {
 
 const historyPreview = document.getElementById("historyPreview");
 const historyPreviewTitle = document.getElementById("historyPreviewTitle");
-const historyGemText = document.getElementById("historyGemText");
 const historyDefineValue = document.getElementById("historyDefineValue");
 const historyDefineFill = document.getElementById("historyDefineFill");
 const historyDefineNote = document.getElementById("historyDefineNote");
@@ -8799,7 +8838,9 @@ const historyConfidenceValue = document.getElementById("historyConfidenceValue")
 const historyActionValue = document.getElementById("historyActionValue");
 const historyRegionValue = document.getElementById("historyRegionValue");
 const historySummaryText = document.getElementById("historySummaryText");
-const historyTagList = document.getElementById("historyTagList");
+const historyWhyList = document.getElementById("historyWhyList");
+const historyLayerList = document.getElementById("historyLayerList");
+const historyScoreBreakdown = document.getElementById("historyScoreBreakdown");
 const historyPreviewFootnote = document.getElementById("historyPreviewFootnote");
 
 
@@ -15705,6 +15746,66 @@ function buildHistoryPreviewTags({ district = "", periods = [], confidenceLabel 
   return [...new Set(tags)].slice(0, 6);
 }
 
+function classifyOverallLevel(score = 0) {
+  if (score >= 78) return "Yüksek";
+  if (score >= 62) return "İyi";
+  if (score >= 45) return "Orta";
+  return "Düşük";
+}
+
+function scoreNote(label, score) {
+  if (score >= 75) return `${label} için güçlü sinyal üretiliyor.`;
+  if (score >= 55) return `${label} orta seviyede destekleniyor.`;
+  return `${label} için veri sınırlı görünüyor.`;
+}
+
+function buildContextBreakdown({ locationSignals, periods = [], confidenceKey = "low", sourceStatus = "", district = "", province = "" }) {
+  const historyScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.78 + (periods.length * 4)), 0, 100);
+  const culturalScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.7 + (district ? 14 : 6)), 0, 100);
+  const diversityScore = clamp(Math.round(28 + Math.min(48, periods.length * 12) + (province ? 8 : 0)), 0, 100);
+  const continuityScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.62 + (locationSignals.settlementDelta || 0) * 4 + 22), 0, 100);
+  const geoScore = clamp(Math.round(52 + (locationSignals.corridorDelta || 0) * 2 + (locationSignals.water?.bonus || 0) * 3), 0, 100);
+  const confidenceScore = sourceStatus === "verified"
+    ? 86
+    : sourceStatus === "draft"
+      ? 64
+      : confidenceKey === "mid"
+        ? 57
+        : 45;
+
+  const scoreItems = [
+    { key: "historical", label: "Tarihî bağlam skoru", score: historyScore },
+    { key: "cultural", label: "Kültürel kayıt yoğunluğu", score: culturalScore },
+    { key: "diversity", label: "Uygarlık çeşitliliği", score: diversityScore },
+    { key: "continuity", label: "Yerleşim sürekliliği", score: continuityScore },
+    { key: "geography", label: "Coğrafi bağlam skoru", score: geoScore },
+    { key: "confidence", label: "Veri güven skoru", score: confidenceScore }
+  ].map((item) => ({ ...item, note: scoreNote(item.label, item.score) }));
+
+  return {
+    scoreItems,
+    confidenceScore,
+    overall: classifyOverallLevel(Math.round(scoreItems.reduce((sum, item) => sum + item.score, 0) / scoreItems.length))
+  };
+}
+
+function buildPeriodLayers(periods = [], sourceStatus = "draft") {
+  if (!Array.isArray(periods) || !periods.length) {
+    return [{ label: "Bölgesel dönem kaydı", status: "Sınırlı veri" }];
+  }
+  const preferred = ["Antik", "Roma", "Bizans", "Selçuklu", "Osmanlı", "Erken Cumhuriyet"];
+  const unique = [...new Set(periods.map((item) => normalizePreviewLine(item)).filter(Boolean))];
+  const ranked = unique.sort((a, b) => {
+    const ai = preferred.findIndex((p) => a.toLocaleLowerCase("tr-TR").includes(p.toLocaleLowerCase("tr-TR")));
+    const bi = preferred.findIndex((p) => b.toLocaleLowerCase("tr-TR").includes(p.toLocaleLowerCase("tr-TR")));
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+  });
+  return ranked.slice(0, 6).map((label, idx) => ({
+    label,
+    status: sourceStatus === "verified" ? "Doğrulanmış bölgesel bağlam" : idx < 2 ? "Muhtemel etki" : "Yardımcı kaynak desteği"
+  }));
+}
+
 function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const provinceHistory = result?.provinceHistory || null;
   const address = result?.address || null;
@@ -15751,6 +15852,26 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
       ? "Bu kart, uygulamadaki bölgesel özet ve yerleşim eşleştirmesine göre üretildi."
       : "Bu kart, açık kaynak özetleri ve konum eşleşmesine göre üretildi.";
   const footnote = `${footnoteBase} Skor; bölgesel tarih yoğunluğu, ilçe içi mikro tarih bandı, yerleşim profili, su hattı yakınlığı ve taş sinyalinin birleşik etkisine göre değişir. ${locationSignals.microNote}`;
+  const contextBreakdown = buildContextBreakdown({
+    locationSignals,
+    periods,
+    confidenceKey: confidence.key,
+    sourceStatus,
+    district,
+    province
+  });
+  const layerItems = buildPeriodLayers(periods, sourceStatus);
+  const whyItems = [
+    `${district ? `${district} / ${province || "il"} düzeyinde` : `${province || "İl"} düzeyinde`} tarihî süreklilik sinyali değerlendirildi.`,
+    periods.length ? `Birden fazla dönem etkisi (${periods.slice(0, 3).join(", ")}) görüldüğü için bağlam skoru yükseldi.` : "Dönem verisi sınırlı olduğu için bağlam skoru temkinli üretildi.",
+    `${locationSignals.geoBandLabel} ve ${locationSignals.water.label.toLocaleLowerCase("tr-TR")} coğrafi bağlam puanına etki etti.`,
+    confidence.key === "high"
+      ? "Kaynak kapsaması güçlü olduğu için veri güven düzeyi yüksek üretildi."
+      : confidence.key === "mid"
+        ? "Kayıtlar karışık kaynaklardan geldiği için veri güven düzeyi orta tutuldu."
+        : "Kayıt kapsamı sınırlı olduğu için sonuç düşük-orta güvenle üretildi."
+  ];
+  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönem katmanları: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} Kültürel kayıt yoğunluğu ${contextBreakdown.scoreItems[1].score >= 60 ? "orta-yüksek" : "sınırlı-orta"} seviyede değerlendirildi. Veri güven düzeyi: ${confidence.label}.`;
 
   return {
     title: `${region} ön değerlendirmesi`,
@@ -15761,6 +15882,10 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
     confidenceKey: confidence.key,
     action,
     summary,
+    whyItems,
+    layerItems,
+    scoreBreakdown: contextBreakdown.scoreItems,
+    overallLevel: contextBreakdown.overall,
     gemText,
     narrativePercent,
     narrativeLevel,
@@ -15921,11 +16046,27 @@ function extractHistoryPreviewData(rawText) {
 
   const action = explicitAction || chooseHistoryAction({ confidenceKey, score });
   const footnote = explicitFootnote || parseLabeledLine(text, "Sunum notu") || parseLabeledLine(text, "Not") || "Bu kart, bölgesel eşleşme ve kısa özetler kullanılarak üretildi.";
+  const sourceStatus = /Doğrulama seviyesi:\s*Yüksek/i.test(text) ? "verified" : "draft";
+  const contextBreakdown = buildContextBreakdown({
+    locationSignals,
+    periods,
+    confidenceKey,
+    sourceStatus,
+    district,
+    province
+  });
+  const layerItems = buildPeriodLayers(periods, sourceStatus);
+  const whyItems = [
+    district ? "İlçe eşleşmesi bulunduğu için analiz ilçe düzeyine taşındı." : "İlçe verisi bulunamadı; genel il düzeyinde değerlendirme yapıldı.",
+    periods.length ? "Dönem katmanı verisi bulundu." : "Dönem katmanı verisi sınırlı.",
+    locationSignals.water?.bonus ? `${locationSignals.water.label} coğrafi bağlama eklendi.` : "Su hattı verisi sınırlı.",
+    confidenceKey === "high" ? "Kaynak güveni yüksek." : confidenceKey === "mid" ? "Kaynak güveni orta." : "Kaynak güveni düşük-orta."
+  ];
   const tags = buildHistoryPreviewTags({
     district,
     periods,
     confidenceLabel,
-    sourceStatus: /Doğrulama seviyesi:\s*Yüksek/i.test(text) ? "verified" : "draft",
+    sourceStatus,
     narrativeLevel: narrativeLevel.label,
     hasSpecificGem,
     signalTags: locationSignals.tags
@@ -15940,6 +16081,10 @@ function extractHistoryPreviewData(rawText) {
     confidenceKey,
     action,
     summary,
+    whyItems,
+    layerItems,
+    scoreBreakdown: contextBreakdown.scoreItems,
+    overallLevel: contextBreakdown.overall,
     gemText,
     narrativePercent,
     narrativeLevel,
@@ -16161,7 +16306,7 @@ function openQuickSelectionInForm() {
 }
 
 function updateHistoryPreview(rawText) {
-  if (!historyPreview || !historyGemText || !historyDefineValue || !historyDefineFill || !historyDefineNote || !historyDefineChip) return;
+  if (!historyPreview || !historyDefineValue || !historyDefineFill || !historyDefineNote || !historyDefineChip) return;
   const data = extractHistoryPreviewData(rawText);
   if (!data) {
     historyPreview.classList.remove("show");
@@ -16171,13 +16316,14 @@ function updateHistoryPreview(rawText) {
     if (historyActionValue) historyActionValue.textContent = "Nokta seç";
     if (historyRegionValue) historyRegionValue.textContent = "—";
     if (historySummaryText) historySummaryText.textContent = "Konuma göre kısa özet burada görünür.";
-    historyGemText.textContent = "Bölgesel taş sinyali burada görünür.";
+    renderMapEvalList(historyWhyList, [], "Nedenler burada görünür.");
+    if (historyLayerList) historyLayerList.innerHTML = `<span class="history-tag">Veri sınırlı</span>`;
+    if (historyScoreBreakdown) historyScoreBreakdown.innerHTML = "";
     historyDefineValue.textContent = "%0";
     historyDefineFill.style.width = "0%";
-    historyDefineNote.textContent = "Bu alan, bölgesel tarih, yerleşim ve taş sinyallerinin birleşik profilini özetler.";
+    historyDefineNote.textContent = "Veri güven düzeyi; kaynak kapsamı ve konum eşleşmesine göre üretilir.";
     historyDefineChip.textContent = "Hazır değil";
     historyDefineChip.className = "history-preview-chip low";
-    if (historyTagList) historyTagList.innerHTML = "";
     if (historyPreviewFootnote) historyPreviewFootnote.textContent = "Bu kart, skorun bölgesel tarih yoğunluğu, ilçe içi mikro profil, yerleşim yapısı ve konum sinyallerine göre değiştiği ön değerlendirmeyi gösterir.";
     return;
   }
@@ -16186,18 +16332,33 @@ function updateHistoryPreview(rawText) {
   if (historyPreviewTitle) historyPreviewTitle.textContent = data.title;
   if (historyScoreValue) historyScoreValue.textContent = `${data.score}/100`;
   if (historyConfidenceValue) historyConfidenceValue.textContent = data.confidenceLabel;
-  if (historyActionValue) historyActionValue.textContent = data.action;
+  if (historyActionValue) historyActionValue.textContent = data.overallLevel || data.action;
   if (historyRegionValue) historyRegionValue.textContent = data.region;
   if (historySummaryText) historySummaryText.textContent = data.summary;
-  historyGemText.textContent = data.gemText;
-  historyDefineValue.textContent = `%${data.narrativePercent}`;
-  historyDefineFill.style.width = `${data.narrativePercent}%`;
-  historyDefineNote.textContent = data.note;
+  renderMapEvalList(historyWhyList, data.whyItems || [], "Nedenler sınırlı veriyle üretildi.");
+  if (historyLayerList) {
+    const layers = Array.isArray(data.layerItems) ? data.layerItems : [];
+    historyLayerList.innerHTML = layers.length
+      ? layers.map((layer) => `<span class="history-tag">${escapeHtml(`${layer.label} • ${layer.status}`)}</span>`).join("")
+      : `<span class="history-tag">Bölgesel kayıt bulunamadı</span>`;
+  }
+  if (historyScoreBreakdown) {
+    const rows = Array.isArray(data.scoreBreakdown) ? data.scoreBreakdown : [];
+    historyScoreBreakdown.innerHTML = rows.map((row) => `
+      <div class="history-breakdown-item">
+        <div class="history-breakdown-label">${escapeHtml(row.label)}</div>
+        <div class="history-breakdown-score">${Number(row.score) || 0}/100</div>
+        <div class="history-breakdown-note">${escapeHtml(row.note || "Veri sınırlı.")}</div>
+      </div>
+    `).join("");
+  }
+  const confScore = (data.scoreBreakdown || []).find((item) => item.key === "confidence")?.score;
+  const safeConfidenceScore = Number.isFinite(confScore) ? confScore : clamp(data.narrativePercent || 0, 0, 100);
+  historyDefineValue.textContent = `%${safeConfidenceScore}`;
+  historyDefineFill.style.width = `${safeConfidenceScore}%`;
+  historyDefineNote.textContent = data.note || "Veri güven düzeyi sınırlı.";
   historyDefineChip.textContent = data.chipText;
   historyDefineChip.className = `history-preview-chip ${data.confidenceKey}`;
-  if (historyTagList) {
-    historyTagList.innerHTML = (data.tags || []).map((tag) => `<span class="history-tag">${escapeHtml(tag)}</span>`).join("");
-  }
   if (historyPreviewFootnote) historyPreviewFootnote.textContent = data.footnote;
 }
 
