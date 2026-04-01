@@ -7172,17 +7172,20 @@ select {
       <div class="app-header">
         <div class="header-topbar">
           <div class="header-brand">
-            <div class="title-badge">
-              <span>🧭</span>
-              <span>Alan Defteri</span>
-            </div>
+            <div class="title-badge"><span>🧭</span><span>Alan Defteri</span></div>
+            <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Harita</h1>
           </div>
-          <button type="button" id="settingsBtn" class="header-settings-btn" aria-label="Ayarlar ve veri">
-            <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
-            <span class="settings-btn-text">Ayarlar</span>
-          </button>
+          <div class="header-top-actions">
+            <button type="button" id="searchToggleBtn" class="search-toggle-btn icon-only" aria-expanded="false" aria-controls="recordsSearchPanel" aria-label="Ara">
+              <span class="search-toggle-icon">🔎</span>
+              <span class="search-toggle-text">Ara</span>
+            </button>
+            <button type="button" id="settingsBtn" class="header-settings-btn icon-only" aria-label="Ayarlar ve veri">
+              <span class="icon"><span class="icon-core" aria-hidden="true">☰</span></span>
+              <span class="settings-btn-text">Menü</span>
+            </button>
+          </div>
         </div>
-        <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
       </div>
 
       <div class="header-actions">
@@ -7207,10 +7210,6 @@ select {
       <div class="records-toolbar">
         <div class="records-toolbar-top">
           <div id="count" class="count-badge">0 nokta</div>
-          <button type="button" id="searchToggleBtn" class="search-toggle-btn" aria-expanded="false" aria-controls="recordsSearchPanel">
-            <span class="search-toggle-icon">🔎</span>
-            <span class="search-toggle-text">Ara</span>
-          </button>
         </div>
         <div id="recordsSearchPanel" class="records-search-panel" hidden>
           <div class="search-shell compact-search-shell">
@@ -7645,6 +7644,15 @@ select {
         <div class="map-tools secondary">
           <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
           <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
+        </div>
+
+        <button type="button" id="toolsSheetToggle" class="map-utility-toggle" aria-expanded="false" aria-controls="mapUtilitySheet">Araçlar</button>
+        <div id="mapUtilitySheet" class="map-utility-sheet" aria-hidden="true">
+          <div class="map-utility-handle"></div>
+          <div id="utilityActionHost" class="map-utility-primary"></div>
+          <div class="map-utility-secondary">
+            <div id="analysisUsageBannerHost"></div>
+          </div>
         </div>
 
         <div id="coordBar">İmleç: –</div>
@@ -17131,6 +17139,118 @@ function updateHistoryPreview(rawText) {
     }
   }
 </style>
+
+<style id="mobile-map-refactor-2026">
+  .app-shell { padding: 10px 10px 96px !important; border-radius: 16px !important; }
+  .app-header { margin-bottom: 8px !important; }
+  .header-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .header-brand { display: flex; flex-direction: column; gap: 4px; }
+  .app-header h1 { font-size: 17px !important; margin: 0 !important; }
+  .header-top-actions { display: flex; gap: 8px; }
+  .icon-only { width: 42px; min-width: 42px; height: 42px; padding: 0 !important; border-radius: 12px !important; }
+  .icon-only .search-toggle-text,
+  .icon-only .settings-btn-text { display: none !important; }
+  .records-toolbar { margin-bottom: 8px !important; }
+  .records-toolbar-top { justify-content: flex-start !important; }
+  .count-badge { padding: 6px 10px !important; font-size: 11px !important; }
+  .header-actions { margin: 0 !important; }
+  .primary-actions { display: block !important; }
+  .primary-actions #goldGuideBtn { display: none !important; }
+  .primary-actions #addBtn {
+    position: fixed !important;
+    right: calc(env(safe-area-inset-right, 0px) + 16px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+    z-index: 3400;
+    min-height: 58px !important;
+    width: auto !important;
+    padding: 0 18px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 18px 30px rgba(12, 74, 110, 0.42) !important;
+  }
+  #addBtn .hero-btn-subtitle { display: none !important; }
+  #addBtn .hero-btn-title { font-size: 15px !important; }
+  .map-wrapper { margin-top: 0 !important; }
+  .map-stage { min-height: 58vh !important; }
+  #analysisUsageBanner { display: none; }
+  .map-tools, .map-tools.secondary { display: none !important; }
+  .map-utility-toggle {
+    position: fixed;
+    left: calc(env(safe-area-inset-left, 0px) + 14px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+    z-index: 3400;
+    border: 1px solid rgba(148,163,184,.45);
+    background: rgba(15,23,42,.9);
+    color: #dbe7ff;
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-weight: 700;
+  }
+  .map-utility-sheet {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: calc(env(safe-area-inset-bottom,0px) + 76px);
+    background: rgba(10,18,34,.97);
+    border: 1px solid rgba(71,85,105,.7);
+    border-radius: 16px;
+    padding: 10px;
+    z-index: 3350;
+    transform: translateY(calc(100% + 20px));
+    opacity: 0;
+    pointer-events: none;
+    transition: .22s ease;
+    max-height: 58vh;
+    overflow: auto;
+  }
+  .map-utility-sheet.is-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .map-utility-handle { width: 46px; height: 4px; border-radius: 999px; margin: 0 auto 10px; background: rgba(148,163,184,.6); }
+  .map-utility-primary { display: grid; gap: 8px; }
+  .map-utility-primary .map-tools,
+  .map-utility-primary .map-tools.secondary { display: flex !important; margin: 0 !important; }
+  .map-utility-primary .btn-small,
+  .map-utility-primary #goldGuideBtn { width: 100%; justify-content: center; min-height: 44px; }
+  .map-utility-secondary { margin-top: 10px; }
+  .mobile-quickbar button[data-quickbar-action="add"] { display: none !important; }
+</style>
+
+<script>
+  (function () {
+    const setup = () => {
+      const utilityHost = document.getElementById('utilityActionHost');
+      const usageHost = document.getElementById('analysisUsageBannerHost');
+      const utilitySheet = document.getElementById('mapUtilitySheet');
+      const toggleBtn = document.getElementById('toolsSheetToggle');
+      const goldGuideBtn = document.getElementById('goldGuideBtn');
+      const mapTools = document.querySelector('.map-tools');
+      const mapToolsSecondary = document.querySelector('.map-tools.secondary');
+      const usageBanner = document.getElementById('analysisUsageBanner');
+      if (!utilityHost || !utilitySheet || !toggleBtn) return;
+
+      [goldGuideBtn, mapTools, mapToolsSecondary].forEach((el) => {
+        if (!el || utilityHost.contains(el)) return;
+        utilityHost.appendChild(el);
+        el.style.display = '';
+      });
+      if (usageHost && usageBanner && !usageHost.contains(usageBanner)) {
+        usageHost.appendChild(usageBanner);
+        usageBanner.style.display = '';
+      }
+
+      const setOpen = (open) => {
+        utilitySheet.classList.toggle('is-open', open);
+        utilitySheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+        toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      toggleBtn.addEventListener('click', () => setOpen(!utilitySheet.classList.contains('is-open')));
+      document.addEventListener('click', (ev) => {
+        if (!utilitySheet.classList.contains('is-open')) return;
+        if (utilitySheet.contains(ev.target) || toggleBtn.contains(ev.target)) return;
+        setOpen(false);
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
+    else setup();
+  })();
+</script>
 
 </body>
 </html>
