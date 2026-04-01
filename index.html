@@ -9279,6 +9279,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const ANALYSIS_USAGE_STORAGE_KEY = "gem_define_analysis_usage_v4";
     const ANALYSIS_PREMIUM_STORAGE_KEY = "gem_define_premium_unlock_v4";
     const ANALYSIS_RESET_BUILD_MARK = "gem_define_reset_build_v18_applied";
+    // Reklam akışı için tek kaynak URL (boşsa gerçek hata verilir).
+    const ANALYSIS_AD_URL = "https://www.google.com/search?tbm=isch&q=dogal+tas+ekipmanlari";
     const ANALYSIS_PLAN_CONFIG = {
       monthly: {
         label: "Aylık Premium",
@@ -9470,6 +9472,57 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!analysisPremiumModal) return;
       analysisPremiumModal.classList.remove("show");
       analysisPremiumModal.setAttribute("aria-hidden", "true");
+    }
+
+    function getValidAnalysisAdUrl() {
+      const raw = String(ANALYSIS_AD_URL || "").trim();
+      if (!raw) return "";
+      try {
+        const parsed = new URL(raw, window.location.href);
+        if (!/^https?:$/i.test(parsed.protocol)) return "";
+        return parsed.href;
+      } catch (error) {
+        console.error("Reklam URL doğrulama hatası:", error);
+        return "";
+      }
+    }
+
+    function openAnalysisAdFlow() {
+      if (!analysisAdBtn || analysisAdBtn.id !== "analysisAdBtn") {
+        const err = new Error("Reklam butonu bulunamadı veya yanlış id'ye bağlı.");
+        console.error(err.message, { actualId: analysisAdBtn?.id || null });
+        showToast("Reklam butonu başlatılamadı.", "error", 2200);
+        return;
+      }
+      if (isPremiumUnlocked()) {
+        showToast("Premium açıkken reklam gösterimi kapalıdır.", "info", 1700);
+        return;
+      }
+
+      const targetUrl = getValidAnalysisAdUrl();
+      if (!targetUrl) {
+        const err = new Error("Geçerli reklam bağlantısı bulunamadı.");
+        console.error(err.message, { ANALYSIS_AD_URL });
+        showToast("Reklam bağlantısı geçersiz.", "error", 2200);
+        return;
+      }
+
+      // Popup engelinde boş sekme dönebilir; aynı tıklama içinde location fallback yapılır.
+      let popupRef = null;
+      try {
+        popupRef = window.open(targetUrl, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        console.error("window.open çağrısı hata verdi:", error);
+      }
+
+      if (popupRef && !popupRef.closed) return;
+
+      try {
+        window.location.assign(targetUrl);
+      } catch (error) {
+        console.error("Reklam yönlendirme fallback hatası:", error);
+        showToast("Reklam açılamadı. Lütfen popup engelini kontrol et.", "error", 2600);
+      }
     }
 
     function canStartAnalysis(kind = "any") {
@@ -17015,13 +17068,7 @@ function updateHistoryPreview(rawText) {
     });
 
     safeBindClick(analysisPremiumBtn, "analysisPremiumBtn", () => openAnalysisPremiumModal("manual"));
-    safeBindClick(analysisAdBtn, "analysisAdBtn", () => {
-      if (isPremiumUnlocked()) {
-        showToast("Premium açıkken reklam gösterimi kapalıdır.", "info", 1700);
-        return;
-      }
-      showToast("Reklam ödülü özelliği yakında aktif olacak.", "info", 2000);
-    });
+    safeBindClick(analysisAdBtn, "analysisAdBtn", openAnalysisAdFlow);
     safeBindClick(analysisPremiumLaterBtn, "analysisPremiumLaterBtn", closeAnalysisPremiumModal);
     safeBindClick(analysisPremiumCloseBtn, "analysisPremiumCloseBtn", closeAnalysisPremiumModal);
     analysisPlanCards.forEach((card) => {
