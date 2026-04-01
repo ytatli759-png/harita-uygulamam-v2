@@ -3266,6 +3266,34 @@
   gap: 8px;
   margin-top: 2px;
 }
+.history-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.history-breakdown-item {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(71,85,105,0.78);
+  background: rgba(2,6,23,0.62);
+  display: grid;
+  gap: 4px;
+}
+.history-breakdown-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.history-breakdown-score {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.history-breakdown-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
 .history-tag {
   padding: 6px 9px;
   border-radius: 999px;
@@ -3342,6 +3370,9 @@
 }
 @media (max-width: 520px) {
   .history-preview-grid {
+    grid-template-columns: 1fr;
+  }
+  .history-breakdown-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -7172,20 +7203,17 @@ select {
       <div class="app-header">
         <div class="header-topbar">
           <div class="header-brand">
-            <div class="title-badge"><span>🧭</span><span>Alan Defteri</span></div>
-            <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Harita</h1>
+            <div class="title-badge">
+              <span>🧭</span>
+              <span>Alan Defteri</span>
+            </div>
           </div>
-          <div class="header-top-actions">
-            <button type="button" id="searchToggleBtn" class="search-toggle-btn icon-only" aria-expanded="false" aria-controls="recordsSearchPanel" aria-label="Ara">
-              <span class="search-toggle-icon">🔎</span>
-              <span class="search-toggle-text">Ara</span>
-            </button>
-            <button type="button" id="settingsBtn" class="header-settings-btn icon-only" aria-label="Ayarlar ve veri">
-              <span class="icon"><span class="icon-core" aria-hidden="true">☰</span></span>
-              <span class="settings-btn-text">Menü</span>
-            </button>
-          </div>
+          <button type="button" id="settingsBtn" class="header-settings-btn" aria-label="Ayarlar ve veri">
+            <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
+            <span class="settings-btn-text">Ayarlar</span>
+          </button>
         </div>
+        <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
       </div>
 
       <div class="header-actions">
@@ -7210,6 +7238,10 @@ select {
       <div class="records-toolbar">
         <div class="records-toolbar-top">
           <div id="count" class="count-badge">0 nokta</div>
+          <button type="button" id="searchToggleBtn" class="search-toggle-btn" aria-expanded="false" aria-controls="recordsSearchPanel">
+            <span class="search-toggle-icon">🔎</span>
+            <span class="search-toggle-text">Ara</span>
+          </button>
         </div>
         <div id="recordsSearchPanel" class="records-search-panel" hidden>
           <div class="search-shell compact-search-shell">
@@ -7253,6 +7285,7 @@ select {
             <button id="goldReloadWaterBtn" class="btn-small main" type="button">🌊 Akar suları yenile</button>
             <button id="goldBgToggleBtn" class="btn-small" type="button">🛰 Arka plan: Açık</button>
             <button id="goldMicroToggleBtn" class="btn-small" type="button">🧵 Mikro dereler: Açık</button>
+            <button id="goldSelectModeBtn" class="btn-small" type="button">🎯 Akar su seçimi: Açık</button>
             <span id="goldStatus" class="gold-toolbar-status">Hazır</span>
           </div>
 
@@ -7523,30 +7556,39 @@ select {
   </div>
 
   <div class="history-summary-box">
-    <div class="history-summary-title">Arazi özeti</div>
+    <div class="history-summary-title">Kısa özet</div>
     <div id="historySummaryText" class="history-summary-text">Konuma göre kısa özet burada görünür.</div>
-    <div id="historyTagList" class="history-tag-list"></div>
+  </div>
+
+  <div class="history-note-box">
+    <div class="history-summary-title">Neden böyle?</div>
+    <ul id="historyWhyList" class="map-eval-list"></ul>
   </div>
 
   <div class="history-gem-box">
-    <div class="history-gem-title">💎 Bölgesel taş sinyali</div>
-    <div id="historyGemText" class="history-gem-text">Bölgesel taş sinyali burada görünür.</div>
+    <div class="history-gem-title">Uygarlık / dönem katmanı</div>
+    <div id="historyLayerList" class="history-tag-list"></div>
+  </div>
+
+  <div class="history-note-box">
+    <div class="history-summary-title">Ayrıntılı puanlar</div>
+    <div id="historyScoreBreakdown" class="history-breakdown-grid"></div>
   </div>
 
   <div class="history-note-box">
     <div class="history-meter-top">
-      <div class="history-meter-label">Bölgesel yoğunluk profili</div>
+      <div class="history-meter-label">Veri güven düzeyi</div>
       <div id="historyDefineValue" class="history-meter-value">%0</div>
     </div>
     <div class="history-meter-track">
       <div id="historyDefineFill" class="history-meter-fill"></div>
     </div>
     <div class="history-meter-scale">
-      <span>Düşük</span>
-      <span>Orta</span>
-      <span>Yüksek</span>
+      <span>Düşük güven</span>
+      <span>Orta güven</span>
+      <span>Yüksek güven</span>
     </div>
-    <div id="historyDefineNote" class="history-meter-note">Bu alan, bölgesel tarih, yerleşim ve taş sinyallerinin birleşik profilini özetler.</div>
+    <div id="historyDefineNote" class="history-meter-note">Veri güven düzeyi; kaynak kapsamı ve konum eşleşmesine göre üretilir.</div>
   </div>
 
   <div id="historyPreviewFootnote" class="history-preview-sub">Bu kart, skorun bölgesel tarih yoğunluğu, ilçe içi mikro profil, yerleşim yapısı ve konum sinyallerine göre değiştiği ön değerlendirmeyi gösterir.</div>
@@ -7585,6 +7627,7 @@ select {
             </div>
           </div>
           <div id="mapStatus" class="map-status" aria-live="polite"></div>
+          <div id="goldTapHint" class="gold-tap-hint" aria-live="polite" hidden>Mavi akar suya dokun. Yakındaki hat otomatik seçilir.</div>
         </div>
 
         <div id="mapEvalCard" class="map-eval-card" aria-live="polite">
@@ -7646,16 +7689,24 @@ select {
           <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
         </div>
 
-        <button type="button" id="toolsSheetToggle" class="map-utility-toggle" aria-expanded="false" aria-controls="mapUtilitySheet">Araçlar</button>
-        <div id="mapUtilitySheet" class="map-utility-sheet" aria-hidden="true">
-          <div class="map-utility-handle"></div>
-          <div id="utilityActionHost" class="map-utility-primary"></div>
-          <div class="map-utility-secondary">
-            <div id="analysisUsageBannerHost"></div>
+        <div id="coordBar">İmleç: –</div>
+
+        <div id="goldSelectionSheet" class="gold-selection-sheet" hidden>
+          <div class="gold-selection-handle" aria-hidden="true"></div>
+          <div class="gold-selection-top">
+            <div>
+              <div class="gold-selection-kicker">Akar su seçildi</div>
+              <div id="goldSelectionTitle" class="gold-selection-title">Yakındaki hat seçildi</div>
+            </div>
+            <button type="button" id="goldSelectionCloseBtn" class="gold-selection-close" aria-label="Akar su panelini kapat">✕</button>
+          </div>
+          <div id="goldSelectionMeta" class="gold-selection-meta">Kısa analiz için “Bu noktaya göre analiz et” kullan.</div>
+          <div class="gold-selection-actions">
+            <button type="button" id="goldSelectionInspectBtn" class="btn-small">İncele</button>
+            <button type="button" id="goldSelectionAnalyzeBtn" class="btn-small main">Bu noktaya göre analiz et</button>
+            <button type="button" id="goldSelectionSaveBtn" class="btn-small">Yeni nokta olarak kaydet</button>
           </div>
         </div>
-
-        <div id="coordBar">İmleç: –</div>
       </div>
 
       <ul id="list"></ul>
@@ -8797,7 +8848,6 @@ select {
 
 const historyPreview = document.getElementById("historyPreview");
 const historyPreviewTitle = document.getElementById("historyPreviewTitle");
-const historyGemText = document.getElementById("historyGemText");
 const historyDefineValue = document.getElementById("historyDefineValue");
 const historyDefineFill = document.getElementById("historyDefineFill");
 const historyDefineNote = document.getElementById("historyDefineNote");
@@ -8807,7 +8857,9 @@ const historyConfidenceValue = document.getElementById("historyConfidenceValue")
 const historyActionValue = document.getElementById("historyActionValue");
 const historyRegionValue = document.getElementById("historyRegionValue");
 const historySummaryText = document.getElementById("historySummaryText");
-const historyTagList = document.getElementById("historyTagList");
+const historyWhyList = document.getElementById("historyWhyList");
+const historyLayerList = document.getElementById("historyLayerList");
+const historyScoreBreakdown = document.getElementById("historyScoreBreakdown");
 const historyPreviewFootnote = document.getElementById("historyPreviewFootnote");
 
 
@@ -9138,8 +9190,17 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const goldReloadWaterBtn = document.getElementById("goldReloadWaterBtn");
     const goldBgToggleBtn = document.getElementById("goldBgToggleBtn");
     const goldMicroToggleBtn = document.getElementById("goldMicroToggleBtn");
+    const goldSelectModeBtn = document.getElementById("goldSelectModeBtn");
     const goldStatusEl = document.getElementById("goldStatus");
     const goldResultEl = document.getElementById("goldResult");
+    const goldTapHintEl = document.getElementById("goldTapHint");
+    const goldSelectionSheetEl = document.getElementById("goldSelectionSheet");
+    const goldSelectionTitleEl = document.getElementById("goldSelectionTitle");
+    const goldSelectionMetaEl = document.getElementById("goldSelectionMeta");
+    const goldSelectionCloseBtn = document.getElementById("goldSelectionCloseBtn");
+    const goldSelectionInspectBtn = document.getElementById("goldSelectionInspectBtn");
+    const goldSelectionAnalyzeBtn = document.getElementById("goldSelectionAnalyzeBtn");
+    const goldSelectionSaveBtn = document.getElementById("goldSelectionSaveBtn");
     let goldLastMarkup = "";
     const analysisUsageBanner = document.getElementById("analysisUsageBanner");
     const analysisUsageTitle = document.getElementById("analysisUsageTitle");
@@ -9159,6 +9220,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldMode = false;
     let goldBgEnabled = true;
     let goldMicroEnabled = true; // küçük akar sular (ditch/drain vb.)
+    let goldSelectModeEnabled = true;
 
     let selectedSpotId = null;
     let spotMarkersById = new Map();
@@ -9188,6 +9250,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldDeferredBatchTimer = null;
     let goldRefreshRunToken = 0;
     let goldLastNeedBlueHintAt = 0;
+    let goldLastZoomHintAt = 0;
+    let goldLastTapSuccessAt = 0;
+    let goldTapStartPoint = null;
+    let goldTapMovedPx = 0;
+    let goldTapStartAt = 0;
+    let goldSelectedMeta = null;
     const goldTileFailureCooldownUntil = new Map();
     const GOLD_TILE_RETRY_COOLDOWN_MS = 12000;
     const GOLD_NETWORK_RETRY_BASE_MS = 450;
@@ -9211,6 +9279,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const ANALYSIS_USAGE_STORAGE_KEY = "gem_define_analysis_usage_v4";
     const ANALYSIS_PREMIUM_STORAGE_KEY = "gem_define_premium_unlock_v4";
     const ANALYSIS_RESET_BUILD_MARK = "gem_define_reset_build_v18_applied";
+    // Reklam akışı için tek kaynak URL (boşsa gerçek hata verilir).
+    const ANALYSIS_AD_URL = "https://www.google.com/search?tbm=isch&q=dogal+tas+ekipmanlari";
     const ANALYSIS_PLAN_CONFIG = {
       monthly: {
         label: "Aylık Premium",
@@ -9402,6 +9472,57 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!analysisPremiumModal) return;
       analysisPremiumModal.classList.remove("show");
       analysisPremiumModal.setAttribute("aria-hidden", "true");
+    }
+
+    function getValidAnalysisAdUrl() {
+      const raw = String(ANALYSIS_AD_URL || "").trim();
+      if (!raw) return "";
+      try {
+        const parsed = new URL(raw, window.location.href);
+        if (!/^https?:$/i.test(parsed.protocol)) return "";
+        return parsed.href;
+      } catch (error) {
+        console.error("Reklam URL doğrulama hatası:", error);
+        return "";
+      }
+    }
+
+    function openAnalysisAdFlow() {
+      if (!analysisAdBtn || analysisAdBtn.id !== "analysisAdBtn") {
+        const err = new Error("Reklam butonu bulunamadı veya yanlış id'ye bağlı.");
+        console.error(err.message, { actualId: analysisAdBtn?.id || null });
+        showToast("Reklam butonu başlatılamadı.", "error", 2200);
+        return;
+      }
+      if (isPremiumUnlocked()) {
+        showToast("Premium açıkken reklam gösterimi kapalıdır.", "info", 1700);
+        return;
+      }
+
+      const targetUrl = getValidAnalysisAdUrl();
+      if (!targetUrl) {
+        const err = new Error("Geçerli reklam bağlantısı bulunamadı.");
+        console.error(err.message, { ANALYSIS_AD_URL });
+        showToast("Reklam bağlantısı geçersiz.", "error", 2200);
+        return;
+      }
+
+      // Popup engelinde boş sekme dönebilir; aynı tıklama içinde location fallback yapılır.
+      let popupRef = null;
+      try {
+        popupRef = window.open(targetUrl, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        console.error("window.open çağrısı hata verdi:", error);
+      }
+
+      if (popupRef && !popupRef.closed) return;
+
+      try {
+        window.location.assign(targetUrl);
+      } catch (error) {
+        console.error("Reklam yönlendirme fallback hatası:", error);
+        showToast("Reklam açılamadı. Lütfen popup engelini kontrol et.", "error", 2600);
+      }
     }
 
     function canStartAnalysis(kind = "any") {
@@ -10311,6 +10432,31 @@ function initMap() {
         tap: false
       }).setView(savedView.center, savedView.zoom);
 
+      const mapContainer = map.getContainer();
+      if (mapContainer && !mapContainer.__goldTapBound) {
+        mapContainer.__goldTapBound = true;
+        const onStart = (ev) => {
+          const pt = (ev.touches && ev.touches[0]) || ev;
+          goldTapStartPoint = { x: pt.clientX || 0, y: pt.clientY || 0 };
+          goldTapMovedPx = 0;
+          goldTapStartAt = Date.now();
+        };
+        const onMove = (ev) => {
+          if (!goldTapStartPoint) return;
+          const pt = (ev.touches && ev.touches[0]) || ev;
+          const dx = (pt.clientX || 0) - goldTapStartPoint.x;
+          const dy = (pt.clientY || 0) - goldTapStartPoint.y;
+          goldTapMovedPx = Math.max(goldTapMovedPx || 0, Math.hypot(dx, dy));
+        };
+        const onEnd = () => { setTimeout(() => { goldTapStartPoint = null; goldTapStartAt = 0; goldTapMovedPx = 0; }, 20); };
+        mapContainer.addEventListener("touchstart", onStart, { passive: true });
+        mapContainer.addEventListener("touchmove", onMove, { passive: true });
+        mapContainer.addEventListener("touchend", onEnd, { passive: true });
+        mapContainer.addEventListener("mousedown", onStart);
+        mapContainer.addEventListener("mousemove", onMove);
+        mapContainer.addEventListener("mouseup", onEnd);
+      }
+
       // ✅ Altın Modu su ağı: ayrı pane + özel renderer
       // Bazı telefonlarda Canvas çizimi yüklenip renk vermeyebildiği için
       // su katmanını güvenilir SVG renderer ile kuruyoruz.
@@ -10449,14 +10595,46 @@ function initMap() {
 
         setCoordBar(lat, lon);
 
-        // 🏞 Altın Modu açıkken: sadece mavi akar su çizgilerine dokun
+        // 🏞 Altın Modu açıkken: yakın su hattını mobil dostu şekilde seç
         if (goldMode) {
-          setGoldResult(t("gold_need_blue"));
-          const now = Date.now();
-          if ((now - goldLastNeedBlueHintAt) > 1400) {
-            showToast(t("gold_mode_toast"));
-            goldLastNeedBlueHintAt = now;
+          const zoomNow = map ? map.getZoom() : 0;
+          if (!goldSelectModeEnabled) {
+            const now = Date.now();
+            if ((now - goldLastNeedBlueHintAt) > 1800) {
+              showToast("Akar su seçimi kapalı. Araç çubuğundan açabilirsin.");
+              goldLastNeedBlueHintAt = now;
+            }
+            return;
           }
+          if (zoomNow < GOLD_MIN_ZOOM) {
+            const now = Date.now();
+            if ((now - goldLastZoomHintAt) > 1800) {
+              showToast("Seçim için biraz daha yakınlaş (Zoom 12+).");
+              goldLastZoomHintAt = now;
+            }
+            setGoldStatus("Seçim için yakınlaş: Zoom ≥ " + GOLD_MIN_ZOOM);
+            return;
+          }
+          if (!isGoldTapGestureValid()) return;
+
+          const nearest = findNearestGoldWaterAt(e.latlng);
+          if (!nearest || !nearest.meta) {
+            setGoldResult("Yakında uygun akar su bulunamadı. Çizgiye biraz daha yakın dokun.");
+            return;
+          }
+
+          openGoldSelectionSheet({
+            wName: nearest.meta.tags?.name || "İsimsiz su hattı",
+            wType: (nearest.meta.tags?.waterway || "Su hattı"),
+            distancePx: nearest.distancePx
+          });
+
+          const now = Date.now();
+          if ((now - goldLastTapSuccessAt) > 1400) {
+            showToast("Akar su seçildi ✅");
+            goldLastTapSuccessAt = now;
+          }
+          handleGoldWaterClick({ latlng: nearest.snapLatLng || e.latlng }, nearest.meta);
           return;
         }
 
@@ -11342,6 +11520,92 @@ function initMap() {
       goldPrevSelectedWayId = selectedId || null;
     }
 
+
+    function goldSelectionTolerancePx(zoomNow = null) {
+      const z = Number.isFinite(zoomNow) ? zoomNow : (map ? map.getZoom() : 13);
+      const mobile = isPhoneViewport();
+      if (z >= 16) return mobile ? 22 : 16;
+      if (z >= 15) return mobile ? 28 : 20;
+      if (z >= 14) return mobile ? 34 : 24;
+      if (z >= 13) return mobile ? 42 : 30;
+      return mobile ? 48 : 34;
+    }
+
+    function pointToSegmentDistancePx(p, a, b) {
+      const ax = a.x, ay = a.y;
+      const bx = b.x, by = b.y;
+      const vx = bx - ax, vy = by - ay;
+      const wx = p.x - ax, wy = p.y - ay;
+      const c1 = (wx * vx) + (wy * vy);
+      if (c1 <= 0) return Math.hypot(p.x - ax, p.y - ay);
+      const c2 = (vx * vx) + (vy * vy);
+      if (c2 <= c1) return Math.hypot(p.x - bx, p.y - by);
+      const t = c1 / c2;
+      const px = ax + (t * vx);
+      const py = ay + (t * vy);
+      return Math.hypot(p.x - px, p.y - py);
+    }
+
+    function findNearestGoldWaterAt(clickLatLng) {
+      if (!map || !clickLatLng || !goldWaterWaysById || !goldWaterWaysById.size) return null;
+      const tolerancePx = goldSelectionTolerancePx(map.getZoom());
+      const clickPt = map.latLngToContainerPoint(clickLatLng);
+      let best = null;
+
+      for (const poly of goldWaterWaysById.values()) {
+        const meta = poly && poly._goldMeta;
+        if (!meta || !Array.isArray(meta.latlngs) || meta.latlngs.length < 2) continue;
+        let localBest = Infinity;
+        let nearestPt = null;
+        for (let i = 0; i < meta.latlngs.length - 1; i++) {
+          const a = map.latLngToContainerPoint(L.latLng(meta.latlngs[i][0], meta.latlngs[i][1]));
+          const b = map.latLngToContainerPoint(L.latLng(meta.latlngs[i + 1][0], meta.latlngs[i + 1][1]));
+          const d = pointToSegmentDistancePx(clickPt, a, b);
+          if (d < localBest) {
+            localBest = d;
+            nearestPt = d === Infinity ? null : L.latLng((meta.latlngs[i][0] + meta.latlngs[i + 1][0]) / 2, (meta.latlngs[i][1] + meta.latlngs[i + 1][1]) / 2);
+          }
+        }
+        if (localBest <= tolerancePx && (!best || localBest < best.distancePx)) {
+          best = { meta, distancePx: localBest, snapLatLng: nearestPt || clickLatLng, tolerancePx };
+        }
+      }
+      return best;
+    }
+
+    function setGoldTapHintVisible(show, text = "") {
+      if (!goldTapHintEl) return;
+      if (show) {
+        if (text) goldTapHintEl.textContent = text;
+        goldTapHintEl.hidden = false;
+      } else {
+        goldTapHintEl.hidden = true;
+      }
+    }
+
+    function closeGoldSelectionSheet() {
+      if (!goldSelectionSheetEl) return;
+      goldSelectionSheetEl.classList.remove("is-open");
+      goldSelectionSheetEl.hidden = true;
+    }
+
+    function openGoldSelectionSheet(payload = {}) {
+      if (!goldSelectionSheetEl) return;
+      const wName = payload.wName || "İsimsiz su hattı";
+      const wType = payload.wType || "Su hattı";
+      const dist = Number.isFinite(payload.distancePx) ? `${Math.round(payload.distancePx)} px yakınlık` : "Yakın seçim";
+      if (goldSelectionTitleEl) goldSelectionTitleEl.textContent = wName;
+      if (goldSelectionMetaEl) goldSelectionMetaEl.textContent = `${wType} • ${dist}. Kısa analiz için devam et.`;
+      goldSelectionSheetEl.hidden = false;
+      requestAnimationFrame(() => goldSelectionSheetEl.classList.add("is-open"));
+    }
+
+    function isGoldTapGestureValid() {
+      if (!goldTapStartAt) return true;
+      const elapsed = Date.now() - goldTapStartAt;
+      return elapsed < 420 && (goldTapMovedPx || 0) <= 11;
+    }
+
     
     function goldMaxConcurrentFetch() {
       const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -11517,6 +11781,8 @@ function goldResetWater() {
       goldTileCycleId++;
       goldRefreshRunToken++;
       if (goldMode && mapInitialized) ensureGoldWaterRenderer(true);
+      goldSelectedMeta = null;
+      closeGoldSelectionSheet();
       setGoldStatus(t('ready'));
     }
 
@@ -11574,6 +11840,7 @@ function goldResetWater() {
           goldWaterLayer = L.featureGroup();
 
           goldWaterLayer.on("click", (e) => {
+            if (!goldSelectModeEnabled || !isGoldTapGestureValid()) return;
             // Çocuk layer'dan gelen event'i yakala
             const layer = (e && (e.layer || e.propagatedFrom)) || e.target;
             const meta = layer && layer._goldMeta;
@@ -11585,6 +11852,11 @@ function goldResetWater() {
                 L.DomEvent.stop(e.originalEvent);
               }
             } catch {}
+            openGoldSelectionSheet({
+              wName: meta.tags?.name || "İsimsiz su hattı",
+              wType: meta.tags?.waterway || "Su hattı",
+              distancePx: 0
+            });
             handleGoldWaterClick(e, meta);
           });
         }
@@ -11597,6 +11869,10 @@ function goldResetWater() {
         if (goldMicroToggleBtn) {
           goldMicroToggleBtn.textContent = goldMicroEnabled ? t("microOn") : t("microOff");
         }
+        if (goldSelectModeBtn) {
+          goldSelectModeBtn.textContent = goldSelectModeEnabled ? "🎯 Akar su seçimi: Açık" : "🎯 Akar su seçimi: Kapalı";
+        }
+        setGoldTapHintVisible(true, "Mavi akar suya dokun. Yakındaki hat otomatik seçilir.");
 
         // İlk bilgi
         renderGoldLastOrEmptyState();
@@ -11642,6 +11918,8 @@ function goldResetWater() {
         if (markersLayer && goldPrevMarkersVisible && !map.hasLayer(markersLayer)) map.addLayer(markersLayer);
         if (freeMarkersLayer && goldPrevFreeMarkersVisible && !map.hasLayer(freeMarkersLayer)) map.addLayer(freeMarkersLayer);
 
+        setGoldTapHintVisible(false);
+        closeGoldSelectionSheet();
         setGoldStatus(t('ready'));
       }
     }
@@ -12641,7 +12919,17 @@ out tags geom qt;`;
       const sameWayAsCurrent = previousPayload && previousPayload.osmWayId && String(previousPayload.osmWayId) === String(meta.osmWayId || "");
       goldSelectedWayId = meta.osmWayId || null;
       goldSelectedLatLng = clickLatLng;
+      goldSelectedMeta = meta || null;
       applyGoldSelectionVisual();
+      const selectedPoly = goldWaterWaysById.get(Number(goldSelectedWayId)) || goldWaterWaysById.get(goldSelectedWayId);
+      if (selectedPoly && typeof selectedPoly.setStyle === "function") {
+        try {
+          selectedPoly.setStyle({ opacity: 1, weight: Math.max(5.2, (selectedPoly.options?.weight || 4.4) + 1.8), color: "#60a5fa" });
+          setTimeout(() => {
+            try { applyGoldSelectionVisual(); } catch {}
+          }, 900);
+        } catch {}
+      }
       abortGoldAnalysisNetwork();
       const analysisSignal = getGoldAnalysisSignal(true);
       const pointCacheKey = makeGoldPointCacheKey(clickLatLng.lat, clickLatLng.lng, meta.osmWayId || "");
@@ -13570,6 +13858,79 @@ out tags geom qt;`;
         console.error("Reverse hata:", err);
         return null;
       }
+    }
+
+    const HISTORY_ENRICH_CACHE_KEY = "arazi_history_enrich_cache_v1";
+    const HISTORY_ENRICH_TTL_MS = 1000 * 60 * 60 * 18;
+    const HISTORY_ENRICH_STALE_MS = 1000 * 60 * 60 * 24 * 14;
+    const HISTORY_SOURCE_WEIGHTS = { local_model: 1.0, official: 0.95, municipal: 0.82, open_data: 0.76, support: 0.62, regional_general: 0.45 };
+
+    function loadHistoryEnrichDiskCache() {
+      try {
+        const raw = localStorage.getItem(HISTORY_ENRICH_CACHE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch { return {}; }
+    }
+    const historyEnrichMemCache = new Map();
+    const historyEnrichDiskCache = loadHistoryEnrichDiskCache();
+    function saveHistoryEnrichDiskCache() { try { localStorage.setItem(HISTORY_ENRICH_CACHE_KEY, JSON.stringify(historyEnrichDiskCache)); } catch {} }
+    function historyCacheRead(key) {
+      if (!key) return null;
+      if (historyEnrichMemCache.has(key)) return historyEnrichMemCache.get(key);
+      const entry = historyEnrichDiskCache[key];
+      if (entry) historyEnrichMemCache.set(key, entry);
+      return entry || null;
+    }
+    function historyCacheWrite(key, payload) {
+      if (!key || !payload) return;
+      const packed = { ts: Date.now(), payload };
+      historyEnrichMemCache.set(key, packed);
+      historyEnrichDiskCache[key] = packed;
+      saveHistoryEnrichDiskCache();
+    }
+    function toGeoCacheKey(lat, lon) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
+      return `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    }
+    function toDistrictCacheKey(province = "", district = "") {
+      const p = normalizeProvinceKey(province);
+      const d = normalizeProvinceKey(district || "");
+      return p ? `${p}:${d || "_"}` : "";
+    }
+    function normalizeExternalItems(items = []) {
+      const seen = new Set();
+      const out = [];
+      for (const item of Array.isArray(items) ? items : []) {
+        const clean = normalizePreviewLine(item);
+        const key = normalizeProfileKey(clean);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push(clean);
+      }
+      return out;
+    }
+    async function collectWikiNearbyContext(lat, lon) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return { places: [] };
+      try {
+        let url = "https://tr.wikipedia.org/w/api.php?origin=*";
+        const params = new URLSearchParams({ action: "query", list: "geosearch", gscoord: `${lat}|${lon}`, gsradius: "5000", gslimit: "8", format: "json" });
+        url += "&" + params.toString();
+        const res = await fetchWithTimeout(url, {}, 9000);
+        if (!res.ok) return { places: [] };
+        const data = await res.json();
+        return { places: normalizeExternalItems((data?.query?.geosearch || []).map((it) => it?.title || "")).slice(0, 5) };
+      } catch { return { places: [] }; }
+    }
+    function computeSourceConfidence(enrichment = {}, sourceStatus = "draft", district = "") {
+      const sourceCount = Number(enrichment.sourceCount) || 0;
+      const quality = Number(enrichment.qualityScore) || 0;
+      let score = sourceStatus === "verified" ? 82 : district ? 66 : 54;
+      score += Math.min(10, quality * 12);
+      if (sourceCount >= 3) score += 8; else if (sourceCount >= 2) score += 4;
+      if (enrichment.hasConflict) score -= 10;
+      if (!enrichment.hasExternalData) score -= 4;
+      return clamp(Math.round(score), 28, 96);
     }
 
     function buildTurkeyTitleCandidatesFromAddress(address) {
@@ -14911,6 +15272,95 @@ out tags geom qt;`;
         .slice(0, 6);
     }
 
+    const TR_PLATE_CODE_MAP = {
+      "Adana": 1, "Adıyaman": 2, "Afyonkarahisar": 3, "Ağrı": 4, "Amasya": 5, "Ankara": 6, "Antalya": 7, "Artvin": 8, "Aydın": 9, "Balıkesir": 10,
+      "Bilecik": 11, "Bingöl": 12, "Bitlis": 13, "Bolu": 14, "Burdur": 15, "Bursa": 16, "Çanakkale": 17, "Çankırı": 18, "Çorum": 19, "Denizli": 20,
+      "Diyarbakır": 21, "Edirne": 22, "Elazığ": 23, "Erzincan": 24, "Erzurum": 25, "Eskişehir": 26, "Gaziantep": 27, "Giresun": 28, "Gümüşhane": 29, "Hakkari": 30,
+      "Hatay": 31, "Isparta": 32, "Mersin": 33, "İstanbul": 34, "İzmir": 35, "Kars": 36, "Kastamonu": 37, "Kayseri": 38, "Kırklareli": 39, "Kırşehir": 40,
+      "Kocaeli": 41, "Konya": 42, "Kütahya": 43, "Malatya": 44, "Manisa": 45, "Kahramanmaraş": 46, "Mardin": 47, "Muğla": 48, "Muş": 49, "Nevşehir": 50,
+      "Niğde": 51, "Ordu": 52, "Rize": 53, "Sakarya": 54, "Samsun": 55, "Siirt": 56, "Sinop": 57, "Sivas": 58, "Tekirdağ": 59, "Tokat": 60,
+      "Trabzon": 61, "Tunceli": 62, "Şanlıurfa": 63, "Uşak": 64, "Van": 65, "Yozgat": 66, "Zonguldak": 67, "Aksaray": 68, "Bayburt": 69, "Karaman": 70,
+      "Kırıkkale": 71, "Batman": 72, "Şırnak": 73, "Bartın": 74, "Ardahan": 75, "Iğdır": 76, "Yalova": 77, "Karabük": 78, "Kilis": 79, "Osmaniye": 80, "Düzce": 81
+    };
+
+    const TR_PROVINCE_REGION_MAP = {
+      "Adana": "Akdeniz", "Adıyaman": "Güneydoğu Anadolu", "Afyonkarahisar": "Ege", "Ağrı": "Doğu Anadolu", "Amasya": "Karadeniz", "Ankara": "İç Anadolu",
+      "Antalya": "Akdeniz", "Artvin": "Karadeniz", "Aydın": "Ege", "Balıkesir": "Marmara", "Bilecik": "Marmara", "Bingöl": "Doğu Anadolu",
+      "Bitlis": "Doğu Anadolu", "Bolu": "Karadeniz", "Burdur": "Akdeniz", "Bursa": "Marmara", "Çanakkale": "Marmara", "Çankırı": "İç Anadolu",
+      "Çorum": "Karadeniz", "Denizli": "Ege", "Diyarbakır": "Güneydoğu Anadolu", "Edirne": "Marmara", "Elazığ": "Doğu Anadolu", "Erzincan": "Doğu Anadolu",
+      "Erzurum": "Doğu Anadolu", "Eskişehir": "İç Anadolu", "Gaziantep": "Güneydoğu Anadolu", "Giresun": "Karadeniz", "Gümüşhane": "Karadeniz", "Hakkari": "Doğu Anadolu",
+      "Hatay": "Akdeniz", "Isparta": "Akdeniz", "Mersin": "Akdeniz", "İstanbul": "Marmara", "İzmir": "Ege", "Kars": "Doğu Anadolu",
+      "Kastamonu": "Karadeniz", "Kayseri": "İç Anadolu", "Kırklareli": "Marmara", "Kırşehir": "İç Anadolu", "Kocaeli": "Marmara", "Konya": "İç Anadolu",
+      "Kütahya": "Ege", "Malatya": "Doğu Anadolu", "Manisa": "Ege", "Kahramanmaraş": "Akdeniz", "Mardin": "Güneydoğu Anadolu", "Muğla": "Ege", "Muş": "Doğu Anadolu",
+      "Nevşehir": "İç Anadolu", "Niğde": "İç Anadolu", "Ordu": "Karadeniz", "Rize": "Karadeniz", "Sakarya": "Marmara", "Samsun": "Karadeniz",
+      "Siirt": "Güneydoğu Anadolu", "Sinop": "Karadeniz", "Sivas": "İç Anadolu", "Tekirdağ": "Marmara", "Tokat": "Karadeniz", "Trabzon": "Karadeniz",
+      "Tunceli": "Doğu Anadolu", "Şanlıurfa": "Güneydoğu Anadolu", "Uşak": "Ege", "Van": "Doğu Anadolu", "Yozgat": "İç Anadolu", "Zonguldak": "Karadeniz",
+      "Aksaray": "İç Anadolu", "Bayburt": "Karadeniz", "Karaman": "İç Anadolu", "Kırıkkale": "İç Anadolu", "Batman": "Güneydoğu Anadolu", "Şırnak": "Güneydoğu Anadolu",
+      "Bartın": "Karadeniz", "Ardahan": "Doğu Anadolu", "Iğdır": "Doğu Anadolu", "Yalova": "Marmara", "Karabük": "Karadeniz", "Kilis": "Güneydoğu Anadolu",
+      "Osmaniye": "Akdeniz", "Düzce": "Karadeniz"
+    };
+
+    const HISTORY_PLACE_CATEGORY_CATALOG = {
+      fortress: "Kale / sur / savunma yapısı",
+      bridge: "Köprü / geçiş yapısı",
+      mound: "Eski yerleşim / höyük / antik alan",
+      worship: "İbadet yapısı",
+      civic: "Sivil mimari / han / hamam / çarşı",
+      memorial: "Mezarlık / kitabe / anıtsal yapı",
+      protected: "Kültürel alan / tescilli yer"
+    };
+
+    const PERIOD_CIVILIZATION_MAP = {
+      Hitit: { period: "Antik dönem", civ: "Hitit", status: "güçlü kayıt" },
+      Urartu: { period: "Antik dönem", civ: "Urartu", status: "güçlü kayıt" },
+      Frig: { period: "Antik dönem", civ: "Frig", status: "muhtemel etki" },
+      Lidya: { period: "Antik dönem", civ: "Lidya", status: "muhtemel etki" },
+      Helenistik: { period: "Helenistik etki", civ: "Helenistik ağ", status: "bölgesel tarih desteği" },
+      Roma: { period: "Roma", civ: "Roma", status: "güçlü kayıt" },
+      Bizans: { period: "Bizans", civ: "Bizans", status: "güçlü kayıt" },
+      Selçuklu: { period: "Selçuklu", civ: "Selçuklu", status: "güçlü kayıt" },
+      Beylikler: { period: "Bölgesel özel katmanlar", civ: "Anadolu Beylikleri", status: "bölgesel tarih desteği" },
+      Osmanlı: { period: "Osmanlı", civ: "Osmanlı", status: "güçlü kayıt" },
+      Cumhuriyet: { period: "Erken Cumhuriyet", civ: "Cumhuriyet", status: "genel il düzeyi çıkarım" },
+      Pontus: { period: "Bölgesel özel katmanlar", civ: "Pontus ağı", status: "bölgesel tarih desteği" },
+      Kommagene: { period: "Bölgesel özel katmanlar", civ: "Kommagene", status: "güçlü kayıt" }
+    };
+
+    function buildCivilizationLayers(periods = []) {
+      const items = Array.isArray(periods) ? periods : [];
+      const mapped = items
+        .map((period) => PERIOD_CIVILIZATION_MAP[period] ? ({ period, ...PERIOD_CIVILIZATION_MAP[period] }) : null)
+        .filter(Boolean);
+      if (mapped.length) return mapped.slice(0, 7);
+      return [{ period: "Bölgesel dönem kaydı", civ: "Yerel tarih katmanı", status: "sınırlı veri" }];
+    }
+
+    function chooseHistoryPlaceCategories(summary = "", periods = [], province = "", district = "") {
+      const text = `${summary} ${periods.join(" ")} ${province} ${district}`.toLocaleLowerCase("tr-TR");
+      const categories = [];
+      if (/kale|sur|serhat|savunma|tabya/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.fortress);
+      if (/köprü|geçit|boğaz|vadi|menzil/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.bridge);
+      if (/antik|höyük|neolitik|urartu|frig|roma/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.mound);
+      if (/cami|kilise|manastır|külliye|inanç/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.worship);
+      if (/han|hamam|çarşı|kent dokusu|sivil mimari|ticaret/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.civic);
+      if (/anıt|mezar|kitabe|kongre|şehit|savaş/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.memorial);
+      categories.push(HISTORY_PLACE_CATEGORY_CATALOG.protected);
+      return [...new Set(categories)].slice(0, 5);
+    }
+
+    function deriveContinuityLevel(periods = [], districtUsed = false) {
+      if (districtUsed && periods.length >= 3) return "yüksek";
+      if (periods.length >= 2) return "orta";
+      return "sınırlı";
+    }
+
+    function deriveCulturalDensityLevel(periods = [], summary = "") {
+      const s = String(summary || "");
+      if (periods.length >= 4 || /(antik|kale|kent|başkent|imparatorluk|höyük)/i.test(s)) return "yüksek";
+      if (periods.length >= 2) return "orta";
+      return "sınırlı";
+    }
+
     function findProvinceHistoryByName(name) {
       const normalized = normalizeProvinceKey(name);
       if (!normalized) return null;
@@ -15120,15 +15570,42 @@ out tags geom qt;`;
       const districtRecord = district ? findDistrictHistoryByName(record.province, district) : null;
       const summary = districtRecord?.summary || record.summary;
       const periods = deriveHistoryPeriods(summary);
+      const districtSummaryUsed = Boolean(districtRecord);
+      const sourceName = districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME;
+      const sourceStatus = districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS;
+      const provinceCode = TR_PLATE_CODE_MAP[record.province] || null;
+      const regionName = TR_PROVINCE_REGION_MAP[record.province] || "Bölgesel genel çerçeve";
+      const civilizations = buildCivilizationLayers(periods);
+      const continuityLevel = deriveContinuityLevel(periods, districtSummaryUsed);
+      const culturalDensityLevel = deriveCulturalDensityLevel(periods, summary);
+      const historyContext = {
+        provinceName: record.province,
+        provinceCode,
+        districtName: districtRecord?.district || district || "",
+        regionName,
+        summary,
+        prominentPeriods: periods,
+        civilizations,
+        settlementContinuityLevel: continuityLevel,
+        culturalRecordDensityLevel: culturalDensityLevel,
+        geographicContext: `${regionName} bölgesinde ${districtSummaryUsed ? "ilçe" : "il"} ölçeğinde üretilen tarihî bağlam.`,
+        historicalCharacterNote: districtSummaryUsed
+          ? "İlçe odaklı özet bulunduğu için tarihî karakter daha dar ölçekte üretildi."
+          : "İlçe kaydı sınırlı olduğunda il ölçeğine düşen genel tarihî karakter kullanıldı.",
+        confidenceLevel: sourceStatus === "verified" ? "yüksek" : districtSummaryUsed ? "orta" : "düşük-orta",
+        nearbyHistoricalPlaceCategories: chooseHistoryPlaceCategories(summary, periods, record.province, districtRecord?.district || district || ""),
+        sourceTypes: [sourceName, "Yerel özet veri katmanı", "Bölgesel dönem eşleştirmesi"],
+        freshnessNote: districtSummaryUsed ? "İlçe kaydı kullanıldı." : "İlçe kaydı sınırlı; il düzeyi fallback aktif."
+      };
       const text = buildLocationHistoryText({
         province: record.province,
         district: districtRecord?.district || district,
         locality,
         summary,
         periods,
-        districtSummaryUsed: Boolean(districtRecord),
-        sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-        sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS
+        districtSummaryUsed,
+        sourceName,
+        sourceStatus
       });
 
       return {
@@ -15137,9 +15614,10 @@ out tags geom qt;`;
         locality,
         summary,
         periods,
-        districtSummaryUsed: Boolean(districtRecord),
-        sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-        sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS,
+        districtSummaryUsed,
+        sourceName,
+        sourceStatus,
+        historyContext,
         text
       };
     }
@@ -15165,15 +15643,37 @@ out tags geom qt;`;
         const districtRecord = district ? findDistrictHistoryByName(record.province, district) : null;
         const summary = districtRecord?.summary || record.summary;
         const periods = deriveHistoryPeriods(summary);
+        const districtSummaryUsed = Boolean(districtRecord);
+        const sourceName = districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME;
+        const sourceStatus = districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS;
+        const provinceCode = TR_PLATE_CODE_MAP[record.province] || null;
+        const regionName = TR_PROVINCE_REGION_MAP[record.province] || "Bölgesel genel çerçeve";
+        const historyContext = {
+          provinceName: record.province,
+          provinceCode,
+          districtName: districtRecord?.district || district || "",
+          regionName,
+          summary,
+          prominentPeriods: periods,
+          civilizations: buildCivilizationLayers(periods),
+          settlementContinuityLevel: deriveContinuityLevel(periods, districtSummaryUsed),
+          culturalRecordDensityLevel: deriveCulturalDensityLevel(periods, summary),
+          geographicContext: `${regionName} bölgesinde metin-temelli konum çözümlemesiyle oluşturuldu.`,
+          historicalCharacterNote: districtSummaryUsed ? "İlçe özeti bulundu." : "İlçe kaydı bulunamadığı için il düzeyi bağlam uygulandı.",
+          confidenceLevel: sourceStatus === "verified" ? "yüksek" : districtSummaryUsed ? "orta" : "düşük-orta",
+          nearbyHistoricalPlaceCategories: chooseHistoryPlaceCategories(summary, periods, record.province, districtRecord?.district || district || ""),
+          sourceTypes: [sourceName, "Metin konum çözümleyici", "Bölgesel dönem eşleştirmesi"],
+          freshnessNote: districtSummaryUsed ? "İlçe verisi aktif." : "İlçe verisi yok; il fallback aktif."
+        };
         const text = buildLocationHistoryText({
           province: record.province,
           district: districtRecord?.district || district,
           locality: "",
           summary,
           periods,
-          districtSummaryUsed: Boolean(districtRecord),
-          sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-          sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS
+          districtSummaryUsed,
+          sourceName,
+          sourceStatus
         });
 
         return {
@@ -15182,9 +15682,10 @@ out tags geom qt;`;
           locality: "",
           summary,
           periods,
-          districtSummaryUsed: Boolean(districtRecord),
-          sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-          sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS,
+          districtSummaryUsed,
+          sourceName,
+          sourceStatus,
+          historyContext,
           text
         };
       }
@@ -15239,13 +15740,14 @@ out tags geom qt;`;
     async function fetchHistoricalNoteFromInternet(locationText) {
       const txt = (locationText || "").trim();
       if (!txt) return null;
-
       const coordRegex = /(-?\d+(\.\d+)?)\s*[, ]\s*(-?\d+(\.\d+)?)/;
       const match = txt.match(coordRegex);
       let lat = null, lon = null;
-      if (match) {
-        lat = parseFloat(match[1]);
-        lon = parseFloat(match[3]);
+      if (match) { lat = parseFloat(match[1]); lon = parseFloat(match[3]); }
+      const geoCacheKey = toGeoCacheKey(lat, lon);
+      const geoCacheEntry = historyCacheRead(geoCacheKey ? `geo:${geoCacheKey}` : "");
+      if (geoCacheEntry?.payload && (Date.now() - (geoCacheEntry.ts || 0)) <= HISTORY_ENRICH_TTL_MS) {
+        return { ...geoCacheEntry.payload, enrichmentMeta: { ...(geoCacheEntry.payload.enrichmentMeta || {}), cacheUsed: true, cacheFresh: true } };
       }
 
       let gemHint = "";
@@ -15255,21 +15757,37 @@ out tags geom qt;`;
       if (!isNaN(lat) && !isNaN(lon)) {
         const rev = await reverseGeocode(lat, lon);
         if (!rev || !rev.address) {
+          if (geoCacheEntry?.payload && (Date.now() - (geoCacheEntry.ts || 0)) <= HISTORY_ENRICH_STALE_MS) {
+            return { ...geoCacheEntry.payload, enrichmentMeta: { ...(geoCacheEntry.payload.enrichmentMeta || {}), cacheUsed: true, cacheFresh: false, staleFallback: true } };
+          }
           return { text: "", notTurkey: false, gemHint: "", localHistoryUsed: false, address: resolvedAddress, lat, lon };
         }
-
         resolvedAddress = rev.address || null;
-
-        const countryCode = (rev.address.country_code || "").toLowerCase();
-        if (countryCode !== "tr") {
+        if ((rev.address.country_code || "").toLowerCase() !== "tr") {
           return { text: "", notTurkey: true, gemHint: "", localHistoryUsed: false, address: resolvedAddress, lat, lon };
         }
-
         gemHint = buildGemstoneHintFromAddress(rev.address);
-
         const provinceHistory = buildProvinceHistoryFromAddress(rev.address);
         if (provinceHistory) {
-          return {
+          const districtCacheKey = toDistrictCacheKey(provinceHistory?.province || rev.address?.state || "", provinceHistory?.district || rev.address?.county || "");
+          const districtCache = historyCacheRead(districtCacheKey ? `district:${districtCacheKey}` : "");
+          const districtFresh = districtCache?.payload && (Date.now() - (districtCache.ts || 0)) <= HISTORY_ENRICH_TTL_MS;
+          const wikiNearby = districtFresh ? districtCache.payload : await collectWikiNearbyContext(lat, lon);
+          if (!districtFresh && districtCacheKey) historyCacheWrite(`district:${districtCacheKey}`, wikiNearby);
+
+          const sourceTypes = normalizeExternalItems([
+            "Yerel model",
+            provinceHistory?.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
+            rev?.licence ? "OpenStreetMap / Nominatim" : "",
+            wikiNearby?.places?.length ? "Wikipedia Geosearch" : ""
+          ]);
+          const qualityScore = (
+            (HISTORY_SOURCE_WEIGHTS.local_model || 0.8) +
+            ((provinceHistory?.sourceStatus === "verified") ? HISTORY_SOURCE_WEIGHTS.official : HISTORY_SOURCE_WEIGHTS.regional_general) +
+            (rev?.licence ? HISTORY_SOURCE_WEIGHTS.open_data : 0) +
+            (wikiNearby?.places?.length ? HISTORY_SOURCE_WEIGHTS.support : 0)
+          ) / 4;
+          const payload = {
             text: provinceHistory.text,
             notTurkey: false,
             gemHint,
@@ -15277,51 +15795,35 @@ out tags geom qt;`;
             provinceHistory,
             address: resolvedAddress,
             lat,
-            lon
+            lon,
+            enrichmentMeta: { sourceCount: sourceTypes.length, qualityScore, sourceTypes, hasExternalData: Boolean(wikiNearby?.places?.length || rev?.licence), nearbyPlaces: wikiNearby?.places || [], cacheUsed: false }
           };
+          if (geoCacheKey) historyCacheWrite(`geo:${geoCacheKey}`, payload);
+          return payload;
         }
-
         const geoTitle = await wikiGeoSearchTitle(lat, lon);
         if (geoTitle) candidates.push(geoTitle);
-
-        const addrCands = buildTurkeyTitleCandidatesFromAddress(rev.address);
-        candidates.push(...addrCands);
+        candidates.push(...buildTurkeyTitleCandidatesFromAddress(rev.address));
       } else {
         const freeTextHistory = buildProvinceHistoryFromFreeText(txt);
-        if (freeTextHistory) {
-          return {
-            text: freeTextHistory.text,
-            notTurkey: false,
-            gemHint: "",
-            localHistoryUsed: true,
-            provinceHistory: freeTextHistory,
-            address: null,
-            lat: null,
-            lon: null
-          };
-        }
-
-        candidates.push(txt);
-        candidates.push("Türkiye");
+        if (freeTextHistory) return { text: freeTextHistory.text, notTurkey: false, gemHint: "", localHistoryUsed: true, provinceHistory: freeTextHistory, address: null, lat: null, lon: null };
+        candidates.push(txt, "Türkiye");
       }
 
-      const seen = new Set();
       const unique = [];
+      const seen = new Set();
       for (const c of candidates) {
         const key = String(c).toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(c);
-        }
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(c);
       }
-
       for (const term of unique) {
         const direct = await wikiSummaryForTitle(term);
-        if (direct) return { text: direct, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon };
+        if (direct) return { text: direct, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon, enrichmentMeta: { sourceCount: 1, qualityScore: HISTORY_SOURCE_WEIGHTS.support, sourceTypes: ["Wikipedia özet"], hasExternalData: true, nearbyPlaces: [], cacheUsed: false } };
         const viaSearch = await wikiSearchAndSummary(term);
-        if (viaSearch) return { text: viaSearch, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon };
+        if (viaSearch) return { text: viaSearch, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon, enrichmentMeta: { sourceCount: 1, qualityScore: HISTORY_SOURCE_WEIGHTS.support, sourceTypes: ["Wikipedia arama"], hasExternalData: true, nearbyPlaces: [], cacheUsed: false } };
       }
-
       return { text: "", notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon };
     }
 
@@ -15713,8 +16215,75 @@ function buildHistoryPreviewTags({ district = "", periods = [], confidenceLabel 
   return [...new Set(tags)].slice(0, 6);
 }
 
+function classifyOverallLevel(score = 0) {
+  if (score >= 78) return "Yüksek";
+  if (score >= 62) return "İyi";
+  if (score >= 45) return "Orta";
+  return "Düşük";
+}
+
+function scoreNote(label, score) {
+  if (score >= 75) return `${label} için güçlü sinyal üretiliyor.`;
+  if (score >= 55) return `${label} orta seviyede destekleniyor.`;
+  return `${label} için veri sınırlı görünüyor.`;
+}
+
+function buildContextBreakdown({ locationSignals, periods = [], confidenceKey = "low", sourceStatus = "", district = "", province = "", contextModel = null }) {
+  const continuityLevel = contextModel?.settlementContinuityLevel || "sınırlı";
+  const culturalLevel = contextModel?.culturalRecordDensityLevel || "sınırlı";
+  const continuityBoost = continuityLevel === "yüksek" ? 16 : continuityLevel === "orta" ? 9 : 3;
+  const culturalBoost = culturalLevel === "yüksek" ? 15 : culturalLevel === "orta" ? 8 : 3;
+  const civCount = Array.isArray(contextModel?.civilizations) ? contextModel.civilizations.length : 0;
+
+  const historyScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.72 + (periods.length * 4) + continuityBoost * 0.4), 0, 100);
+  const culturalScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.58 + (district ? 10 : 4) + culturalBoost), 0, 100);
+  const diversityScore = clamp(Math.round(24 + Math.min(44, periods.length * 9) + Math.min(22, civCount * 5) + (province ? 6 : 0)), 0, 100);
+  const continuityScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.52 + (locationSignals.settlementDelta || 0) * 4 + 18 + continuityBoost), 0, 100);
+  const geoScore = clamp(Math.round(48 + (locationSignals.corridorDelta || 0) * 2 + (locationSignals.water?.bonus || 0) * 3 + (contextModel?.regionName ? 4 : 0)), 0, 100);
+  const confidenceScore = sourceStatus === "verified"
+    ? 88
+    : sourceStatus === "draft"
+      ? (contextModel?.districtName ? 63 : 56)
+      : confidenceKey === "mid"
+        ? 54
+        : 41;
+
+  const scoreItems = [
+    { key: "historical", label: "Tarihî bağlam skoru", score: historyScore },
+    { key: "cultural", label: "Kültürel kayıt yoğunluğu", score: culturalScore },
+    { key: "diversity", label: "Uygarlık çeşitliliği", score: diversityScore },
+    { key: "continuity", label: "Yerleşim sürekliliği", score: continuityScore },
+    { key: "geography", label: "Coğrafi bağlam skoru", score: geoScore },
+    { key: "confidence", label: "Veri güven skoru", score: confidenceScore }
+  ].map((item) => ({ ...item, note: scoreNote(item.label, item.score) }));
+
+  return {
+    scoreItems,
+    confidenceScore,
+    overall: classifyOverallLevel(Math.round(scoreItems.reduce((sum, item) => sum + item.score, 0) / scoreItems.length))
+  };
+}
+
+function buildPeriodLayers(periods = [], sourceStatus = "draft") {
+  if (!Array.isArray(periods) || !periods.length) {
+    return [{ label: "Bölgesel dönem kaydı", status: "Sınırlı veri" }];
+  }
+  const preferred = ["Antik", "Roma", "Bizans", "Selçuklu", "Osmanlı", "Erken Cumhuriyet"];
+  const unique = [...new Set(periods.map((item) => normalizePreviewLine(item)).filter(Boolean))];
+  const ranked = unique.sort((a, b) => {
+    const ai = preferred.findIndex((p) => a.toLocaleLowerCase("tr-TR").includes(p.toLocaleLowerCase("tr-TR")));
+    const bi = preferred.findIndex((p) => b.toLocaleLowerCase("tr-TR").includes(p.toLocaleLowerCase("tr-TR")));
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+  });
+  return ranked.slice(0, 6).map((label, idx) => ({
+    label,
+    status: sourceStatus === "verified" ? "Doğrulanmış bölgesel bağlam" : idx < 2 ? "Muhtemel etki" : "Yardımcı kaynak desteği"
+  }));
+}
+
 function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const provinceHistory = result?.provinceHistory || null;
+  const contextModel = provinceHistory?.historyContext || null;
   const address = result?.address || null;
   const province = provinceHistory?.province || normalizePreviewLine(address?.state || "");
   const district = provinceHistory?.district || normalizePreviewLine(address?.county || address?.town || "");
@@ -15724,21 +16293,23 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const lon = Number.isFinite(result?.lon) ? Number(result.lon) : null;
 
   const summarySource = provinceHistory?.summary || result?.text || "";
-  const summary = normalizePreviewLine(String(summarySource).split(/\n+/).find((line) => normalizePreviewLine(line) && !/^İl\b|^İlçe\b|^Yerleşim\b|^Kısa özet\b/i.test(normalizePreviewLine(line))) || summarySource) || "Bölgesel arka plan özeti hazırlanamadı.";
+  const summarySnippet = normalizePreviewLine(String(summarySource).split(/\n+/).find((line) => normalizePreviewLine(line) && !/^İl\b|^İlçe\b|^Yerleşim\b|^Kısa özet\b/i.test(normalizePreviewLine(line))) || summarySource) || "Bölgesel arka plan özeti hazırlanamadı.";
 
   const gemText = normalizeGemHint(result?.gemHint) || "Bu bölge için öne çıkan taş sinyali bulunamadı; sahada kuvars ve benzeri yüzey göstergeleri kontrol edilebilir.";
   const hasSpecificGem = !/özel bir değerli taş kaydı elimde yok|özel bir değerli taş kaydı yok|özel bir taş kaydı yok/i.test(gemText);
 
   const sourceStatus = provinceHistory?.sourceStatus || (result?.localHistoryUsed ? "draft" : "external");
-  const confidence = sourceStatus === "verified"
+  const sourceConfidence = computeSourceConfidence(result?.enrichmentMeta || {}, sourceStatus, district);
+  const confidence = sourceConfidence >= 75
     ? { key: "high", label: "Yüksek" }
-    : result?.localHistoryUsed
+    : sourceConfidence >= 55
       ? { key: "mid", label: "Orta" }
       : { key: "low", label: "Düşük-Orta" };
 
   const periods = Array.isArray(provinceHistory?.periods) ? provinceHistory.periods.filter(Boolean) : [];
   const locationSignals = deriveLocationSignals({ address, province, district, locality, lat, lon, gemText });
-  const narrativePercent = clamp(Math.round(locationSignals.profilePercent + Math.min(8, periods.length * 2)), 8, 96);
+  const extBoost = Math.round(((result?.enrichmentMeta?.qualityScore || 0) * 10) + Math.min(6, (result?.enrichmentMeta?.sourceCount || 0) * 2));
+  const narrativePercent = clamp(Math.round(locationSignals.profilePercent + Math.min(10, periods.length * 2) + (contextModel?.districtName ? 4 : 0) + extBoost), 8, 96);
   const narrativeLevel = getDefineMeterLevel(narrativePercent);
   const score = computeHistoryScore({
     confidenceKey: confidence.key,
@@ -15759,6 +16330,37 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
       ? "Bu kart, uygulamadaki bölgesel özet ve yerleşim eşleştirmesine göre üretildi."
       : "Bu kart, açık kaynak özetleri ve konum eşleşmesine göre üretildi.";
   const footnote = `${footnoteBase} Skor; bölgesel tarih yoğunluğu, ilçe içi mikro tarih bandı, yerleşim profili, su hattı yakınlığı ve taş sinyalinin birleşik etkisine göre değişir. ${locationSignals.microNote}`;
+  const contextBreakdown = buildContextBreakdown({
+    locationSignals,
+    periods,
+    confidenceKey: confidence.key,
+    sourceStatus,
+    district,
+    province,
+    contextModel
+  });
+  const layerItems = buildPeriodLayers(periods, sourceStatus);
+  const placeCategoryLine = contextModel?.nearbyHistoricalPlaceCategories?.length
+    ? contextModel.nearbyHistoricalPlaceCategories.slice(0, 3).join(", ")
+    : "genel tarihî çevre kategorileri";
+  const nearbyLine = (result?.enrichmentMeta?.nearbyPlaces || []).slice(0, 2).join(", ");
+  const sourceLine = (result?.enrichmentMeta?.sourceTypes || []).slice(0, 3).join(", ");
+  const fallbackLine = contextModel?.freshnessNote || (district ? "İlçe verisi sınırlıysa il fallback aktiftir." : "İl düzeyi fallback aktiftir.");
+  const whyItems = [
+    `${district ? `${district} / ${province || "il"} düzeyinde` : `${province || "İl"} düzeyinde`} tarihî süreklilik sinyali değerlendirildi.`,
+    periods.length ? `Birden fazla dönem etkisi (${periods.slice(0, 3).join(", ")}) görüldüğü için bağlam skoru yükseldi.` : "Dönem verisi sınırlı olduğu için bağlam skoru temkinli üretildi.",
+    `${locationSignals.geoBandLabel} ve ${locationSignals.water.label.toLocaleLowerCase("tr-TR")} coğrafi bağlam puanına etki etti.`,
+    `Yakın tarihî çevre kategorileri (${placeCategoryLine}) skora yardımcı sinyal olarak eklendi.`,
+    nearbyLine ? `Yakın çevrede yardımcı kayıtlar (${nearbyLine}) bulundu ve tekilleştirme sonrası analize eklendi.` : "Ek çevresel kayıt sınırlı olduğu için sistem yerel model ağırlığıyla çalıştı.",
+    sourceLine ? `Kaynak bileşimi: ${sourceLine}.` : "Kaynak bileşimi sınırlı.",
+    confidence.key === "high"
+      ? "Kaynak kapsaması güçlü olduğu için veri güven düzeyi yüksek üretildi."
+      : confidence.key === "mid"
+        ? "Kayıtlar karışık kaynaklardan geldiği için veri güven düzeyi orta tutuldu."
+        : "Kayıt kapsamı sınırlı olduğu için sonuç düşük-orta güvenle üretildi.",
+    fallbackLine
+  ];
+  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönemler: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} ${nearbyLine ? `Yakın kayıt örnekleri: ${nearbyLine}.` : summarySnippet} Veri güven düzeyi: ${confidence.label}.`;
 
   return {
     title: `${region} ön değerlendirmesi`,
@@ -15769,10 +16371,18 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
     confidenceKey: confidence.key,
     action,
     summary,
+    whyItems,
+    layerItems,
+    scoreBreakdown: contextBreakdown.scoreItems,
+    overallLevel: contextBreakdown.overall,
     gemText,
     narrativePercent,
     narrativeLevel,
-    note: locationSignals.note,
+    note: sourceConfidence >= 75
+      ? "Veri güven düzeyi; yerel model + bağımsız kaynak eşleşmeleri ile güçlendirildi."
+      : sourceConfidence >= 55
+        ? "Veri güven düzeyi; karışık kaynaklar birlikte değerlendirilerek orta seviyede tutuldu."
+        : "Veri güven düzeyi; veri sınırlılığı nedeniyle temkinli tutuldu.",
     footnote,
     tags: buildHistoryPreviewTags({
       district,
@@ -15785,6 +16395,11 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
     }),
     sourceStatus,
     district,
+    provinceCode: contextModel?.provinceCode || null,
+    regionName: contextModel?.regionName || "",
+    civilizations: contextModel?.civilizations || buildCivilizationLayers(periods),
+    nearbyHistoricalPlaceCategories: contextModel?.nearbyHistoricalPlaceCategories || [],
+    fallbackNote: fallbackLine,
     historyDensityLabel: locationSignals.historyDensityLabel,
     stonePotentialLabel: locationSignals.stonePotentialLabel,
     settlementLabel: locationSignals.settlementLabel,
@@ -15929,11 +16544,27 @@ function extractHistoryPreviewData(rawText) {
 
   const action = explicitAction || chooseHistoryAction({ confidenceKey, score });
   const footnote = explicitFootnote || parseLabeledLine(text, "Sunum notu") || parseLabeledLine(text, "Not") || "Bu kart, bölgesel eşleşme ve kısa özetler kullanılarak üretildi.";
+  const sourceStatus = /Doğrulama seviyesi:\s*Yüksek/i.test(text) ? "verified" : "draft";
+  const contextBreakdown = buildContextBreakdown({
+    locationSignals,
+    periods,
+    confidenceKey,
+    sourceStatus,
+    district,
+    province
+  });
+  const layerItems = buildPeriodLayers(periods, sourceStatus);
+  const whyItems = [
+    district ? "İlçe eşleşmesi bulunduğu için analiz ilçe düzeyine taşındı." : "İlçe verisi bulunamadı; genel il düzeyinde değerlendirme yapıldı.",
+    periods.length ? "Dönem katmanı verisi bulundu." : "Dönem katmanı verisi sınırlı.",
+    locationSignals.water?.bonus ? `${locationSignals.water.label} coğrafi bağlama eklendi.` : "Su hattı verisi sınırlı.",
+    confidenceKey === "high" ? "Kaynak güveni yüksek." : confidenceKey === "mid" ? "Kaynak güveni orta." : "Kaynak güveni düşük-orta."
+  ];
   const tags = buildHistoryPreviewTags({
     district,
     periods,
     confidenceLabel,
-    sourceStatus: /Doğrulama seviyesi:\s*Yüksek/i.test(text) ? "verified" : "draft",
+    sourceStatus,
     narrativeLevel: narrativeLevel.label,
     hasSpecificGem,
     signalTags: locationSignals.tags
@@ -15948,6 +16579,10 @@ function extractHistoryPreviewData(rawText) {
     confidenceKey,
     action,
     summary,
+    whyItems,
+    layerItems,
+    scoreBreakdown: contextBreakdown.scoreItems,
+    overallLevel: contextBreakdown.overall,
     gemText,
     narrativePercent,
     narrativeLevel,
@@ -16105,8 +16740,10 @@ async function runMapQuickEvaluation(coordText) {
   const requestId = ++mapQuickRequestId;
   lastMapQuickSelection = { coordText, noteText: "", data: null };
   showMapEvaluationLoading(coordText);
+  showToast("Analiz hazırlanıyor…", "info", 1100);
 
   try {
+    showToast("Veri zenginleştiriliyor…", "info", 1200);
     const result = await fetchHistoricalNoteFromInternet(coordText);
     if (requestId !== mapQuickRequestId) return;
 
@@ -16130,6 +16767,9 @@ async function runMapQuickEvaluation(coordText) {
       const built = buildProfessionalHistoryNote(result, coordText);
       lastMapQuickSelection = { coordText, noteText: built.noteText, data: built.data };
       updateMapEvaluationCard(built.data, coordText);
+      if (result?.enrichmentMeta?.cacheUsed) showToast("Cache kullanıldı.", "info", 1400);
+      else if (result?.enrichmentMeta?.hasExternalData) showToast("İnternet verisi alındı.", "success", 1400);
+      else showToast("Ek kaynak bulunamadı, yerel veri kullanıldı.", "info", 1700);
       recordAnalysisUse("map");
       return;
     }
@@ -16137,6 +16777,7 @@ async function runMapQuickEvaluation(coordText) {
     const fallback = buildMapEvaluationFallback(coordText, "offline");
     lastMapQuickSelection = { coordText, noteText: "", data: fallback };
     updateMapEvaluationCard(fallback, coordText);
+    showToast("Veri sınırlı, temel analiz gösterildi.", "info", 1700);
     recordAnalysisUse("map");
   } catch {
     if (requestId !== mapQuickRequestId) return;
@@ -16169,7 +16810,7 @@ function openQuickSelectionInForm() {
 }
 
 function updateHistoryPreview(rawText) {
-  if (!historyPreview || !historyGemText || !historyDefineValue || !historyDefineFill || !historyDefineNote || !historyDefineChip) return;
+  if (!historyPreview || !historyDefineValue || !historyDefineFill || !historyDefineNote || !historyDefineChip) return;
   const data = extractHistoryPreviewData(rawText);
   if (!data) {
     historyPreview.classList.remove("show");
@@ -16179,13 +16820,14 @@ function updateHistoryPreview(rawText) {
     if (historyActionValue) historyActionValue.textContent = "Nokta seç";
     if (historyRegionValue) historyRegionValue.textContent = "—";
     if (historySummaryText) historySummaryText.textContent = "Konuma göre kısa özet burada görünür.";
-    historyGemText.textContent = "Bölgesel taş sinyali burada görünür.";
+    renderMapEvalList(historyWhyList, [], "Nedenler burada görünür.");
+    if (historyLayerList) historyLayerList.innerHTML = `<span class="history-tag">Veri sınırlı</span>`;
+    if (historyScoreBreakdown) historyScoreBreakdown.innerHTML = "";
     historyDefineValue.textContent = "%0";
     historyDefineFill.style.width = "0%";
-    historyDefineNote.textContent = "Bu alan, bölgesel tarih, yerleşim ve taş sinyallerinin birleşik profilini özetler.";
+    historyDefineNote.textContent = "Veri güven düzeyi; kaynak kapsamı ve konum eşleşmesine göre üretilir.";
     historyDefineChip.textContent = "Hazır değil";
     historyDefineChip.className = "history-preview-chip low";
-    if (historyTagList) historyTagList.innerHTML = "";
     if (historyPreviewFootnote) historyPreviewFootnote.textContent = "Bu kart, skorun bölgesel tarih yoğunluğu, ilçe içi mikro profil, yerleşim yapısı ve konum sinyallerine göre değiştiği ön değerlendirmeyi gösterir.";
     return;
   }
@@ -16194,18 +16836,33 @@ function updateHistoryPreview(rawText) {
   if (historyPreviewTitle) historyPreviewTitle.textContent = data.title;
   if (historyScoreValue) historyScoreValue.textContent = `${data.score}/100`;
   if (historyConfidenceValue) historyConfidenceValue.textContent = data.confidenceLabel;
-  if (historyActionValue) historyActionValue.textContent = data.action;
+  if (historyActionValue) historyActionValue.textContent = data.overallLevel || data.action;
   if (historyRegionValue) historyRegionValue.textContent = data.region;
   if (historySummaryText) historySummaryText.textContent = data.summary;
-  historyGemText.textContent = data.gemText;
-  historyDefineValue.textContent = `%${data.narrativePercent}`;
-  historyDefineFill.style.width = `${data.narrativePercent}%`;
-  historyDefineNote.textContent = data.note;
+  renderMapEvalList(historyWhyList, data.whyItems || [], "Nedenler sınırlı veriyle üretildi.");
+  if (historyLayerList) {
+    const layers = Array.isArray(data.layerItems) ? data.layerItems : [];
+    historyLayerList.innerHTML = layers.length
+      ? layers.map((layer) => `<span class="history-tag">${escapeHtml(`${layer.label} • ${layer.status}`)}</span>`).join("")
+      : `<span class="history-tag">Bölgesel kayıt bulunamadı</span>`;
+  }
+  if (historyScoreBreakdown) {
+    const rows = Array.isArray(data.scoreBreakdown) ? data.scoreBreakdown : [];
+    historyScoreBreakdown.innerHTML = rows.map((row) => `
+      <div class="history-breakdown-item">
+        <div class="history-breakdown-label">${escapeHtml(row.label)}</div>
+        <div class="history-breakdown-score">${Number(row.score) || 0}/100</div>
+        <div class="history-breakdown-note">${escapeHtml(row.note || "Veri sınırlı.")}</div>
+      </div>
+    `).join("");
+  }
+  const confScore = (data.scoreBreakdown || []).find((item) => item.key === "confidence")?.score;
+  const safeConfidenceScore = Number.isFinite(confScore) ? confScore : clamp(data.narrativePercent || 0, 0, 100);
+  historyDefineValue.textContent = `%${safeConfidenceScore}`;
+  historyDefineFill.style.width = `${safeConfidenceScore}%`;
+  historyDefineNote.textContent = data.note || "Veri güven düzeyi sınırlı.";
   historyDefineChip.textContent = data.chipText;
   historyDefineChip.className = `history-preview-chip ${data.confidenceKey}`;
-  if (historyTagList) {
-    historyTagList.innerHTML = (data.tags || []).map((tag) => `<span class="history-tag">${escapeHtml(tag)}</span>`).join("");
-  }
   if (historyPreviewFootnote) historyPreviewFootnote.textContent = data.footnote;
 }
 
@@ -16216,7 +16873,9 @@ function updateHistoryPreview(rawText) {
         return;
       }
       historicalNoteInput.value = "Bu konum için Türkiye içi kısa arka plan bilgisi aranıyor...";
+      showToast("Analiz hazırlanıyor…", "info", 1100);
       try {
+        showToast("Veri zenginleştiriliyor…", "info", 1200);
         const result = await fetchHistoricalNoteFromInternet(locText);
         if (!result) {
           lastAutoHistoryPreview = { text: "", data: null };
@@ -16237,6 +16896,9 @@ function updateHistoryPreview(rawText) {
           lastAutoHistoryPreview = { text: built.noteText, data: built.data };
           historicalNoteInput.value = built.noteText;
           updateHistoryPreview(historicalNoteInput.value);
+          if (result?.enrichmentMeta?.cacheUsed) showToast("Cache kullanıldı.", "info", 1400);
+          else if (result?.enrichmentMeta?.hasExternalData) showToast("İnternet verisi alındı.", "success", 1400);
+          else showToast("Ek kaynak bulunamadı, yerel veri kullanıldı.", "info", 1700);
         } else {
           lastAutoHistoryPreview = { text: "", data: null };
           historicalNoteInput.value = "";
@@ -16406,13 +17068,7 @@ function updateHistoryPreview(rawText) {
     });
 
     safeBindClick(analysisPremiumBtn, "analysisPremiumBtn", () => openAnalysisPremiumModal("manual"));
-    safeBindClick(analysisAdBtn, "analysisAdBtn", () => {
-      if (isPremiumUnlocked()) {
-        showToast("Premium açıkken reklam gösterimi kapalıdır.", "info", 1700);
-        return;
-      }
-      showToast("Reklam ödülü özelliği yakında aktif olacak.", "info", 2000);
-    });
+    safeBindClick(analysisAdBtn, "analysisAdBtn", openAnalysisAdFlow);
     safeBindClick(analysisPremiumLaterBtn, "analysisPremiumLaterBtn", closeAnalysisPremiumModal);
     safeBindClick(analysisPremiumCloseBtn, "analysisPremiumCloseBtn", closeAnalysisPremiumModal);
     analysisPlanCards.forEach((card) => {
@@ -16503,6 +17159,35 @@ function updateHistoryPreview(rawText) {
       if (goldMicroToggleBtn) goldMicroToggleBtn.textContent = goldMicroEnabled ? t("microOn") : t("microOff");
       goldResetWater();
       scheduleGoldRefresh(true);
+    });
+
+
+    safeBindClick(goldSelectModeBtn, "goldSelectModeBtn", () => {
+      goldSelectModeEnabled = !goldSelectModeEnabled;
+      if (goldSelectModeBtn) goldSelectModeBtn.textContent = goldSelectModeEnabled ? "🎯 Akar su seçimi: Açık" : "🎯 Akar su seçimi: Kapalı";
+      if (goldSelectModeEnabled) {
+        setGoldTapHintVisible(true, "Mavi akar suya dokun. Yakındaki hat otomatik seçilir.");
+      } else {
+        closeGoldSelectionSheet();
+        setGoldTapHintVisible(false);
+      }
+    });
+
+    safeBindClick(goldSelectionCloseBtn, "goldSelectionCloseBtn", closeGoldSelectionSheet);
+    safeBindClick(goldSelectionInspectBtn, "goldSelectionInspectBtn", () => {
+      if (goldPanel) openSurfacePanel(goldPanel);
+      const resultEl = document.getElementById("goldResult");
+      try { resultEl && resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch {}
+    });
+    safeBindClick(goldSelectionAnalyzeBtn, "goldSelectionAnalyzeBtn", () => {
+      if (!goldSelectedMeta || !goldSelectedLatLng) return;
+      handleGoldWaterClick({ latlng: goldSelectedLatLng }, goldSelectedMeta);
+    });
+    safeBindClick(goldSelectionSaveBtn, "goldSelectionSaveBtn", () => {
+      if (!goldSelectedLatLng) return;
+      openFormNew();
+      if (locationInput) locationInput.value = `${goldSelectedLatLng.lat.toFixed(6)}, ${goldSelectedLatLng.lng.toFixed(6)}`;
+      showToast("Seçilen akar su noktası forma aktarıldı.", "success", 1600);
     });
 
     safeBindClick(settingsBtn, "settingsBtn", () => {
@@ -17138,119 +17823,79 @@ function updateHistoryPreview(rawText) {
       line-height: 1.34 !important;
     }
   }
+
+
+.gold-tap-hint {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 910;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(96,165,250,0.4);
+  background: rgba(8,17,34,0.86);
+  color: #dbeafe;
+  font-size: 12px;
+  line-height: 1.35;
+  box-shadow: 0 10px 22px rgba(2,6,23,0.44);
+}
+.gold-selection-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 10px);
+  transform: translateX(-50%) translateY(16px);
+  width: min(94vw, 520px);
+  z-index: 3600;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,0.32);
+  background: rgba(9,17,32,0.96);
+  box-shadow: 0 16px 34px rgba(2,6,23,0.58);
+  padding: 10px 12px 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .2s ease;
+}
+.gold-selection-sheet.is-open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.gold-selection-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.58);
+  margin: 0 auto 8px;
+}
+.gold-selection-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gold-selection-kicker { font-size: 11px; color: #93c5fd; }
+.gold-selection-title { font-size: 14px; font-weight: 700; color: #f8fafc; margin-top: 2px; }
+.gold-selection-meta { margin-top: 7px; color: #cbd5e1; font-size: 12px; line-height: 1.4; }
+.gold-selection-close {
+  border: 1px solid rgba(148,163,184,0.4);
+  background: rgba(15,23,42,0.95);
+  color: #e2e8f0;
+  border-radius: 10px;
+  width: 32px;
+  height: 30px;
+}
+.gold-selection-actions {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+.gold-selection-actions .btn-small { min-height: 36px; font-size: 12px; }
+@media (max-width: 480px) {
+  .gold-selection-sheet { width: calc(100vw - 14px); bottom: calc(env(safe-area-inset-bottom) + 6px); }
+  .gold-selection-actions { grid-template-columns: 1fr; }
+}
 </style>
-
-<style id="mobile-map-refactor-2026">
-  .app-shell { padding: 10px 10px 96px !important; border-radius: 16px !important; }
-  .app-header { margin-bottom: 8px !important; }
-  .header-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .header-brand { display: flex; flex-direction: column; gap: 4px; }
-  .app-header h1 { font-size: 17px !important; margin: 0 !important; }
-  .header-top-actions { display: flex; gap: 8px; }
-  .icon-only { width: 42px; min-width: 42px; height: 42px; padding: 0 !important; border-radius: 12px !important; }
-  .icon-only .search-toggle-text,
-  .icon-only .settings-btn-text { display: none !important; }
-  .records-toolbar { margin-bottom: 8px !important; }
-  .records-toolbar-top { justify-content: flex-start !important; }
-  .count-badge { padding: 6px 10px !important; font-size: 11px !important; }
-  .header-actions { margin: 0 !important; }
-  .primary-actions { display: block !important; }
-  .primary-actions #goldGuideBtn { display: none !important; }
-  .primary-actions #addBtn {
-    position: fixed !important;
-    right: calc(env(safe-area-inset-right, 0px) + 16px);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
-    z-index: 3400;
-    min-height: 58px !important;
-    width: auto !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    box-shadow: 0 18px 30px rgba(12, 74, 110, 0.42) !important;
-  }
-  #addBtn .hero-btn-subtitle { display: none !important; }
-  #addBtn .hero-btn-title { font-size: 15px !important; }
-  .map-wrapper { margin-top: 0 !important; }
-  .map-stage { min-height: 58vh !important; }
-  #analysisUsageBanner { display: none; }
-  .map-tools, .map-tools.secondary { display: none !important; }
-  .map-utility-toggle {
-    position: fixed;
-    left: calc(env(safe-area-inset-left, 0px) + 14px);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
-    z-index: 3400;
-    border: 1px solid rgba(148,163,184,.45);
-    background: rgba(15,23,42,.9);
-    color: #dbe7ff;
-    border-radius: 14px;
-    padding: 10px 14px;
-    font-weight: 700;
-  }
-  .map-utility-sheet {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: calc(env(safe-area-inset-bottom,0px) + 76px);
-    background: rgba(10,18,34,.97);
-    border: 1px solid rgba(71,85,105,.7);
-    border-radius: 16px;
-    padding: 10px;
-    z-index: 3350;
-    transform: translateY(calc(100% + 20px));
-    opacity: 0;
-    pointer-events: none;
-    transition: .22s ease;
-    max-height: 58vh;
-    overflow: auto;
-  }
-  .map-utility-sheet.is-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
-  .map-utility-handle { width: 46px; height: 4px; border-radius: 999px; margin: 0 auto 10px; background: rgba(148,163,184,.6); }
-  .map-utility-primary { display: grid; gap: 8px; }
-  .map-utility-primary .map-tools,
-  .map-utility-primary .map-tools.secondary { display: flex !important; margin: 0 !important; }
-  .map-utility-primary .btn-small,
-  .map-utility-primary #goldGuideBtn { width: 100%; justify-content: center; min-height: 44px; }
-  .map-utility-secondary { margin-top: 10px; }
-  .mobile-quickbar button[data-quickbar-action="add"] { display: none !important; }
-</style>
-
-<script>
-  (function () {
-    const setup = () => {
-      const utilityHost = document.getElementById('utilityActionHost');
-      const usageHost = document.getElementById('analysisUsageBannerHost');
-      const utilitySheet = document.getElementById('mapUtilitySheet');
-      const toggleBtn = document.getElementById('toolsSheetToggle');
-      const goldGuideBtn = document.getElementById('goldGuideBtn');
-      const mapTools = document.querySelector('.map-tools');
-      const mapToolsSecondary = document.querySelector('.map-tools.secondary');
-      const usageBanner = document.getElementById('analysisUsageBanner');
-      if (!utilityHost || !utilitySheet || !toggleBtn) return;
-
-      [goldGuideBtn, mapTools, mapToolsSecondary].forEach((el) => {
-        if (!el || utilityHost.contains(el)) return;
-        utilityHost.appendChild(el);
-        el.style.display = '';
-      });
-      if (usageHost && usageBanner && !usageHost.contains(usageBanner)) {
-        usageHost.appendChild(usageBanner);
-        usageBanner.style.display = '';
-      }
-
-      const setOpen = (open) => {
-        utilitySheet.classList.toggle('is-open', open);
-        utilitySheet.setAttribute('aria-hidden', open ? 'false' : 'true');
-        toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      };
-      toggleBtn.addEventListener('click', () => setOpen(!utilitySheet.classList.contains('is-open')));
-      document.addEventListener('click', (ev) => {
-        if (!utilitySheet.classList.contains('is-open')) return;
-        if (utilitySheet.contains(ev.target) || toggleBtn.contains(ev.target)) return;
-        setOpen(false);
-      });
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
-    else setup();
-  })();
-</script>
 
 </body>
 </html>
