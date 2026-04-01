@@ -16240,7 +16240,7 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const lon = Number.isFinite(result?.lon) ? Number(result.lon) : null;
 
   const summarySource = provinceHistory?.summary || result?.text || "";
-  const summary = normalizePreviewLine(String(summarySource).split(/\n+/).find((line) => normalizePreviewLine(line) && !/^İl\b|^İlçe\b|^Yerleşim\b|^Kısa özet\b/i.test(normalizePreviewLine(line))) || summarySource) || "Bölgesel arka plan özeti hazırlanamadı.";
+  const summarySnippet = normalizePreviewLine(String(summarySource).split(/\n+/).find((line) => normalizePreviewLine(line) && !/^İl\b|^İlçe\b|^Yerleşim\b|^Kısa özet\b/i.test(normalizePreviewLine(line))) || summarySource) || "Bölgesel arka plan özeti hazırlanamadı.";
 
   const gemText = normalizeGemHint(result?.gemHint) || "Bu bölge için öne çıkan taş sinyali bulunamadı; sahada kuvars ve benzeri yüzey göstergeleri kontrol edilebilir.";
   const hasSpecificGem = !/özel bir değerli taş kaydı elimde yok|özel bir değerli taş kaydı yok|özel bir taş kaydı yok/i.test(gemText);
@@ -16307,7 +16307,7 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
         : "Kayıt kapsamı sınırlı olduğu için sonuç düşük-orta güvenle üretildi.",
     fallbackLine
   ];
-  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönemler: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} ${nearbyLine ? `Yakın kayıt örnekleri: ${nearbyLine}.` : "Yakın çevre kayıtları sınırlı."} Veri güven düzeyi: ${confidence.label}.`;
+  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönemler: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} ${nearbyLine ? `Yakın kayıt örnekleri: ${nearbyLine}.` : summarySnippet} Veri güven düzeyi: ${confidence.label}.`;
 
   return {
     title: `${region} ön değerlendirmesi`,
