@@ -17133,5 +17133,167 @@ function updateHistoryPreview(rawText) {
     }
 </style>
 
+
+<style id="interaction-polish-v4">
+  :root {
+    --motion-fast: 160ms;
+    --motion-medium: 240ms;
+    --motion-press: cubic-bezier(.24,.66,.2,1);
+    --motion-release: cubic-bezier(.2,.82,.24,1);
+    --radius-control: 14px;
+    --radius-button: 16px;
+    --shadow-control-rest: 0 8px 20px rgba(2,6,23,.22), inset 0 1px 0 rgba(255,255,255,.05);
+    --shadow-control-hover: 0 14px 28px rgba(2,6,23,.28), inset 0 1px 0 rgba(255,255,255,.08);
+    --shadow-control-press: 0 6px 14px rgba(2,6,23,.2), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+
+  .btn-small,
+  .btn-primary,
+  .btn-secondary,
+  .settings-data-actions button,
+  .map-preset-btn,
+  .mobile-quickbar button,
+  .item-actions .btn-small,
+  .spot-detail-actions .btn-small,
+  .form-buttons button,
+  .map-tools button,
+  .map-tools.secondary button {
+    border-radius: var(--radius-button) !important;
+    min-height: 46px;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, box-shadow, border-color, background-color, filter;
+    transition:
+      transform var(--motion-fast) var(--motion-release),
+      box-shadow var(--motion-medium) var(--motion-release),
+      border-color var(--motion-medium) ease,
+      background-color var(--motion-medium) ease,
+      filter var(--motion-medium) ease,
+      opacity var(--motion-fast) ease;
+    box-shadow: var(--shadow-control-rest) !important;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .btn-pressing {
+    transform: translateY(1px) scale(.975) !important;
+    box-shadow: var(--shadow-control-press) !important;
+    filter: saturate(1.03);
+    transition-timing-function: var(--motion-press) !important;
+    transition-duration: 110ms !important;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn-small:hover,
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .settings-data-actions button:hover,
+    .map-preset-btn:hover,
+    .mobile-quickbar button:hover,
+    .item-actions .btn-small:hover,
+    .spot-detail-actions .btn-small:hover,
+    .form-buttons button:hover,
+    .map-tools button:hover,
+    .map-tools.secondary button:hover {
+      transform: translateY(-1.5px);
+      box-shadow: var(--shadow-control-hover) !important;
+      filter: saturate(1.05);
+    }
+  }
+
+  .btn-ripple {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: .24;
+    background: radial-gradient(circle, rgba(255,255,255,.75) 0%, rgba(255,255,255,.24) 38%, rgba(255,255,255,0) 72%);
+    animation: btnRipple 520ms cubic-bezier(.2,.7,.24,1) forwards;
+    z-index: 0;
+  }
+
+  @keyframes btnRipple {
+    to {
+      transform: translate(-50%, -50%) scale(9.5);
+      opacity: 0;
+    }
+  }
+
+  .item,
+  .field-card,
+  .search-shell,
+  .map-header-card,
+  .map-stage {
+    border-color: rgba(148,163,184,.26) !important;
+    box-shadow: 0 14px 30px rgba(2,6,23,.24), inset 0 1px 0 rgba(255,255,255,.05) !important;
+  }
+
+  .map-preset-btn.active,
+  .mobile-quickbar button.active {
+    box-shadow: 0 0 0 1px rgba(79,156,255,.34), 0 14px 26px rgba(79,156,255,.2) !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-small,
+    .btn-primary,
+    .btn-secondary,
+    .settings-data-actions button,
+    .map-preset-btn,
+    .mobile-quickbar button,
+    .item-actions .btn-small,
+    .spot-detail-actions .btn-small,
+    .form-buttons button,
+    .map-tools button,
+    .map-tools.secondary button {
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+    }
+    .btn-ripple { display: none !important; }
+  }
+</style>
+
+<script id="interaction-polish-js">
+  (function () {
+    const selectors = [
+      '.btn-small', '.btn-primary', '.btn-secondary', '.settings-data-actions button', '.map-preset-btn',
+      '.mobile-quickbar button', '.item-actions .btn-small', '.spot-detail-actions .btn-small',
+      '.form-buttons button', '.map-tools button', '.map-tools.secondary button', '#addBtn', '#goldGuideBtn'
+    ].join(',');
+
+    function bindButtonInteractions(root = document) {
+      const buttons = root.querySelectorAll(selectors);
+      buttons.forEach((btn) => {
+        if (btn.dataset.motionBound === '1') return;
+        btn.dataset.motionBound = '1';
+
+        const press = () => btn.classList.add('btn-pressing');
+        const release = () => btn.classList.remove('btn-pressing');
+
+        btn.addEventListener('pointerdown', press, { passive: true });
+        btn.addEventListener('pointerup', release, { passive: true });
+        btn.addEventListener('pointercancel', release, { passive: true });
+        btn.addEventListener('pointerleave', release, { passive: true });
+
+        btn.addEventListener('click', (event) => {
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          const rect = btn.getBoundingClientRect();
+          const ripple = document.createElement('span');
+          ripple.className = 'btn-ripple';
+          ripple.style.left = `${event.clientX - rect.left}px`;
+          ripple.style.top = `${event.clientY - rect.top}px`;
+          btn.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 560);
+        }, { passive: true });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => bindButtonInteractions(document));
+    setTimeout(() => bindButtonInteractions(document), 450);
+  })();
+</script>
+
 </body>
 </html>
