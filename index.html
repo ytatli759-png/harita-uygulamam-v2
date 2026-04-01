@@ -13605,6 +13605,79 @@ out tags geom qt;`;
       }
     }
 
+    const HISTORY_ENRICH_CACHE_KEY = "arazi_history_enrich_cache_v1";
+    const HISTORY_ENRICH_TTL_MS = 1000 * 60 * 60 * 18;
+    const HISTORY_ENRICH_STALE_MS = 1000 * 60 * 60 * 24 * 14;
+    const HISTORY_SOURCE_WEIGHTS = { local_model: 1.0, official: 0.95, municipal: 0.82, open_data: 0.76, support: 0.62, regional_general: 0.45 };
+
+    function loadHistoryEnrichDiskCache() {
+      try {
+        const raw = localStorage.getItem(HISTORY_ENRICH_CACHE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch { return {}; }
+    }
+    const historyEnrichMemCache = new Map();
+    const historyEnrichDiskCache = loadHistoryEnrichDiskCache();
+    function saveHistoryEnrichDiskCache() { try { localStorage.setItem(HISTORY_ENRICH_CACHE_KEY, JSON.stringify(historyEnrichDiskCache)); } catch {} }
+    function historyCacheRead(key) {
+      if (!key) return null;
+      if (historyEnrichMemCache.has(key)) return historyEnrichMemCache.get(key);
+      const entry = historyEnrichDiskCache[key];
+      if (entry) historyEnrichMemCache.set(key, entry);
+      return entry || null;
+    }
+    function historyCacheWrite(key, payload) {
+      if (!key || !payload) return;
+      const packed = { ts: Date.now(), payload };
+      historyEnrichMemCache.set(key, packed);
+      historyEnrichDiskCache[key] = packed;
+      saveHistoryEnrichDiskCache();
+    }
+    function toGeoCacheKey(lat, lon) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
+      return `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    }
+    function toDistrictCacheKey(province = "", district = "") {
+      const p = normalizeProvinceKey(province);
+      const d = normalizeProvinceKey(district || "");
+      return p ? `${p}:${d || "_"}` : "";
+    }
+    function normalizeExternalItems(items = []) {
+      const seen = new Set();
+      const out = [];
+      for (const item of Array.isArray(items) ? items : []) {
+        const clean = normalizePreviewLine(item);
+        const key = normalizeProfileKey(clean);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push(clean);
+      }
+      return out;
+    }
+    async function collectWikiNearbyContext(lat, lon) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return { places: [] };
+      try {
+        let url = "https://tr.wikipedia.org/w/api.php?origin=*";
+        const params = new URLSearchParams({ action: "query", list: "geosearch", gscoord: `${lat}|${lon}`, gsradius: "5000", gslimit: "8", format: "json" });
+        url += "&" + params.toString();
+        const res = await fetchWithTimeout(url, {}, 9000);
+        if (!res.ok) return { places: [] };
+        const data = await res.json();
+        return { places: normalizeExternalItems((data?.query?.geosearch || []).map((it) => it?.title || "")).slice(0, 5) };
+      } catch { return { places: [] }; }
+    }
+    function computeSourceConfidence(enrichment = {}, sourceStatus = "draft", district = "") {
+      const sourceCount = Number(enrichment.sourceCount) || 0;
+      const quality = Number(enrichment.qualityScore) || 0;
+      let score = sourceStatus === "verified" ? 82 : district ? 66 : 54;
+      score += Math.min(10, quality * 12);
+      if (sourceCount >= 3) score += 8; else if (sourceCount >= 2) score += 4;
+      if (enrichment.hasConflict) score -= 10;
+      if (!enrichment.hasExternalData) score -= 4;
+      return clamp(Math.round(score), 28, 96);
+    }
+
     function buildTurkeyTitleCandidatesFromAddress(address) {
       const a = address || {};
       const cands = [];
@@ -15412,13 +15485,14 @@ out tags geom qt;`;
     async function fetchHistoricalNoteFromInternet(locationText) {
       const txt = (locationText || "").trim();
       if (!txt) return null;
-
       const coordRegex = /(-?\d+(\.\d+)?)\s*[, ]\s*(-?\d+(\.\d+)?)/;
       const match = txt.match(coordRegex);
       let lat = null, lon = null;
-      if (match) {
-        lat = parseFloat(match[1]);
-        lon = parseFloat(match[3]);
+      if (match) { lat = parseFloat(match[1]); lon = parseFloat(match[3]); }
+      const geoCacheKey = toGeoCacheKey(lat, lon);
+      const geoCacheEntry = historyCacheRead(geoCacheKey ? `geo:${geoCacheKey}` : "");
+      if (geoCacheEntry?.payload && (Date.now() - (geoCacheEntry.ts || 0)) <= HISTORY_ENRICH_TTL_MS) {
+        return { ...geoCacheEntry.payload, enrichmentMeta: { ...(geoCacheEntry.payload.enrichmentMeta || {}), cacheUsed: true, cacheFresh: true } };
       }
 
       let gemHint = "";
@@ -15428,21 +15502,37 @@ out tags geom qt;`;
       if (!isNaN(lat) && !isNaN(lon)) {
         const rev = await reverseGeocode(lat, lon);
         if (!rev || !rev.address) {
+          if (geoCacheEntry?.payload && (Date.now() - (geoCacheEntry.ts || 0)) <= HISTORY_ENRICH_STALE_MS) {
+            return { ...geoCacheEntry.payload, enrichmentMeta: { ...(geoCacheEntry.payload.enrichmentMeta || {}), cacheUsed: true, cacheFresh: false, staleFallback: true } };
+          }
           return { text: "", notTurkey: false, gemHint: "", localHistoryUsed: false, address: resolvedAddress, lat, lon };
         }
-
         resolvedAddress = rev.address || null;
-
-        const countryCode = (rev.address.country_code || "").toLowerCase();
-        if (countryCode !== "tr") {
+        if ((rev.address.country_code || "").toLowerCase() !== "tr") {
           return { text: "", notTurkey: true, gemHint: "", localHistoryUsed: false, address: resolvedAddress, lat, lon };
         }
-
         gemHint = buildGemstoneHintFromAddress(rev.address);
-
         const provinceHistory = buildProvinceHistoryFromAddress(rev.address);
         if (provinceHistory) {
-          return {
+          const districtCacheKey = toDistrictCacheKey(provinceHistory?.province || rev.address?.state || "", provinceHistory?.district || rev.address?.county || "");
+          const districtCache = historyCacheRead(districtCacheKey ? `district:${districtCacheKey}` : "");
+          const districtFresh = districtCache?.payload && (Date.now() - (districtCache.ts || 0)) <= HISTORY_ENRICH_TTL_MS;
+          const wikiNearby = districtFresh ? districtCache.payload : await collectWikiNearbyContext(lat, lon);
+          if (!districtFresh && districtCacheKey) historyCacheWrite(`district:${districtCacheKey}`, wikiNearby);
+
+          const sourceTypes = normalizeExternalItems([
+            "Yerel model",
+            provinceHistory?.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
+            rev?.licence ? "OpenStreetMap / Nominatim" : "",
+            wikiNearby?.places?.length ? "Wikipedia Geosearch" : ""
+          ]);
+          const qualityScore = (
+            (HISTORY_SOURCE_WEIGHTS.local_model || 0.8) +
+            ((provinceHistory?.sourceStatus === "verified") ? HISTORY_SOURCE_WEIGHTS.official : HISTORY_SOURCE_WEIGHTS.regional_general) +
+            (rev?.licence ? HISTORY_SOURCE_WEIGHTS.open_data : 0) +
+            (wikiNearby?.places?.length ? HISTORY_SOURCE_WEIGHTS.support : 0)
+          ) / 4;
+          const payload = {
             text: provinceHistory.text,
             notTurkey: false,
             gemHint,
@@ -15450,51 +15540,35 @@ out tags geom qt;`;
             provinceHistory,
             address: resolvedAddress,
             lat,
-            lon
+            lon,
+            enrichmentMeta: { sourceCount: sourceTypes.length, qualityScore, sourceTypes, hasExternalData: Boolean(wikiNearby?.places?.length || rev?.licence), nearbyPlaces: wikiNearby?.places || [], cacheUsed: false }
           };
+          if (geoCacheKey) historyCacheWrite(`geo:${geoCacheKey}`, payload);
+          return payload;
         }
-
         const geoTitle = await wikiGeoSearchTitle(lat, lon);
         if (geoTitle) candidates.push(geoTitle);
-
-        const addrCands = buildTurkeyTitleCandidatesFromAddress(rev.address);
-        candidates.push(...addrCands);
+        candidates.push(...buildTurkeyTitleCandidatesFromAddress(rev.address));
       } else {
         const freeTextHistory = buildProvinceHistoryFromFreeText(txt);
-        if (freeTextHistory) {
-          return {
-            text: freeTextHistory.text,
-            notTurkey: false,
-            gemHint: "",
-            localHistoryUsed: true,
-            provinceHistory: freeTextHistory,
-            address: null,
-            lat: null,
-            lon: null
-          };
-        }
-
-        candidates.push(txt);
-        candidates.push("Türkiye");
+        if (freeTextHistory) return { text: freeTextHistory.text, notTurkey: false, gemHint: "", localHistoryUsed: true, provinceHistory: freeTextHistory, address: null, lat: null, lon: null };
+        candidates.push(txt, "Türkiye");
       }
 
-      const seen = new Set();
       const unique = [];
+      const seen = new Set();
       for (const c of candidates) {
         const key = String(c).toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(c);
-        }
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(c);
       }
-
       for (const term of unique) {
         const direct = await wikiSummaryForTitle(term);
-        if (direct) return { text: direct, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon };
+        if (direct) return { text: direct, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon, enrichmentMeta: { sourceCount: 1, qualityScore: HISTORY_SOURCE_WEIGHTS.support, sourceTypes: ["Wikipedia özet"], hasExternalData: true, nearbyPlaces: [], cacheUsed: false } };
         const viaSearch = await wikiSearchAndSummary(term);
-        if (viaSearch) return { text: viaSearch, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon };
+        if (viaSearch) return { text: viaSearch, notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon, enrichmentMeta: { sourceCount: 1, qualityScore: HISTORY_SOURCE_WEIGHTS.support, sourceTypes: ["Wikipedia arama"], hasExternalData: true, nearbyPlaces: [], cacheUsed: false } };
       }
-
       return { text: "", notTurkey: false, gemHint, localHistoryUsed: false, address: resolvedAddress, lat, lon };
     }
 
@@ -15970,15 +16044,17 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const hasSpecificGem = !/özel bir değerli taş kaydı elimde yok|özel bir değerli taş kaydı yok|özel bir taş kaydı yok/i.test(gemText);
 
   const sourceStatus = provinceHistory?.sourceStatus || (result?.localHistoryUsed ? "draft" : "external");
-  const confidence = sourceStatus === "verified"
+  const sourceConfidence = computeSourceConfidence(result?.enrichmentMeta || {}, sourceStatus, district);
+  const confidence = sourceConfidence >= 75
     ? { key: "high", label: "Yüksek" }
-    : result?.localHistoryUsed
+    : sourceConfidence >= 55
       ? { key: "mid", label: "Orta" }
       : { key: "low", label: "Düşük-Orta" };
 
   const periods = Array.isArray(provinceHistory?.periods) ? provinceHistory.periods.filter(Boolean) : [];
   const locationSignals = deriveLocationSignals({ address, province, district, locality, lat, lon, gemText });
-  const narrativePercent = clamp(Math.round(locationSignals.profilePercent + Math.min(10, periods.length * 2) + (contextModel?.districtName ? 4 : 0)), 8, 96);
+  const extBoost = Math.round(((result?.enrichmentMeta?.qualityScore || 0) * 10) + Math.min(6, (result?.enrichmentMeta?.sourceCount || 0) * 2));
+  const narrativePercent = clamp(Math.round(locationSignals.profilePercent + Math.min(10, periods.length * 2) + (contextModel?.districtName ? 4 : 0) + extBoost), 8, 96);
   const narrativeLevel = getDefineMeterLevel(narrativePercent);
   const score = computeHistoryScore({
     confidenceKey: confidence.key,
@@ -16012,12 +16088,16 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const placeCategoryLine = contextModel?.nearbyHistoricalPlaceCategories?.length
     ? contextModel.nearbyHistoricalPlaceCategories.slice(0, 3).join(", ")
     : "genel tarihî çevre kategorileri";
+  const nearbyLine = (result?.enrichmentMeta?.nearbyPlaces || []).slice(0, 2).join(", ");
+  const sourceLine = (result?.enrichmentMeta?.sourceTypes || []).slice(0, 3).join(", ");
   const fallbackLine = contextModel?.freshnessNote || (district ? "İlçe verisi sınırlıysa il fallback aktiftir." : "İl düzeyi fallback aktiftir.");
   const whyItems = [
     `${district ? `${district} / ${province || "il"} düzeyinde` : `${province || "İl"} düzeyinde`} tarihî süreklilik sinyali değerlendirildi.`,
     periods.length ? `Birden fazla dönem etkisi (${periods.slice(0, 3).join(", ")}) görüldüğü için bağlam skoru yükseldi.` : "Dönem verisi sınırlı olduğu için bağlam skoru temkinli üretildi.",
     `${locationSignals.geoBandLabel} ve ${locationSignals.water.label.toLocaleLowerCase("tr-TR")} coğrafi bağlam puanına etki etti.`,
     `Yakın tarihî çevre kategorileri (${placeCategoryLine}) skora yardımcı sinyal olarak eklendi.`,
+    nearbyLine ? `Yakın çevrede yardımcı kayıtlar (${nearbyLine}) bulundu ve tekilleştirme sonrası analize eklendi.` : "Ek çevresel kayıt sınırlı olduğu için sistem yerel model ağırlığıyla çalıştı.",
+    sourceLine ? `Kaynak bileşimi: ${sourceLine}.` : "Kaynak bileşimi sınırlı.",
     confidence.key === "high"
       ? "Kaynak kapsaması güçlü olduğu için veri güven düzeyi yüksek üretildi."
       : confidence.key === "mid"
@@ -16025,7 +16105,7 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
         : "Kayıt kapsamı sınırlı olduğu için sonuç düşük-orta güvenle üretildi.",
     fallbackLine
   ];
-  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönem katmanları: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} Kültürel kayıt yoğunluğu ${contextBreakdown.scoreItems[1].score >= 60 ? "orta-yüksek" : "sınırlı-orta"} seviyede değerlendirildi. ${contextModel?.regionName ? `${contextModel.regionName} bölgesel çerçevesi dikkate alındı.` : "Bölgesel genel çerçeve kullanıldı."} Veri güven düzeyi: ${confidence.label}.`;
+  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönemler: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} ${nearbyLine ? `Yakın kayıt örnekleri: ${nearbyLine}.` : "Yakın çevre kayıtları sınırlı."} Veri güven düzeyi: ${confidence.label}.`;
 
   return {
     title: `${region} ön değerlendirmesi`,
@@ -16043,7 +16123,11 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
     gemText,
     narrativePercent,
     narrativeLevel,
-    note: locationSignals.note,
+    note: sourceConfidence >= 75
+      ? "Veri güven düzeyi; yerel model + bağımsız kaynak eşleşmeleri ile güçlendirildi."
+      : sourceConfidence >= 55
+        ? "Veri güven düzeyi; karışık kaynaklar birlikte değerlendirilerek orta seviyede tutuldu."
+        : "Veri güven düzeyi; veri sınırlılığı nedeniyle temkinli tutuldu.",
     footnote,
     tags: buildHistoryPreviewTags({
       district,
@@ -16401,8 +16485,10 @@ async function runMapQuickEvaluation(coordText) {
   const requestId = ++mapQuickRequestId;
   lastMapQuickSelection = { coordText, noteText: "", data: null };
   showMapEvaluationLoading(coordText);
+  showToast("Analiz hazırlanıyor…", "info", 1100);
 
   try {
+    showToast("Veri zenginleştiriliyor…", "info", 1200);
     const result = await fetchHistoricalNoteFromInternet(coordText);
     if (requestId !== mapQuickRequestId) return;
 
@@ -16426,6 +16512,9 @@ async function runMapQuickEvaluation(coordText) {
       const built = buildProfessionalHistoryNote(result, coordText);
       lastMapQuickSelection = { coordText, noteText: built.noteText, data: built.data };
       updateMapEvaluationCard(built.data, coordText);
+      if (result?.enrichmentMeta?.cacheUsed) showToast("Cache kullanıldı.", "info", 1400);
+      else if (result?.enrichmentMeta?.hasExternalData) showToast("İnternet verisi alındı.", "success", 1400);
+      else showToast("Ek kaynak bulunamadı, yerel veri kullanıldı.", "info", 1700);
       recordAnalysisUse("map");
       return;
     }
@@ -16433,6 +16522,7 @@ async function runMapQuickEvaluation(coordText) {
     const fallback = buildMapEvaluationFallback(coordText, "offline");
     lastMapQuickSelection = { coordText, noteText: "", data: fallback };
     updateMapEvaluationCard(fallback, coordText);
+    showToast("Veri sınırlı, temel analiz gösterildi.", "info", 1700);
     recordAnalysisUse("map");
   } catch {
     if (requestId !== mapQuickRequestId) return;
@@ -16528,7 +16618,9 @@ function updateHistoryPreview(rawText) {
         return;
       }
       historicalNoteInput.value = "Bu konum için Türkiye içi kısa arka plan bilgisi aranıyor...";
+      showToast("Analiz hazırlanıyor…", "info", 1100);
       try {
+        showToast("Veri zenginleştiriliyor…", "info", 1200);
         const result = await fetchHistoricalNoteFromInternet(locText);
         if (!result) {
           lastAutoHistoryPreview = { text: "", data: null };
@@ -16549,6 +16641,9 @@ function updateHistoryPreview(rawText) {
           lastAutoHistoryPreview = { text: built.noteText, data: built.data };
           historicalNoteInput.value = built.noteText;
           updateHistoryPreview(historicalNoteInput.value);
+          if (result?.enrichmentMeta?.cacheUsed) showToast("Cache kullanıldı.", "info", 1400);
+          else if (result?.enrichmentMeta?.hasExternalData) showToast("İnternet verisi alındı.", "success", 1400);
+          else showToast("Ek kaynak bulunamadı, yerel veri kullanıldı.", "info", 1700);
         } else {
           lastAutoHistoryPreview = { text: "", data: null };
           historicalNoteInput.value = "";
