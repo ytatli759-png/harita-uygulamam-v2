@@ -14944,6 +14944,95 @@ out tags geom qt;`;
         .slice(0, 6);
     }
 
+    const TR_PLATE_CODE_MAP = {
+      "Adana": 1, "Adıyaman": 2, "Afyonkarahisar": 3, "Ağrı": 4, "Amasya": 5, "Ankara": 6, "Antalya": 7, "Artvin": 8, "Aydın": 9, "Balıkesir": 10,
+      "Bilecik": 11, "Bingöl": 12, "Bitlis": 13, "Bolu": 14, "Burdur": 15, "Bursa": 16, "Çanakkale": 17, "Çankırı": 18, "Çorum": 19, "Denizli": 20,
+      "Diyarbakır": 21, "Edirne": 22, "Elazığ": 23, "Erzincan": 24, "Erzurum": 25, "Eskişehir": 26, "Gaziantep": 27, "Giresun": 28, "Gümüşhane": 29, "Hakkari": 30,
+      "Hatay": 31, "Isparta": 32, "Mersin": 33, "İstanbul": 34, "İzmir": 35, "Kars": 36, "Kastamonu": 37, "Kayseri": 38, "Kırklareli": 39, "Kırşehir": 40,
+      "Kocaeli": 41, "Konya": 42, "Kütahya": 43, "Malatya": 44, "Manisa": 45, "Kahramanmaraş": 46, "Mardin": 47, "Muğla": 48, "Muş": 49, "Nevşehir": 50,
+      "Niğde": 51, "Ordu": 52, "Rize": 53, "Sakarya": 54, "Samsun": 55, "Siirt": 56, "Sinop": 57, "Sivas": 58, "Tekirdağ": 59, "Tokat": 60,
+      "Trabzon": 61, "Tunceli": 62, "Şanlıurfa": 63, "Uşak": 64, "Van": 65, "Yozgat": 66, "Zonguldak": 67, "Aksaray": 68, "Bayburt": 69, "Karaman": 70,
+      "Kırıkkale": 71, "Batman": 72, "Şırnak": 73, "Bartın": 74, "Ardahan": 75, "Iğdır": 76, "Yalova": 77, "Karabük": 78, "Kilis": 79, "Osmaniye": 80, "Düzce": 81
+    };
+
+    const TR_PROVINCE_REGION_MAP = {
+      "Adana": "Akdeniz", "Adıyaman": "Güneydoğu Anadolu", "Afyonkarahisar": "Ege", "Ağrı": "Doğu Anadolu", "Amasya": "Karadeniz", "Ankara": "İç Anadolu",
+      "Antalya": "Akdeniz", "Artvin": "Karadeniz", "Aydın": "Ege", "Balıkesir": "Marmara", "Bilecik": "Marmara", "Bingöl": "Doğu Anadolu",
+      "Bitlis": "Doğu Anadolu", "Bolu": "Karadeniz", "Burdur": "Akdeniz", "Bursa": "Marmara", "Çanakkale": "Marmara", "Çankırı": "İç Anadolu",
+      "Çorum": "Karadeniz", "Denizli": "Ege", "Diyarbakır": "Güneydoğu Anadolu", "Edirne": "Marmara", "Elazığ": "Doğu Anadolu", "Erzincan": "Doğu Anadolu",
+      "Erzurum": "Doğu Anadolu", "Eskişehir": "İç Anadolu", "Gaziantep": "Güneydoğu Anadolu", "Giresun": "Karadeniz", "Gümüşhane": "Karadeniz", "Hakkari": "Doğu Anadolu",
+      "Hatay": "Akdeniz", "Isparta": "Akdeniz", "Mersin": "Akdeniz", "İstanbul": "Marmara", "İzmir": "Ege", "Kars": "Doğu Anadolu",
+      "Kastamonu": "Karadeniz", "Kayseri": "İç Anadolu", "Kırklareli": "Marmara", "Kırşehir": "İç Anadolu", "Kocaeli": "Marmara", "Konya": "İç Anadolu",
+      "Kütahya": "Ege", "Malatya": "Doğu Anadolu", "Manisa": "Ege", "Kahramanmaraş": "Akdeniz", "Mardin": "Güneydoğu Anadolu", "Muğla": "Ege", "Muş": "Doğu Anadolu",
+      "Nevşehir": "İç Anadolu", "Niğde": "İç Anadolu", "Ordu": "Karadeniz", "Rize": "Karadeniz", "Sakarya": "Marmara", "Samsun": "Karadeniz",
+      "Siirt": "Güneydoğu Anadolu", "Sinop": "Karadeniz", "Sivas": "İç Anadolu", "Tekirdağ": "Marmara", "Tokat": "Karadeniz", "Trabzon": "Karadeniz",
+      "Tunceli": "Doğu Anadolu", "Şanlıurfa": "Güneydoğu Anadolu", "Uşak": "Ege", "Van": "Doğu Anadolu", "Yozgat": "İç Anadolu", "Zonguldak": "Karadeniz",
+      "Aksaray": "İç Anadolu", "Bayburt": "Karadeniz", "Karaman": "İç Anadolu", "Kırıkkale": "İç Anadolu", "Batman": "Güneydoğu Anadolu", "Şırnak": "Güneydoğu Anadolu",
+      "Bartın": "Karadeniz", "Ardahan": "Doğu Anadolu", "Iğdır": "Doğu Anadolu", "Yalova": "Marmara", "Karabük": "Karadeniz", "Kilis": "Güneydoğu Anadolu",
+      "Osmaniye": "Akdeniz", "Düzce": "Karadeniz"
+    };
+
+    const HISTORY_PLACE_CATEGORY_CATALOG = {
+      fortress: "Kale / sur / savunma yapısı",
+      bridge: "Köprü / geçiş yapısı",
+      mound: "Eski yerleşim / höyük / antik alan",
+      worship: "İbadet yapısı",
+      civic: "Sivil mimari / han / hamam / çarşı",
+      memorial: "Mezarlık / kitabe / anıtsal yapı",
+      protected: "Kültürel alan / tescilli yer"
+    };
+
+    const PERIOD_CIVILIZATION_MAP = {
+      Hitit: { period: "Antik dönem", civ: "Hitit", status: "güçlü kayıt" },
+      Urartu: { period: "Antik dönem", civ: "Urartu", status: "güçlü kayıt" },
+      Frig: { period: "Antik dönem", civ: "Frig", status: "muhtemel etki" },
+      Lidya: { period: "Antik dönem", civ: "Lidya", status: "muhtemel etki" },
+      Helenistik: { period: "Helenistik etki", civ: "Helenistik ağ", status: "bölgesel tarih desteği" },
+      Roma: { period: "Roma", civ: "Roma", status: "güçlü kayıt" },
+      Bizans: { period: "Bizans", civ: "Bizans", status: "güçlü kayıt" },
+      Selçuklu: { period: "Selçuklu", civ: "Selçuklu", status: "güçlü kayıt" },
+      Beylikler: { period: "Bölgesel özel katmanlar", civ: "Anadolu Beylikleri", status: "bölgesel tarih desteği" },
+      Osmanlı: { period: "Osmanlı", civ: "Osmanlı", status: "güçlü kayıt" },
+      Cumhuriyet: { period: "Erken Cumhuriyet", civ: "Cumhuriyet", status: "genel il düzeyi çıkarım" },
+      Pontus: { period: "Bölgesel özel katmanlar", civ: "Pontus ağı", status: "bölgesel tarih desteği" },
+      Kommagene: { period: "Bölgesel özel katmanlar", civ: "Kommagene", status: "güçlü kayıt" }
+    };
+
+    function buildCivilizationLayers(periods = []) {
+      const items = Array.isArray(periods) ? periods : [];
+      const mapped = items
+        .map((period) => PERIOD_CIVILIZATION_MAP[period] ? ({ period, ...PERIOD_CIVILIZATION_MAP[period] }) : null)
+        .filter(Boolean);
+      if (mapped.length) return mapped.slice(0, 7);
+      return [{ period: "Bölgesel dönem kaydı", civ: "Yerel tarih katmanı", status: "sınırlı veri" }];
+    }
+
+    function chooseHistoryPlaceCategories(summary = "", periods = [], province = "", district = "") {
+      const text = `${summary} ${periods.join(" ")} ${province} ${district}`.toLocaleLowerCase("tr-TR");
+      const categories = [];
+      if (/kale|sur|serhat|savunma|tabya/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.fortress);
+      if (/köprü|geçit|boğaz|vadi|menzil/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.bridge);
+      if (/antik|höyük|neolitik|urartu|frig|roma/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.mound);
+      if (/cami|kilise|manastır|külliye|inanç/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.worship);
+      if (/han|hamam|çarşı|kent dokusu|sivil mimari|ticaret/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.civic);
+      if (/anıt|mezar|kitabe|kongre|şehit|savaş/i.test(text)) categories.push(HISTORY_PLACE_CATEGORY_CATALOG.memorial);
+      categories.push(HISTORY_PLACE_CATEGORY_CATALOG.protected);
+      return [...new Set(categories)].slice(0, 5);
+    }
+
+    function deriveContinuityLevel(periods = [], districtUsed = false) {
+      if (districtUsed && periods.length >= 3) return "yüksek";
+      if (periods.length >= 2) return "orta";
+      return "sınırlı";
+    }
+
+    function deriveCulturalDensityLevel(periods = [], summary = "") {
+      const s = String(summary || "");
+      if (periods.length >= 4 || /(antik|kale|kent|başkent|imparatorluk|höyük)/i.test(s)) return "yüksek";
+      if (periods.length >= 2) return "orta";
+      return "sınırlı";
+    }
+
     function findProvinceHistoryByName(name) {
       const normalized = normalizeProvinceKey(name);
       if (!normalized) return null;
@@ -15153,15 +15242,42 @@ out tags geom qt;`;
       const districtRecord = district ? findDistrictHistoryByName(record.province, district) : null;
       const summary = districtRecord?.summary || record.summary;
       const periods = deriveHistoryPeriods(summary);
+      const districtSummaryUsed = Boolean(districtRecord);
+      const sourceName = districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME;
+      const sourceStatus = districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS;
+      const provinceCode = TR_PLATE_CODE_MAP[record.province] || null;
+      const regionName = TR_PROVINCE_REGION_MAP[record.province] || "Bölgesel genel çerçeve";
+      const civilizations = buildCivilizationLayers(periods);
+      const continuityLevel = deriveContinuityLevel(periods, districtSummaryUsed);
+      const culturalDensityLevel = deriveCulturalDensityLevel(periods, summary);
+      const historyContext = {
+        provinceName: record.province,
+        provinceCode,
+        districtName: districtRecord?.district || district || "",
+        regionName,
+        summary,
+        prominentPeriods: periods,
+        civilizations,
+        settlementContinuityLevel: continuityLevel,
+        culturalRecordDensityLevel: culturalDensityLevel,
+        geographicContext: `${regionName} bölgesinde ${districtSummaryUsed ? "ilçe" : "il"} ölçeğinde üretilen tarihî bağlam.`,
+        historicalCharacterNote: districtSummaryUsed
+          ? "İlçe odaklı özet bulunduğu için tarihî karakter daha dar ölçekte üretildi."
+          : "İlçe kaydı sınırlı olduğunda il ölçeğine düşen genel tarihî karakter kullanıldı.",
+        confidenceLevel: sourceStatus === "verified" ? "yüksek" : districtSummaryUsed ? "orta" : "düşük-orta",
+        nearbyHistoricalPlaceCategories: chooseHistoryPlaceCategories(summary, periods, record.province, districtRecord?.district || district || ""),
+        sourceTypes: [sourceName, "Yerel özet veri katmanı", "Bölgesel dönem eşleştirmesi"],
+        freshnessNote: districtSummaryUsed ? "İlçe kaydı kullanıldı." : "İlçe kaydı sınırlı; il düzeyi fallback aktif."
+      };
       const text = buildLocationHistoryText({
         province: record.province,
         district: districtRecord?.district || district,
         locality,
         summary,
         periods,
-        districtSummaryUsed: Boolean(districtRecord),
-        sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-        sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS
+        districtSummaryUsed,
+        sourceName,
+        sourceStatus
       });
 
       return {
@@ -15170,9 +15286,10 @@ out tags geom qt;`;
         locality,
         summary,
         periods,
-        districtSummaryUsed: Boolean(districtRecord),
-        sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-        sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS,
+        districtSummaryUsed,
+        sourceName,
+        sourceStatus,
+        historyContext,
         text
       };
     }
@@ -15198,15 +15315,37 @@ out tags geom qt;`;
         const districtRecord = district ? findDistrictHistoryByName(record.province, district) : null;
         const summary = districtRecord?.summary || record.summary;
         const periods = deriveHistoryPeriods(summary);
+        const districtSummaryUsed = Boolean(districtRecord);
+        const sourceName = districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME;
+        const sourceStatus = districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS;
+        const provinceCode = TR_PLATE_CODE_MAP[record.province] || null;
+        const regionName = TR_PROVINCE_REGION_MAP[record.province] || "Bölgesel genel çerçeve";
+        const historyContext = {
+          provinceName: record.province,
+          provinceCode,
+          districtName: districtRecord?.district || district || "",
+          regionName,
+          summary,
+          prominentPeriods: periods,
+          civilizations: buildCivilizationLayers(periods),
+          settlementContinuityLevel: deriveContinuityLevel(periods, districtSummaryUsed),
+          culturalRecordDensityLevel: deriveCulturalDensityLevel(periods, summary),
+          geographicContext: `${regionName} bölgesinde metin-temelli konum çözümlemesiyle oluşturuldu.`,
+          historicalCharacterNote: districtSummaryUsed ? "İlçe özeti bulundu." : "İlçe kaydı bulunamadığı için il düzeyi bağlam uygulandı.",
+          confidenceLevel: sourceStatus === "verified" ? "yüksek" : districtSummaryUsed ? "orta" : "düşük-orta",
+          nearbyHistoricalPlaceCategories: chooseHistoryPlaceCategories(summary, periods, record.province, districtRecord?.district || district || ""),
+          sourceTypes: [sourceName, "Metin konum çözümleyici", "Bölgesel dönem eşleştirmesi"],
+          freshnessNote: districtSummaryUsed ? "İlçe verisi aktif." : "İlçe verisi yok; il fallback aktif."
+        };
         const text = buildLocationHistoryText({
           province: record.province,
           district: districtRecord?.district || district,
           locality: "",
           summary,
           periods,
-          districtSummaryUsed: Boolean(districtRecord),
-          sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-          sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS
+          districtSummaryUsed,
+          sourceName,
+          sourceStatus
         });
 
         return {
@@ -15215,9 +15354,10 @@ out tags geom qt;`;
           locality: "",
           summary,
           periods,
-          districtSummaryUsed: Boolean(districtRecord),
-          sourceName: districtRecord?.sourceName || record.sourceName || DEFAULT_HISTORY_SOURCE_NAME,
-          sourceStatus: districtRecord?.sourceStatus || record.sourceStatus || DEFAULT_HISTORY_SOURCE_STATUS,
+          districtSummaryUsed,
+          sourceName,
+          sourceStatus,
+          historyContext,
           text
         };
       }
@@ -15759,19 +15899,25 @@ function scoreNote(label, score) {
   return `${label} için veri sınırlı görünüyor.`;
 }
 
-function buildContextBreakdown({ locationSignals, periods = [], confidenceKey = "low", sourceStatus = "", district = "", province = "" }) {
-  const historyScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.78 + (periods.length * 4)), 0, 100);
-  const culturalScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.7 + (district ? 14 : 6)), 0, 100);
-  const diversityScore = clamp(Math.round(28 + Math.min(48, periods.length * 12) + (province ? 8 : 0)), 0, 100);
-  const continuityScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.62 + (locationSignals.settlementDelta || 0) * 4 + 22), 0, 100);
-  const geoScore = clamp(Math.round(52 + (locationSignals.corridorDelta || 0) * 2 + (locationSignals.water?.bonus || 0) * 3), 0, 100);
+function buildContextBreakdown({ locationSignals, periods = [], confidenceKey = "low", sourceStatus = "", district = "", province = "", contextModel = null }) {
+  const continuityLevel = contextModel?.settlementContinuityLevel || "sınırlı";
+  const culturalLevel = contextModel?.culturalRecordDensityLevel || "sınırlı";
+  const continuityBoost = continuityLevel === "yüksek" ? 16 : continuityLevel === "orta" ? 9 : 3;
+  const culturalBoost = culturalLevel === "yüksek" ? 15 : culturalLevel === "orta" ? 8 : 3;
+  const civCount = Array.isArray(contextModel?.civilizations) ? contextModel.civilizations.length : 0;
+
+  const historyScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.72 + (periods.length * 4) + continuityBoost * 0.4), 0, 100);
+  const culturalScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.58 + (district ? 10 : 4) + culturalBoost), 0, 100);
+  const diversityScore = clamp(Math.round(24 + Math.min(44, periods.length * 9) + Math.min(22, civCount * 5) + (province ? 6 : 0)), 0, 100);
+  const continuityScore = clamp(Math.round((locationSignals.historyDensityScore || 50) * 0.52 + (locationSignals.settlementDelta || 0) * 4 + 18 + continuityBoost), 0, 100);
+  const geoScore = clamp(Math.round(48 + (locationSignals.corridorDelta || 0) * 2 + (locationSignals.water?.bonus || 0) * 3 + (contextModel?.regionName ? 4 : 0)), 0, 100);
   const confidenceScore = sourceStatus === "verified"
-    ? 86
+    ? 88
     : sourceStatus === "draft"
-      ? 64
+      ? (contextModel?.districtName ? 63 : 56)
       : confidenceKey === "mid"
-        ? 57
-        : 45;
+        ? 54
+        : 41;
 
   const scoreItems = [
     { key: "historical", label: "Tarihî bağlam skoru", score: historyScore },
@@ -15808,6 +15954,7 @@ function buildPeriodLayers(periods = [], sourceStatus = "draft") {
 
 function buildHistoryPreviewDataFromResult(result, locationText = "") {
   const provinceHistory = result?.provinceHistory || null;
+  const contextModel = provinceHistory?.historyContext || null;
   const address = result?.address || null;
   const province = provinceHistory?.province || normalizePreviewLine(address?.state || "");
   const district = provinceHistory?.district || normalizePreviewLine(address?.county || address?.town || "");
@@ -15831,7 +15978,7 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
 
   const periods = Array.isArray(provinceHistory?.periods) ? provinceHistory.periods.filter(Boolean) : [];
   const locationSignals = deriveLocationSignals({ address, province, district, locality, lat, lon, gemText });
-  const narrativePercent = clamp(Math.round(locationSignals.profilePercent + Math.min(8, periods.length * 2)), 8, 96);
+  const narrativePercent = clamp(Math.round(locationSignals.profilePercent + Math.min(10, periods.length * 2) + (contextModel?.districtName ? 4 : 0)), 8, 96);
   const narrativeLevel = getDefineMeterLevel(narrativePercent);
   const score = computeHistoryScore({
     confidenceKey: confidence.key,
@@ -15858,20 +16005,27 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
     confidenceKey: confidence.key,
     sourceStatus,
     district,
-    province
+    province,
+    contextModel
   });
   const layerItems = buildPeriodLayers(periods, sourceStatus);
+  const placeCategoryLine = contextModel?.nearbyHistoricalPlaceCategories?.length
+    ? contextModel.nearbyHistoricalPlaceCategories.slice(0, 3).join(", ")
+    : "genel tarihî çevre kategorileri";
+  const fallbackLine = contextModel?.freshnessNote || (district ? "İlçe verisi sınırlıysa il fallback aktiftir." : "İl düzeyi fallback aktiftir.");
   const whyItems = [
     `${district ? `${district} / ${province || "il"} düzeyinde` : `${province || "İl"} düzeyinde`} tarihî süreklilik sinyali değerlendirildi.`,
     periods.length ? `Birden fazla dönem etkisi (${periods.slice(0, 3).join(", ")}) görüldüğü için bağlam skoru yükseldi.` : "Dönem verisi sınırlı olduğu için bağlam skoru temkinli üretildi.",
     `${locationSignals.geoBandLabel} ve ${locationSignals.water.label.toLocaleLowerCase("tr-TR")} coğrafi bağlam puanına etki etti.`,
+    `Yakın tarihî çevre kategorileri (${placeCategoryLine}) skora yardımcı sinyal olarak eklendi.`,
     confidence.key === "high"
       ? "Kaynak kapsaması güçlü olduğu için veri güven düzeyi yüksek üretildi."
       : confidence.key === "mid"
         ? "Kayıtlar karışık kaynaklardan geldiği için veri güven düzeyi orta tutuldu."
-        : "Kayıt kapsamı sınırlı olduğu için sonuç düşük-orta güvenle üretildi."
+        : "Kayıt kapsamı sınırlı olduğu için sonuç düşük-orta güvenle üretildi.",
+    fallbackLine
   ];
-  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönem katmanları: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} Kültürel kayıt yoğunluğu ${contextBreakdown.scoreItems[1].score >= 60 ? "orta-yüksek" : "sınırlı-orta"} seviyede değerlendirildi. Veri güven düzeyi: ${confidence.label}.`;
+  const summary = `${region} çevresi ${contextBreakdown.overall.toLocaleLowerCase("tr-TR")} tarihî bağlam profili gösteriyor. ${periods.length ? `Öne çıkan dönem katmanları: ${periods.slice(0, 3).join(", ")}.` : "Öne çıkan dönem verisi sınırlı."} Kültürel kayıt yoğunluğu ${contextBreakdown.scoreItems[1].score >= 60 ? "orta-yüksek" : "sınırlı-orta"} seviyede değerlendirildi. ${contextModel?.regionName ? `${contextModel.regionName} bölgesel çerçevesi dikkate alındı.` : "Bölgesel genel çerçeve kullanıldı."} Veri güven düzeyi: ${confidence.label}.`;
 
   return {
     title: `${region} ön değerlendirmesi`,
@@ -15902,6 +16056,11 @@ function buildHistoryPreviewDataFromResult(result, locationText = "") {
     }),
     sourceStatus,
     district,
+    provinceCode: contextModel?.provinceCode || null,
+    regionName: contextModel?.regionName || "",
+    civilizations: contextModel?.civilizations || buildCivilizationLayers(periods),
+    nearbyHistoricalPlaceCategories: contextModel?.nearbyHistoricalPlaceCategories || [],
+    fallbackNote: fallbackLine,
     historyDensityLabel: locationSignals.historyDensityLabel,
     stonePotentialLabel: locationSignals.stonePotentialLabel,
     settlementLabel: locationSignals.settlementLabel,
