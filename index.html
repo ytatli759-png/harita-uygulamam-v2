@@ -26,6 +26,7 @@
     <script
             src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js">
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         * {
@@ -7500,6 +7501,24 @@
                 </div>
             </div>
 
+            <div class="gallery-section-title">🔐 Hesap ve senkronizasyon</div>
+            <div class="gem-card">
+                <div class="gem-desc">
+                    Supabase bağlantısı yapılandırılırsa kayıtlar hesabına güvenli şekilde bağlanır ve cihazlar arasında senkronize edilir.
+                </div>
+                <div id="authStatus" class="map-status info" style="margin:10px 0 12px;">Yerel mod: Bulut bağlantısı kapalı.</div>
+                <div class="settings-data-actions" style="margin-bottom:8px;">
+                    <input id="authEmail" type="email" placeholder="E-posta" autocomplete="email" style="min-height:44px; border-radius:12px; border:1px solid var(--border-subtle); background:rgba(10,18,34,0.72); color:var(--text-primary); padding:0 12px;" />
+                    <input id="authPassword" type="password" placeholder="Şifre" autocomplete="current-password" style="min-height:44px; border-radius:12px; border:1px solid var(--border-subtle); background:rgba(10,18,34,0.72); color:var(--text-primary); padding:0 12px;" />
+                </div>
+                <div class="settings-data-actions">
+                    <button type="button" id="authRegisterBtn"><span class="icon">🆕</span><span>Kayıt ol</span></button>
+                    <button type="button" id="authLoginBtn"><span class="icon">🔑</span><span>Giriş yap</span></button>
+                    <button type="button" id="authLogoutBtn"><span class="icon">🚪</span><span>Çıkış yap</span></button>
+                    <button type="button" id="syncNowBtn"><span class="icon">🔄</span><span>Şimdi senkronize et</span></button>
+                </div>
+            </div>
+
             <div class="gallery-section-title" id="settingsSec2Title">🗺️ 2) Nokta ekleme akışı</div>
             <div class="gem-card">
                 <div class="gem-desc" id="settingsSec2Body">
@@ -7797,6 +7816,10 @@
 
 <script>
     const STORAGE_KEY = "arazi_noktalarim_basit";
+    const SPOT_SYNC_QUEUE_KEY = "arazi_spot_sync_queue_v1";
+    const SUPABASE_CONFIG_KEY = "arazi_supabase_config_v1";
+    const SYNC_RETRY_BASE_MS = 1400;
+
 
     // ✅ Otomatik tarih metni sınırı
     const HISTORY_MAX_CHARS = 8000;
@@ -8858,6 +8881,13 @@
     const exportBtn = document.getElementById("exportBtn");
     const importBtn = document.getElementById("importBtn");
     const importFile = document.getElementById("importFile");
+    const authStatus = document.getElementById("authStatus");
+    const authEmail = document.getElementById("authEmail");
+    const authPassword = document.getElementById("authPassword");
+    const authRegisterBtn = document.getElementById("authRegisterBtn");
+    const authLoginBtn = document.getElementById("authLoginBtn");
+    const authLogoutBtn = document.getElementById("authLogoutBtn");
+    const syncNowBtn = document.getElementById("syncNowBtn");
     const searchInput = document.getElementById("searchInput");
     const searchToggleBtn = document.getElementById("searchToggleBtn");
     const recordsSearchPanel = document.getElementById("recordsSearchPanel");
@@ -10158,6 +10188,211 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       };
     }
 
+    const backendState = {
+      client: null,
+      enabled: false,
+      user: null,
+      syncInFlight: false,
+      syncRetryTimer: null,
+      queue: []
+    };
+
+    function readSupabaseConfig() {
+      const fromWindow = window.__SUPABASE_CONFIG;
+      if (fromWindow && fromWindow.url && fromWindow.anonKey) return fromWindow;
+      const fromStorage = safeReadStorageJson(SUPABASE_CONFIG_KEY, null, (cfg) => !!(cfg && cfg.url && cfg.anonKey));
+      return fromStorage || null;
+    }
+
+    function setAuthStatus(text, type = "info") {
+      if (!authStatus) return;
+      authStatus.className = `map-status ${type}`;
+      authStatus.textContent = text;
+    }
+
+    function readSyncQueue() {
+      return safeReadStorageJson(SPOT_SYNC_QUEUE_KEY, [], Array.isArray)
+        .filter((item) => item && (item.op === "upsert" || item.op === "delete"));
+    }
+
+    function writeSyncQueue(queue) {
+      backendState.queue = Array.isArray(queue) ? queue : [];
+      safeWriteStorageJson(SPOT_SYNC_QUEUE_KEY, backendState.queue);
+    }
+
+    function enqueueSyncOperation(op) {
+      const normalized = {
+        op: op.op,
+        spot: op.spot ? sanitizeSpotRecord(op.spot) : null,
+        id: op.id ? String(op.id) : null,
+        at: Date.now()
+      };
+      const queue = readSyncQueue();
+      queue.push(normalized);
+      if (queue.length > 600) queue.splice(0, queue.length - 600);
+      writeSyncQueue(queue);
+      scheduleRemoteSync(200);
+    }
+
+    async function initBackend() {
+      backendState.queue = readSyncQueue();
+      const cfg = readSupabaseConfig();
+      if (!cfg || !window.supabase || !window.supabase.createClient) {
+        backendState.enabled = false;
+        setAuthStatus("Yerel mod: Bulut bağlantısı kapalı.", "info");
+        return;
+      }
+      try {
+        backendState.client = window.supabase.createClient(cfg.url, cfg.anonKey, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        backendState.enabled = true;
+        const { data, error } = await backendState.client.auth.getSession();
+        if (error) throw error;
+        backendState.user = data?.session?.user || null;
+        if (backendState.user) {
+          setAuthStatus(`Giriş aktif: ${backendState.user.email || backendState.user.id}`, "success");
+          await pullLatestFromRemote();
+          scheduleRemoteSync(50);
+        } else {
+          setAuthStatus("Bulut hazır. Giriş yaptığında kayıtların hesabına bağlanır.", "info");
+        }
+      } catch (err) {
+        console.error("Backend init error:", err);
+        backendState.enabled = false;
+        setAuthStatus("Bulut başlatılamadı. Yerel modda devam ediliyor.", "error");
+      }
+    }
+
+    async function handleAuthLogin(mode = "login") {
+      if (!backendState.enabled || !backendState.client) {
+        showToast("Önce Supabase yapılandırmasını eklemelisin.", "error", 2200);
+        return;
+      }
+      const email = String(authEmail?.value || "").trim();
+      const password = String(authPassword?.value || "").trim();
+      if (!email || !password) {
+        showToast("E-posta ve şifre gerekli.", "info");
+        return;
+      }
+      try {
+        setAuthStatus("Kimlik doğrulama yapılıyor...", "info");
+        let result;
+        if (mode === "register") result = await backendState.client.auth.signUp({ email, password });
+        else result = await backendState.client.auth.signInWithPassword({ email, password });
+        if (result.error) throw result.error;
+        backendState.user = result.data?.user || result.data?.session?.user || null;
+        setAuthStatus(`Giriş aktif: ${backendState.user?.email || email}`, "success");
+        showToast(mode === "register" ? "Kayıt tamamlandı. E-posta doğrulaması gerekebilir." : "Giriş başarılı.", "success", 2200);
+        await pullLatestFromRemote();
+        scheduleRemoteSync(60);
+      } catch (err) {
+        console.error("Auth error:", err);
+        setAuthStatus("Giriş başarısız. Bilgileri kontrol et.", "error");
+        showToast("Giriş/Kayıt başarısız: " + (err?.message || "bilinmeyen hata"), "error", 3000);
+      }
+    }
+
+    async function handleAuthLogout() {
+      if (!backendState.client) return;
+      try { await backendState.client.auth.signOut(); } catch {}
+      backendState.user = null;
+      setAuthStatus("Çıkış yapıldı. Yerel mod açık.", "info");
+    }
+
+    function scheduleRemoteSync(delayMs = SYNC_RETRY_BASE_MS) {
+      clearTimeout(backendState.syncRetryTimer);
+      backendState.syncRetryTimer = setTimeout(() => {
+        syncQueueWithRemote().catch((err) => {
+          console.error("Sync error:", err);
+          scheduleRemoteSync(Math.min(12000, delayMs * 2));
+        });
+      }, Math.max(50, delayMs));
+    }
+
+    async function pullLatestFromRemote() {
+      if (!backendState.enabled || !backendState.user || !backendState.client) return;
+      const { data, error } = await backendState.client
+        .from("spots")
+        .select("id,name,location,historical_note,tags,photos,created_at,last_visit_at,visit_count,updated_at")
+        .eq("user_id", backendState.user.id)
+        .order("created_at", { ascending: false })
+        .limit(3000);
+      if (error) {
+        console.error("Remote pull error:", error);
+        showToast("Buluttan veri alınamadı, yerel veriler korunuyor.", "error", 2600);
+        return;
+      }
+      const remoteSpots = (data || []).map((r, i) => sanitizeSpotRecord({
+        id: r.id,
+        name: r.name,
+        location: r.location,
+        historicalNote: r.historical_note,
+        tags: r.tags,
+        photos: r.photos,
+        createdAt: r.created_at ? Date.parse(r.created_at) : Date.now(),
+        lastVisitAt: r.last_visit_at ? Date.parse(r.last_visit_at) : null,
+        visitCount: Number(r.visit_count) || 0,
+        updatedAt: r.updated_at ? Date.parse(r.updated_at) : Date.now()
+      }, i)).filter(Boolean);
+      const local = loadSpots({ force: true });
+      const byId = new Map();
+      [...local, ...remoteSpots].forEach((s) => {
+        const prev = byId.get(s.id);
+        const nextTs = Number(s.updatedAt || s.createdAt || 0);
+        const prevTs = Number(prev?.updatedAt || prev?.createdAt || 0);
+        if (!prev || nextTs >= prevTs) byId.set(s.id, s);
+      });
+      setSpotState(Array.from(byId.values()), { immediate: true });
+      scheduleRender();
+    }
+
+    function buildRemoteSpotPayload(spot) {
+      return {
+        id: spot.id,
+        user_id: backendState.user.id,
+        name: spot.name,
+        location: spot.location || "",
+        historical_note: spot.historicalNote || "",
+        tags: normalizeSpotTags(spot.tags),
+        photos: normalizeSpotPhotos(spot.photos),
+        created_at: new Date(spot.createdAt || Date.now()).toISOString(),
+        last_visit_at: spot.lastVisitAt ? new Date(spot.lastVisitAt).toISOString() : null,
+        visit_count: Number(spot.visitCount) || 0,
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    async function syncQueueWithRemote() {
+      if (!backendState.enabled || !backendState.user || !backendState.client) return;
+      if (!navigator.onLine) return;
+      if (backendState.syncInFlight) return;
+      backendState.syncInFlight = true;
+      try {
+        let queue = readSyncQueue();
+        if (!queue.length) return;
+        while (queue.length) {
+          const item = queue[0];
+          if (item.op === "upsert") {
+            const spot = sanitizeSpotRecord(item.spot || {});
+            if (spot) {
+              const payload = buildRemoteSpotPayload(spot);
+              const { error } = await backendState.client.from("spots").upsert(payload, { onConflict: "id" });
+              if (error) throw error;
+            }
+          } else if (item.op === "delete" && item.id) {
+            const { error } = await backendState.client.from("spots").delete().eq("id", item.id).eq("user_id", backendState.user.id);
+            if (error) throw error;
+          }
+          queue.shift();
+          writeSyncQueue(queue);
+        }
+        setAuthStatus(`Senkron tamamlandı • ${backendState.user.email || backendState.user.id}`, "success");
+      } finally {
+        backendState.syncInFlight = false;
+      }
+    }
+
     function safeReadStorageJson(key, fallbackValue, validator = null) {
       try {
         const raw = localStorage.getItem(key);
@@ -10202,9 +10437,14 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       };
     }
 
+    function getLocalStorageKeyForActiveUser() {
+      const uid = backendState?.user?.id;
+      return uid ? `${STORAGE_KEY}:${uid}` : STORAGE_KEY;
+    }
+
     function loadSpots({ force = false } = {}) {
       if (!force && Array.isArray(allSpotsCache) && allSpotsCache.length) return allSpotsCache;
-      const parsed = safeReadStorageJson(STORAGE_KEY, [], Array.isArray);
+      const parsed = safeReadStorageJson(getLocalStorageKeyForActiveUser(), [], Array.isArray);
       allSpotsCache = parsed
         .map((spot, index) => sanitizeSpotRecord(spot, index))
         .filter(Boolean);
@@ -10213,7 +10453,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function commitSpotsNow() {
       if (!Array.isArray(allSpotsCache)) return false;
-      return safeWriteStorageJson(STORAGE_KEY, allSpotsCache);
+      return safeWriteStorageJson(getLocalStorageKeyForActiveUser(), allSpotsCache);
     }
 
     function setSpotState(nextSpots, { immediate = false } = {}) {
@@ -10306,6 +10546,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       });
 
       setSpotState(merged, { immediate: true });
+      merged.forEach((spot) => enqueueSyncOperation({ op: "upsert", spot: { ...spot, updatedAt: Date.now() } }));
       render();
       showToast(ux('import_done_count', { count: importedCount }), 'success', 1900);
     }
@@ -13341,6 +13582,7 @@ out tags geom qt;`;
       let spots = loadSpots();
       spots = spots.filter((s) => s.id !== id);
       setSpotState(spots);
+      enqueueSyncOperation({ op: "delete", id });
       if (activeDetailSpotId && String(activeDetailSpotId) === String(id)) closeSpotDetail();
       scheduleRender();
       showToast(ux('delete_done'), 'success');
@@ -13376,6 +13618,8 @@ out tags geom qt;`;
       });
 
       setSpotState(spots, { immediate: true });
+      const updated = spots.find((s) => String(s.id) === String(id));
+      if (updated) enqueueSyncOperation({ op: "upsert", spot: { ...updated, updatedAt: Date.now() } });
       scheduleRender();
     }
 
@@ -16536,7 +16780,7 @@ function updateHistoryPreview(rawText) {
       updateHistoryPreview(historicalNoteInput.value);
     });
 
-    spotForm.addEventListener("submit", (e) => {
+    spotForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = nameInput.value.trim();
       const location = locationInput.value.trim();
@@ -16583,6 +16827,8 @@ function updateHistoryPreview(rawText) {
       }
 
       setSpotState(spots, { immediate: true });
+      const changedSpot = spots.find((s) => String(s.id) === String(id)) || spots[spots.length - 1];
+      if (changedSpot) enqueueSyncOperation({ op: "upsert", spot: { ...changedSpot, updatedAt: Date.now() } });
       closeForm();
       scheduleRender();
       showToast(isEdit ? ux('save_updated') : ux('save_created'), 'success');
@@ -16744,6 +16990,25 @@ function updateHistoryPreview(rawText) {
       }
     });
 
+    safeBindClick(authRegisterBtn, "authRegisterBtn", () => handleAuthLogin("register"));
+    safeBindClick(authLoginBtn, "authLoginBtn", () => handleAuthLogin("login"));
+    safeBindClick(authLogoutBtn, "authLogoutBtn", handleAuthLogout);
+    safeBindClick(syncNowBtn, "syncNowBtn", async () => {
+      try {
+        await syncQueueWithRemote();
+        await pullLatestFromRemote();
+        showToast("Senkronizasyon tamamlandı.", "success", 1800);
+      } catch (err) {
+        console.error(err);
+        showToast("Senkronizasyon başarısız, tekrar dene.", "error", 2200);
+      }
+    });
+
+    window.addEventListener("online", () => {
+      showToast("Bağlantı geri geldi, bekleyen kayıtlar gönderiliyor.", "info", 1800);
+      scheduleRemoteSync(120);
+    });
+
     setSearchPanelState(Boolean(searchInput?.value?.trim()));
 
     searchInput?.addEventListener("input", scheduleRender);
@@ -16884,7 +17149,10 @@ function updateHistoryPreview(rawText) {
       bootMap();
       safeAction("updateMapToolTexts", updateMapToolTexts)();
       safeAction("updateMapToolStates", updateMapToolStates)();
-      safeAction("render", render)();
+      initBackend().finally(() => {
+        safeAction("render", render)();
+        scheduleRemoteSync(300);
+      });
       requestAnimationFrame(applyInitialCardReveal);
       closeSplash(false);
     }
