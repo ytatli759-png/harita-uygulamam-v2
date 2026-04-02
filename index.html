@@ -9,6 +9,7 @@
     <!-- Standalone HTML için kırık asset referansları kaldırıldı -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 x2=%271%27 y1=%270%27 y2=%271%27%3E%3Cstop stop-color=%27%230ea5e9%27/%3E%3Cstop offset=%271%27 stop-color=%27%2322c55e%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230f172a%27/%3E%3Cpath d=%27M18 42l10-20 7 12 6-8 5 16H18z%27 fill=%27url(%23g)%27/%3E%3Ccircle cx=%2750%27 cy=%2718%27 r=%276%27 fill=%27%23facc15%27/%3E%3C/svg%3E">
     <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="./manifest.webmanifest" />
 
     <!-- Leaflet (harita) -->
     <link
@@ -9287,6 +9288,9 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     let selectedSpotId = null;
     let spotMarkersById = new Map();
+    let allSpotsCache = [];
+    let spotWriteTimer = null;
+    let renderRafToken = 0;
 
     let goldWaterLayer = null;
     let goldWaterWaysById = new Map(); // osmWayId -> L.Polyline
@@ -10154,25 +10158,75 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       };
     }
 
-    function loadSpots() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
+    function safeReadStorageJson(key, fallbackValue, validator = null) {
       try {
-        const data = JSON.parse(raw);
-        if (!Array.isArray(data)) return [];
-        return data.map((spot) => ({
-          ...spot,
-          tags: normalizeSpotTags(spot?.tags),
-          photos: normalizeSpotPhotos(spot?.photos)
-        }));
-      } catch (e) {
-        console.error("Kayıt okunamadı:", e);
-        return [];
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallbackValue;
+        const parsed = JSON.parse(raw);
+        if (validator && !validator(parsed)) return fallbackValue;
+        return parsed;
+      } catch {
+        return fallbackValue;
       }
     }
 
-    function saveSpots(spots) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(spots));
+    function safeWriteStorageJson(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch (error) {
+        console.error("Storage write error:", error);
+        showToast("Depolama yazma hatası oluştu. Yedek indirmen önerilir.", "error", 2400);
+        return false;
+      }
+    }
+
+    function sanitizeSpotRecord(rawSpot, index = 0) {
+      if (!rawSpot || typeof rawSpot !== "object") return null;
+      const name = String(rawSpot.name || "").trim();
+      if (!name) return null;
+      const createdAt = Number(rawSpot.createdAt);
+      const visitCount = Number(rawSpot.visitCount);
+      const lastVisitAt = Number(rawSpot.lastVisitAt);
+      return {
+        ...rawSpot,
+        id: String(rawSpot.id || `spot_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 6)}`),
+        name: name.slice(0, 120),
+        location: String(rawSpot.location || "").trim().slice(0, 140),
+        createdAt: Number.isFinite(createdAt) ? createdAt : Date.now(),
+        visitCount: Number.isFinite(visitCount) && visitCount >= 0 ? Math.floor(visitCount) : 0,
+        lastVisitAt: Number.isFinite(lastVisitAt) ? lastVisitAt : null,
+        historicalNote: clampHistoryText(rawSpot.historicalNote || ""),
+        tags: normalizeSpotTags(rawSpot.tags),
+        photos: normalizeSpotPhotos(rawSpot.photos)
+      };
+    }
+
+    function loadSpots({ force = false } = {}) {
+      if (!force && Array.isArray(allSpotsCache) && allSpotsCache.length) return allSpotsCache;
+      const parsed = safeReadStorageJson(STORAGE_KEY, [], Array.isArray);
+      allSpotsCache = parsed
+        .map((spot, index) => sanitizeSpotRecord(spot, index))
+        .filter(Boolean);
+      return allSpotsCache;
+    }
+
+    function commitSpotsNow() {
+      if (!Array.isArray(allSpotsCache)) return false;
+      return safeWriteStorageJson(STORAGE_KEY, allSpotsCache);
+    }
+
+    function setSpotState(nextSpots, { immediate = false } = {}) {
+      allSpotsCache = (Array.isArray(nextSpots) ? nextSpots : [])
+        .map((spot, index) => sanitizeSpotRecord(spot, index))
+        .filter(Boolean);
+      clearTimeout(spotWriteTimer);
+      if (immediate) {
+        commitSpotsNow();
+      } else {
+        spotWriteTimer = setTimeout(commitSpotsNow, 120);
+      }
+      return allSpotsCache;
     }
 
     function exportSpots() {
@@ -10205,13 +10259,19 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     }
 
     function isValidSpot(s) {
-      return s && typeof s === "object" && typeof s.name === "string";
+      return !!sanitizeSpotRecord(s);
     }
 
     // ✅ Import: version + geriye uyum
     async function importSpotsFromFile(file) {
-      const text = await file.text();
-      const data = JSON.parse(text);
+      let data;
+      try {
+        const text = await file.text();
+        data = JSON.parse(text);
+      } catch {
+        showToast("Dosya okunamadı veya geçersiz JSON.", "error", 2200);
+        return;
+      }
 
       let incoming = [];
 
@@ -10231,33 +10291,21 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       const merged = [...existing];
       let importedCount = 0;
 
-      incoming.forEach((s) => {
-        const copy = { ...s };
-        if (!isValidSpot(copy)) return;
+      incoming.forEach((s, index) => {
+        const copy = sanitizeSpotRecord(s, index);
+        if (!copy) return;
 
         if (!copy.id || existingIds.has(copy.id)) {
           const now = Date.now();
           copy.id = "spot_" + now + "_" + Math.random().toString(36).slice(2, 6);
         }
 
-        copy.createdAt = copy.createdAt || Date.now();
-
-        copy.lastVisitAt =
-          typeof copy.lastVisitAt === "number" ? copy.lastVisitAt : null;
-
-        copy.visitCount =
-          typeof copy.visitCount === "number" ? copy.visitCount : 0;
-
-        copy.historicalNote = clampHistoryText(copy.historicalNote || "");
-        copy.tags = normalizeSpotTags(copy.tags);
-        copy.photos = normalizeSpotPhotos(copy.photos);
-
         merged.push(copy);
         existingIds.add(copy.id);
         importedCount += 1;
       });
 
-      saveSpots(merged);
+      setSpotState(merged, { immediate: true });
       render();
       showToast(ux('import_done_count', { count: importedCount }), 'success', 1900);
     }
@@ -10488,6 +10536,9 @@ function initMap() {
       };
       const activeLayer = themeLayerMap[preferredTheme] || voyagerLayer;
       activeLayer.addTo(map);
+      activeLayer.on("tileerror", () => {
+        setMapStatus("Harita katmanları yüklenirken ağ hatası oluştu. İnternet bağlantını kontrol et.", "error", true);
+      });
       currentBaseLayer = activeLayer;
       window.__activeMapTheme = preferredTheme in themeLayerMap ? preferredTheme : "voyager";
 
@@ -10499,6 +10550,8 @@ function initMap() {
           spiderfyOnMaxZoom: true,
           maxClusterRadius: 44,
           disableClusteringAtZoom: 14,
+          animate: !isPhoneViewport(),
+          removeOutsideVisibleBounds: true,
           chunkedLoading: true,
           chunkInterval: 120,
           chunkDelay: 20
@@ -12987,15 +13040,16 @@ out tags geom qt;`;
 
     // ✅ 3) fitBounds kontrolü: aramada auto-fit yok, ilk dolu listede 1 kez
     function updateMapMarkers(spots, opts = {}) {
-      if (!mapInitialized) return;
-      markersLayer.clearLayers();
-      spotMarkersById.clear();
+      if (!mapInitialized || !markersLayer) return;
+      const activeIds = new Set();
       const bounds = [];
 
       spots.forEach((spot) => {
         const ll = getSpotLatLng(spot);
         if (!ll) return;
         const [lat, lon] = ll;
+        const markerId = String(spot.id);
+        activeIds.add(markerId);
         const label = spot.name || t('pointDefault');
 
         const safeLabel = escapeHtml(label);
@@ -13005,14 +13059,27 @@ out tags geom qt;`;
           : "";
         const popupHtml = `<strong>${safeLabel}</strong>${popupTagsHtml}`;
 
-        const marker = L.marker([lat, lon], {
-          icon: markerIconForSpot(spot)
-        }).bindPopup(popupHtml);
-        marker.on("click", () => openSpotDetail(spot.id));
-
-        spotMarkersById.set(String(spot.id), marker);
-        markersLayer.addLayer(marker);
+        let marker = spotMarkersById.get(markerId);
+        if (!marker) {
+          marker = L.marker([lat, lon], { icon: markerIconForSpot(spot) }).bindPopup(popupHtml);
+          marker.on("click", () => openSpotDetail(spot.id));
+          spotMarkersById.set(markerId, marker);
+          markersLayer.addLayer(marker);
+        } else {
+          const markerLatLng = marker.getLatLng();
+          if (Math.abs(markerLatLng.lat - lat) > 0.000001 || Math.abs(markerLatLng.lng - lon) > 0.000001) {
+            marker.setLatLng([lat, lon]);
+          }
+          marker.setPopupContent(popupHtml);
+        }
         bounds.push([lat, lon]);
+      });
+
+      Array.from(spotMarkersById.keys()).forEach((markerId) => {
+        if (activeIds.has(markerId)) return;
+        const marker = spotMarkersById.get(markerId);
+        if (marker) markersLayer.removeLayer(marker);
+        spotMarkersById.delete(markerId);
       });
 
       updateMapHud({ spotCount: spotMarkersById.size });
@@ -13047,6 +13114,14 @@ out tags geom qt;`;
       }
     }
 
+    function scheduleRender() {
+      if (renderRafToken) return;
+      renderRafToken = requestAnimationFrame(() => {
+        renderRafToken = 0;
+        render();
+      });
+    }
+
     function render() {
       const q = (searchInput?.value || "").toLowerCase().trim();
 
@@ -13070,6 +13145,7 @@ out tags geom qt;`;
         });
 
       listEl.innerHTML = "";
+      const listFrag = document.createDocumentFragment();
       if (selectedSpotId && !allSpots.some((s) => String(s.id) === String(selectedSpotId))) {
         selectedSpotId = null;
       }
@@ -13088,7 +13164,8 @@ out tags geom qt;`;
         const li = document.createElement("li");
         li.className = "empty-state-card";
         li.textContent = q ? t('noResults') : t('noRecords');
-        listEl.appendChild(li);
+        listFrag.appendChild(li);
+        listEl.appendChild(listFrag);
         return;
       }
 
@@ -13197,8 +13274,9 @@ out tags geom qt;`;
         li.appendChild(header);
         li.appendChild(summary);
         actions && li.appendChild(actions);
-        listEl.appendChild(li);
+        listFrag.appendChild(li);
       });
+      listEl.appendChild(listFrag);
     }
 
     function normalizeViewForForm() {
@@ -13262,9 +13340,9 @@ out tags geom qt;`;
       if (!ok) return;
       let spots = loadSpots();
       spots = spots.filter((s) => s.id !== id);
-      saveSpots(spots);
+      setSpotState(spots);
       if (activeDetailSpotId && String(activeDetailSpotId) === String(id)) closeSpotDetail();
-      render();
+      scheduleRender();
       showToast(ux('delete_done'), 'success');
     }
 
@@ -13297,8 +13375,8 @@ out tags geom qt;`;
         };
       });
 
-      saveSpots(spots);
-      render();
+      setSpotState(spots, { immediate: true });
+      scheduleRender();
     }
 
     async function wikiLongExtractForTitle(trTitle) {
@@ -16504,9 +16582,9 @@ function updateHistoryPreview(rawText) {
         spots.push(newSpot);
       }
 
-      saveSpots(spots);
+      setSpotState(spots, { immediate: true });
       closeForm();
-      render();
+      scheduleRender();
       showToast(isEdit ? ux('save_updated') : ux('save_created'), 'success');
     });
 
@@ -16668,7 +16746,7 @@ function updateHistoryPreview(rawText) {
 
     setSearchPanelState(Boolean(searchInput?.value?.trim()));
 
-    searchInput?.addEventListener("input", render);
+    searchInput?.addEventListener("input", scheduleRender);
     updateSelectedAnalysisPlanUi();
     updateAnalysisUsageUi();
     safeBindClick(goldGuideBtn, "goldGuideBtn", () => {
@@ -16811,6 +16889,13 @@ function updateHistoryPreview(rawText) {
       closeSplash(false);
     }
 
+    function registerPwaRuntime() {
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.register("./sw.js").catch((error) => {
+        console.warn("Service worker register failed:", error);
+      });
+    }
+
     window.addEventListener("error", (event) => {
       console.error("Global error:", event.error || event.message);
       if (!mapInitialized) setMapStatus("Harita ya da arayüzde bir hata oluştu. Yeniden dene butonunu kullanabilirsin.", "error", true);
@@ -16830,10 +16915,12 @@ function updateHistoryPreview(rawText) {
         langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
       }
 
+      registerPwaRuntime();
       startApp();
       requestAnimationFrame(() => closeSplash(false));
     });
     window.addEventListener("load", () => closeSplash(true));
+    window.addEventListener("beforeunload", commitSpotsNow);
     setTimeout(() => closeSplash(true), 1800);
 </script>
 <script>
