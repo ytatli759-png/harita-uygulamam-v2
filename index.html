@@ -54,73 +54,168 @@
         #app {
           display: block;
           opacity: 0;
-          transform: translateY(6px);
-          transition: opacity .24s ease, transform .24s ease;
+          transform: translateY(8px) scale(0.996);
+          filter: saturate(0.92) brightness(0.94);
+          transition:
+            opacity 560ms var(--ease-premium),
+            transform 620ms var(--ease-premium),
+            filter 680ms var(--ease-premium);
+          transition-delay: 120ms;
         }
         #app.is-ready {
           opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: saturate(1) brightness(1);
+        }
+        #app [data-entry-reveal] {
+          opacity: 0;
+          transform: translateY(10px);
+          filter: blur(8px);
+          transition:
+            opacity 480ms var(--ease-premium),
+            transform 560ms var(--ease-premium),
+            filter 560ms var(--ease-premium);
+          transition-delay: var(--reveal-delay, 120ms);
+          will-change: transform, opacity, filter;
+        }
+        #app.is-ready [data-entry-reveal] {
+          opacity: 1;
           transform: translateY(0);
+          filter: blur(0);
         }
 
-        .splash-screen {
+        .app-entry {
           position: fixed;
           inset: 0;
           z-index: 4200;
           display: grid;
           place-items: center;
           padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
-          background:
-            radial-gradient(circle at 14% 18%, rgba(56,189,248,0.20), transparent 40%),
-            radial-gradient(circle at 84% 78%, rgba(34,197,94,0.18), transparent 44%),
-            linear-gradient(180deg, rgba(2,6,23,0.98), rgba(2,6,23,1));
+          overflow: hidden;
+          background: #03060e;
           opacity: 1;
           visibility: visible;
-          transition: opacity .34s ease, visibility .34s ease;
+          transition: opacity 620ms var(--ease-premium), visibility 620ms linear;
         }
-        .splash-screen.is-hidden {
+        .app-entry.is-hidden {
           opacity: 0;
           visibility: hidden;
           pointer-events: none;
         }
-        .splash-card {
-          width: min(100%, 360px);
-          border-radius: 24px;
-          border: 1px solid rgba(71,85,105,0.62);
-          padding: 22px 18px;
-          text-align: center;
-          background: rgba(15,23,42,0.9);
-          box-shadow: 0 26px 50px rgba(2,6,23,0.58), inset 0 1px 0 rgba(255,255,255,0.08);
-          transform: translateY(8px) scale(.985);
+        .entry-backdrop,
+        .entry-ambient,
+        .entry-grid,
+        .entry-veil {
+          position: absolute;
+          inset: -8%;
+          pointer-events: none;
+        }
+        .entry-backdrop {
+          background:
+            radial-gradient(160% 130% at 12% 8%, rgba(74,113,176,0.22) 0%, transparent 44%),
+            radial-gradient(120% 110% at 84% 92%, rgba(46,107,92,0.20) 0%, transparent 48%),
+            linear-gradient(165deg, #010206 0%, #040915 54%, #050a16 100%);
+          transform: scale(1.03);
+        }
+        .entry-ambient {
+          background:
+            radial-gradient(circle at 50% 56%, rgba(170,193,230,0.11), transparent 52%),
+            radial-gradient(circle at 47% 42%, rgba(79,156,255,0.14), transparent 41%);
+          mix-blend-mode: screen;
           opacity: 0;
-          animation: splashIn .36s cubic-bezier(.22, .8, .28, 1) .06s forwards;
+          animation: entryAmbient 920ms var(--ease-premium) 130ms forwards;
         }
-        .splash-icon {
-          width: 54px;
-          height: 54px;
-          border-radius: 18px;
-          margin: 0 auto 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          background: linear-gradient(135deg, rgba(56,189,248,0.28), rgba(34,197,94,0.24));
-          border: 1px solid rgba(148,163,184,0.4);
-          box-shadow: 0 12px 24px rgba(2,6,23,0.34);
+        .entry-grid {
+          opacity: 0;
+          background-image:
+            repeating-linear-gradient(0deg, rgba(146,167,199,0.055) 0 1px, transparent 1px 34px),
+            repeating-linear-gradient(90deg, rgba(146,167,199,0.045) 0 1px, transparent 1px 34px),
+            radial-gradient(circle at 50% 50%, transparent 38%, rgba(133,157,194,0.085) 100%);
+          transform: scale(1.02) translateY(8px);
+          animation: entryGridIn 880ms var(--ease-premium) 230ms forwards;
         }
-        .splash-title {
-          font-size: 24px;
-          font-weight: 900;
-          letter-spacing: -0.03em;
-          color: var(--text-primary);
-          margin-bottom: 5px;
+        .entry-logo-wrap {
+          position: relative;
+          width: min(82vw, 336px);
+          display: grid;
+          place-items: center;
+          text-align: center;
+          gap: 12px;
+          padding: 26px 22px;
+          border-radius: 28px;
+          border: 1px solid rgba(123,149,191,0.22);
+          background: linear-gradient(180deg, rgba(11,18,31,0.74), rgba(7,13,24,0.9));
+          box-shadow: 0 24px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(248,251,255,0.10);
+          transform: translateY(14px) scale(0.965);
+          opacity: 0;
+          filter: blur(15px);
+          animation: entryLogoIn 760ms var(--ease-premium) 320ms forwards;
+          will-change: transform, opacity, filter;
         }
-        .splash-subtitle {
-          font-size: 13px;
-          line-height: 1.5;
-          color: var(--text-secondary);
+        .entry-logo-mark {
+          width: 72px;
+          height: 72px;
+          border-radius: 22px;
+          background:
+            linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.02)),
+            radial-gradient(circle at 24% 22%, rgba(162,211,255,0.36), transparent 52%),
+            linear-gradient(140deg, #14355f, #0f1f38 52%, #0a172b);
+          border: 1px solid rgba(168,192,224,0.36);
+          box-shadow: 0 14px 28px rgba(2,6,23,0.42), inset 0 1px 0 rgba(255,255,255,0.18);
+          position: relative;
         }
-        @keyframes splashIn {
-          to { opacity: 1; transform: translateY(0) scale(1); }
+        .entry-logo-mark::before {
+          content: "";
+          position: absolute;
+          inset: 16px;
+          border-radius: 12px;
+          background: linear-gradient(155deg, rgba(202,227,255,0.72), rgba(126,181,244,0.24));
+          clip-path: polygon(18% 78%, 44% 32%, 57% 54%, 71% 38%, 84% 74%);
+          opacity: 0.9;
+        }
+        .entry-logo-text {
+          font-size: clamp(22px, 4.8vw, 30px);
+          font-weight: 780;
+          letter-spacing: -0.02em;
+          color: #f4f8ff;
+          text-shadow: 0 0 22px rgba(156,191,242,0.14);
+        }
+        .entry-logo-sub {
+          font-size: 12px;
+          letter-spacing: 0.11em;
+          text-transform: uppercase;
+          color: rgba(185,202,228,0.76);
+        }
+        .entry-veil {
+          background: radial-gradient(circle at 50% 50%, rgba(3,6,12,0) 20%, rgba(2,4,9,0.55) 100%);
+          opacity: 0.7;
+        }
+
+        @keyframes entryAmbient {
+          from { opacity: 0; transform: scale(1.08); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes entryGridIn {
+          from { opacity: 0; transform: scale(1.03) translateY(10px); }
+          to { opacity: 0.44; transform: scale(1) translateY(0); }
+        }
+        @keyframes entryLogoIn {
+          0% { opacity: 0; transform: translateY(14px) scale(0.965); filter: blur(15px); }
+          65% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+          100% { opacity: 1; transform: translateY(0) scale(0.998); filter: blur(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .app-entry *,
+          #app,
+          #app [data-entry-reveal] {
+            animation: none !important;
+            transition-duration: 1ms !important;
+            transition-delay: 0ms !important;
+            filter: none !important;
+          }
+          .entry-grid { opacity: 0.2; transform: none; }
+          .entry-logo-wrap { opacity: 1; transform: none; }
         }
 
         .app-shell {
@@ -7337,12 +7432,16 @@ body {
 
 <body>
 
-<div id="splashScreen" class="splash-screen" aria-hidden="true">
-    <div class="splash-card">
-        <div class="splash-icon">🧭</div>
-        <div class="splash-title">Alan Defteri</div>
-        <div class="splash-subtitle">Harita, saha notu ve işaret yönetimi</div>
+<div id="splashScreen" class="app-entry" aria-hidden="true">
+    <div class="entry-backdrop" aria-hidden="true"></div>
+    <div class="entry-ambient" aria-hidden="true"></div>
+    <div class="entry-grid" aria-hidden="true"></div>
+    <div class="entry-logo-wrap" aria-label="Alan Defteri">
+        <div class="entry-logo-mark" aria-hidden="true"></div>
+        <div class="entry-logo-text">Alan Defteri</div>
+        <div class="entry-logo-sub">Field Notes • Map Native</div>
     </div>
+    <div class="entry-veil" aria-hidden="true"></div>
 </div>
 
 <!-- ✅ Toast -->
@@ -9122,8 +9221,29 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     const appContainer = document.getElementById("app");
     const splashScreen = document.getElementById("splashScreen");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.documentElement.classList.toggle("reduce-motion", prefersReducedMotion.matches);
+    prefersReducedMotion.addEventListener?.("change", (event) => {
+      document.documentElement.classList.toggle("reduce-motion", event.matches);
+    });
     const splashStartedAt = Date.now();
     let splashClosed = false;
+
+    const entryRevealSelectors = [
+      ".app-header",
+      ".header-actions",
+      ".records-toolbar",
+      ".map-wrapper",
+      "#list",
+      ".mobile-quickbar"
+    ];
+    const entryRevealNodes = entryRevealSelectors
+      .map((selector) => document.querySelector(selector))
+      .filter(Boolean);
+    entryRevealNodes.forEach((node, index) => {
+      node.setAttribute("data-entry-reveal", "");
+      node.style.setProperty("--reveal-delay", `${160 + index * 60}ms`);
+    });
 
     function openSurfacePanel(panel) {
       if (!panel) return;
@@ -9925,14 +10045,17 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function closeSplash(force = false) {
       if (splashClosed) return;
-      const minVisibleMs = force ? 900 : 1100;
+      const reduced = prefersReducedMotion.matches;
+      const minVisibleMs = reduced ? 120 : (force ? 760 : 980);
       const elapsed = Date.now() - splashStartedAt;
       const wait = Math.max(0, minVisibleMs - elapsed);
       setTimeout(() => {
         if (splashClosed) return;
         splashClosed = true;
-        splashScreen?.classList.add("is-hidden");
         revealMainApp();
+        splashScreen?.classList.add("is-hidden");
+        const removeDelay = reduced ? 120 : 760;
+        setTimeout(() => splashScreen?.remove(), removeDelay);
       }, wait);
     }
 
