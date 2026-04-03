@@ -7293,9 +7293,9 @@
 
 <!-- 🔐 GİRİŞ EKRANI -->
 
-<div id="app">
-    <div class="app-shell">
-        <div class="app-header">
+<div id="app" class="AppShell">
+    <div class="app-shell AppShell__frame">
+        <div class="app-header TopAppBar">
             <div class="header-topbar">
                 <div class="header-brand">
                     <div class="title-badge">
@@ -7311,16 +7311,16 @@
             <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
         </div>
 
-        <div class="header-actions">
-            <div class="primary-actions">
-                <button type="button" id="addBtn">
+        <div class="header-actions HeroActionCardRow">
+            <div class="primary-actions HeroActionCardGrid">
+                <button type="button" id="addBtn" class="HeroActionCard PrimaryButton">
                     <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">＋</span></span>
                     <span class="hero-btn-copy">
               <span class="hero-btn-title">Yeni nokta ekle</span>
               <span class="hero-btn-subtitle">Haritada seç, kısa bilgi ekle, kaydet</span>
             </span>
                 </button>
-                <button type="button" id="goldGuideBtn">
+                <button type="button" id="goldGuideBtn" class="HeroActionCard HeroActionCard--guide SecondaryButton">
                     <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">✦</span></span>
                     <span class="hero-btn-copy">
               <span class="hero-btn-title">Hızlı saha analizi</span>
@@ -7330,7 +7330,7 @@
             </div>
         </div>
 
-        <div class="records-toolbar">
+        <div class="records-toolbar SectionCard" id="recordsToolbar">
             <div class="records-toolbar-top">
                 <div id="count" class="count-badge">0 nokta</div>
                 <button type="button" id="searchToggleBtn" class="search-toggle-btn" aria-expanded="false" aria-controls="recordsSearchPanel">
@@ -7339,15 +7339,23 @@
                 </button>
             </div>
             <div id="recordsSearchPanel" class="records-search-panel" hidden>
-                <div class="search-shell compact-search-shell">
+                <div class="search-shell compact-search-shell SearchBar">
                     <span class="search-icon">🔎</span>
                     <input id="searchInput" placeholder="Başlık veya bölge notu içinde ara..." />
                 </div>
             </div>
+            <div class="filter-chips-row FilterChipsRow" id="filterChipsRow" role="tablist" aria-label="Kayıt filtreleri">
+                <button type="button" class="filter-chip active" data-filter="all">En yeni</button>
+                <button type="button" class="filter-chip" data-filter="near">En yakın</button>
+                <button type="button" class="filter-chip" data-filter="photo">Fotoğraflı</button>
+                <button type="button" class="filter-chip" data-filter="tag">Etiketli</button>
+                <button type="button" class="filter-chip" data-filter="score">Puanı yüksek</button>
+                <button type="button" class="filter-chip" data-filter="visited">Ziyaret edilen</button>
+            </div>
         </div>
 
         <!-- 🏞 Altın tozu rehberi paneli -->
-        <div id="goldPanel">
+        <div id="goldPanel" class="BottomSheet__guidePane">
             <div class="gallery-header">
                 <div class="gallery-title">
                     <span class="icon">🏞️</span>
@@ -7460,7 +7468,7 @@
         </div>
 
         <!-- ⚙️ Ayarlar / Bilgilendirme paneli -->
-        <div id="settingsPanel">
+        <div id="settingsPanel" class="BottomSheet__settingsPane">
             <div class="gallery-header">
                 <div class="gallery-title">
                     <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
@@ -7583,7 +7591,7 @@
         </div>
 
         <!-- Nokta formu -->
-        <div id="formContainer">
+        <div id="formContainer" class="BottomSheet__formPane">
             <form id="spotForm">
                 <input type="hidden" id="spotId" />
 
@@ -7713,7 +7721,7 @@
             </form>
         </div>
 
-        <div class="map-wrapper">
+        <div class="map-wrapper MapViewport">
 
             <div id="analysisUsageBanner" class="analysis-usage-banner" aria-live="polite">
                 <div class="analysis-usage-copy">
@@ -7730,7 +7738,7 @@
 
             <div class="map-stage">
                 <div id="map"></div>
-                <div class="map-hud">
+                <div class="map-hud InfoPills">
                     <div class="map-hud-left">
                         <div class="map-hud-chip live" id="mapHudZoom">Yakınlık: <strong>6x</strong></div>
                         <div class="map-hud-chip" id="mapHudCount">Kayıtlı nokta: <strong>0</strong></div>
@@ -7739,7 +7747,7 @@
                 <div id="mapStatus" class="map-status" aria-live="polite"></div>
             </div>
 
-            <div id="mapEvalCard" class="map-eval-card" aria-live="polite">
+            <div id="mapEvalCard" class="map-eval-card PointDetailCard" aria-live="polite">
                 <div class="map-eval-top">
                     <div>
                         <div class="map-eval-kicker">Seçili nokta</div>
@@ -7801,7 +7809,7 @@
             <div id="coordBar">İmleç: –</div>
         </div>
 
-        <ul id="list"></ul>
+        <ul id="list" class="PointListCard"></ul>
     </div>
 </div>
 
@@ -17700,69 +17708,70 @@ function updateHistoryPreview(rawText) {
 
 <style id="premium-refactor-2026">
 :root{
-  --tok-bg:#050a14;--tok-bg-soft:#0b1424;--tok-surface:#121d31;--tok-surface-2:#16243a;--tok-surface-3:#1a2b45;
-  --tok-border:rgba(148,163,184,.26);--tok-border-strong:rgba(148,163,184,.42);
-  --tok-text:#edf3ff;--tok-text-muted:#9aaac3;--tok-text-sub:#c8d5ea;
-  --tok-blue:#79b8ff;--tok-blue-soft:rgba(121,184,255,.18);
-  --tok-amber:#d7af62;--tok-amber-soft:rgba(215,175,98,.18);
-  --tok-success:#49c790;--tok-danger:#df6a74;
-  --tok-r-sm:12px;--tok-r-md:16px;--tok-r-lg:22px;--tok-r-xl:28px;
-  --tok-sp-1:6px;--tok-sp-2:10px;--tok-sp-3:14px;--tok-sp-4:18px;--tok-sp-5:24px;
-  --tok-shadow:0 18px 42px rgba(1,6,16,.45);--tok-shadow-soft:0 10px 24px rgba(1,6,16,.3);
-  --tok-motion-fast:.16s;--tok-motion-mid:.24s;--tok-z-sheet:1450;
+  --bg-app:#060b15;--bg-surface-1:#0d1627;--bg-surface-2:#111d32;--bg-surface-3:#17253f;
+  --text-primary:#edf3ff;--text-secondary:#c7d4ea;--text-muted:#8ea0bd;
+  --border-soft:rgba(148,163,184,.2);--border-strong:rgba(148,163,184,.38);
+  --accent-primary:#8ac5ff;--accent-amber:#d7af62;--accent-success:#42bf88;--accent-danger:#de6a73;
+  --shadow-soft:0 10px 24px rgba(2,6,20,.28);--shadow-raised:0 18px 44px rgba(2,6,20,.45);
+  --radius-sm:10px;--radius-md:14px;--radius-lg:18px;--radius-xl:22px;--radius-2xl:28px;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:28px;--space-8:32px;--space-9:40px;--space-10:48px;
+  --font-xs:11px;--font-sm:12px;--font-md:14px;--font-lg:16px;--font-xl:20px;--font-2xl:26px;
+  --motion-fast:.16s;--motion-base:.24s;--motion-slow:.32s;
+  --sheet-z:1450;--map-controls-z:560;--modal-z:1800;
 }
-body{background:radial-gradient(circle at 10% 0%,rgba(87,162,255,.15),transparent 34%),radial-gradient(circle at 100% 100%,rgba(215,175,98,.14),transparent 28%),var(--tok-bg)!important;color:var(--tok-text-sub)!important;}
-.app-shell{max-width:980px!important;padding:12px 12px 180px!important;background:linear-gradient(180deg,rgba(9,16,30,.94),rgba(6,11,23,.98))!important;border:1px solid var(--tok-border)!important;border-radius:26px!important;box-shadow:var(--tok-shadow)!important;}
-.header-topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:4px 2px 8px!important;}
-h1{font-size:clamp(18px,4.8vw,26px)!important;letter-spacing:-.03em!important;}
-.subtitle{font-size:13px!important;line-height:1.5!important;}
-.primary-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;}
-#addBtn,#goldGuideBtn{min-height:92px!important;border-radius:20px!important;border:1px solid var(--tok-border)!important;box-shadow:var(--tok-shadow-soft)!important;}
-#addBtn{background:linear-gradient(145deg,rgba(54,109,174,.65),rgba(23,43,73,.9))!important;}
-#goldGuideBtn{background:linear-gradient(145deg,rgba(137,98,35,.70),rgba(54,36,14,.92))!important;}
-.map-wrapper{position:relative!important;margin:12px 0 0!important;padding:10px!important;background:linear-gradient(180deg,rgba(16,27,45,.92),rgba(10,16,30,.92))!important;border:1px solid var(--tok-border)!important;border-radius:22px!important;}
-.map-stage{border-radius:18px!important;overflow:hidden!important;min-height:min(56vh,620px)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 14px 34px rgba(0,0,0,.36)!important;}
-#map{min-height:min(56vh,620px)!important;}
-.map-hud{padding:10px!important;}
-.map-hud-chip{font-size:11px!important;padding:6px 10px!important;border-radius:999px!important;background:rgba(5,11,22,.72)!important;border:1px solid var(--tok-border)!important;backdrop-filter:blur(8px);}
-.map-floating-controls{position:absolute;right:18px;bottom:18px;z-index:560;display:flex;flex-direction:column;gap:8px;}
-.map-floating-controls .btn-small{min-height:44px;padding:0 13px!important;border-radius:14px!important;border:1px solid var(--tok-border)!important;background:rgba(8,16,30,.86)!important;backdrop-filter:blur(8px);font-weight:620!important;box-shadow:var(--tok-shadow-soft)!important;}
-.map-floating-controls .btn-small.danger{background:rgba(83,25,32,.78)!important;border-color:rgba(223,106,116,.5)!important;}
+body{background:radial-gradient(circle at 0 0,rgba(138,197,255,.12),transparent 35%),radial-gradient(circle at 100% 100%,rgba(215,175,98,.1),transparent 24%),var(--bg-app)!important;color:var(--text-secondary)!important;}
+.app-shell{max-width:1080px!important;padding:12px 12px 170px!important;border-radius:var(--radius-2xl)!important;background:linear-gradient(180deg,rgba(9,16,31,.95),rgba(7,12,23,.98))!important;border:1px solid var(--border-soft)!important;box-shadow:var(--shadow-raised)!important;}
+.TopAppBar{position:sticky;top:0;z-index:40;padding-top:env(safe-area-inset-top,0px);background:linear-gradient(180deg,rgba(9,16,31,.95),rgba(9,16,31,.68) 70%,transparent);backdrop-filter:blur(10px);}
+h1{font-size:clamp(20px,3.8vw,30px)!important;line-height:1.1!important;}
+.HeroActionCardGrid{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;}
+.HeroActionCard{min-height:88px!important;border-radius:var(--radius-xl)!important;border:1px solid var(--border-soft)!important;box-shadow:var(--shadow-soft)!important;}
+#addBtn{background:linear-gradient(140deg,rgba(28,99,178,.75),rgba(19,43,84,.95))!important;}
+#goldGuideBtn{background:linear-gradient(140deg,rgba(82,64,24,.82),rgba(31,26,18,.95))!important;border-color:rgba(215,175,98,.3)!important;}
+.records-toolbar{display:grid;gap:10px;padding:10px!important;border-radius:var(--radius-xl)!important;background:rgba(11,20,36,.8)!important;border:1px solid var(--border-soft)!important;}
+.filter-chips-row{display:flex;gap:8px;overflow:auto;padding-bottom:2px;scrollbar-width:none;}
+.filter-chips-row::-webkit-scrollbar{display:none;}
+.filter-chip{height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--border-soft);background:rgba(16,30,52,.7);color:var(--text-secondary);font-size:var(--font-sm);font-weight:700;white-space:nowrap;}
+.filter-chip.active{background:rgba(138,197,255,.18);border-color:rgba(138,197,255,.5);color:var(--text-primary);}
+.MapViewport{position:relative!important;margin:10px 0 0!important;padding:10px!important;border:1px solid var(--border-soft)!important;border-radius:var(--radius-xl)!important;background:linear-gradient(180deg,rgba(12,21,37,.9),rgba(8,14,27,.96))!important;}
+.map-stage{position:relative;border-radius:var(--radius-lg)!important;overflow:hidden;}
+#map{height:min(58vh,640px)!important;min-height:420px!important;border-radius:14px!important;}
 .map-tools,.map-tools.secondary{display:none!important;}
-#coordBar{position:absolute;left:16px;bottom:16px;z-index:560;background:rgba(4,10,20,.76)!important;border:1px solid var(--tok-border)!important;border-radius:999px!important;padding:8px 12px!important;font-size:11px!important;}
-.smart-bottom-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;width:min(980px,calc(100vw - 16px));z-index:var(--tok-z-sheet);background:linear-gradient(180deg,rgba(12,22,38,.97),rgba(7,12,24,.98));border:1px solid var(--tok-border);border-radius:24px 24px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;transition:height var(--tok-motion-mid) var(--ease-premium);overflow:hidden;}
-.smart-bottom-sheet.sheet-mini{height:148px;}
-.smart-bottom-sheet.sheet-mid{height:46vh;}
-.smart-bottom-sheet.sheet-full{height:calc(100vh - 64px);}
-.sheet-head{padding:10px 14px;border-bottom:1px solid rgba(148,163,184,.18);display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(10,17,30,.92);}
-.sheet-handle{width:44px;height:5px;border-radius:999px;background:rgba(148,163,184,.5);margin:0 auto 8px;}
-.sheet-title{font-size:12px;font-weight:700;letter-spacing:.03em;color:var(--tok-text-muted);text-transform:uppercase;}
-.sheet-snaps{display:flex;gap:6px;}
-.sheet-snap-btn{min-width:34px;height:30px;border-radius:10px;border:1px solid var(--tok-border);background:rgba(14,25,42,.72);color:var(--tok-text-sub);font-size:11px;font-weight:700;}
-.sheet-snap-btn.active{background:var(--tok-blue-soft);border-color:rgba(121,184,255,.5);color:var(--tok-text);}
-.sheet-content{overflow:auto;padding:10px 12px 16px;display:grid;gap:12px;}
-.records-toolbar,#formContainer,#list{margin:0!important;background:rgba(14,23,39,.62)!important;border:1px solid rgba(148,163,184,.20)!important;border-radius:16px!important;padding:12px!important;}
-#list{max-height:none!important;overflow:visible!important;padding:8px!important;}
-#list .item{border-radius:14px!important;background:linear-gradient(180deg,rgba(20,32,52,.88),rgba(15,24,40,.88))!important;border:1px solid rgba(148,163,184,.2)!important;}
-@media (min-width: 980px){.app-shell{padding-bottom:16px!important}.smart-bottom-sheet{position:static;transform:none;width:100%;height:auto!important;border-radius:18px;margin-top:12px;box-shadow:none}.sheet-snaps{display:none}}
-@media (max-width: 640px){.primary-actions{grid-template-columns:1fr!important}.app-shell{border-radius:18px!important;padding:10px 10px 178px!important}.map-stage,#map{min-height:48vh!important}.map-floating-controls{right:12px;bottom:12px}.map-floating-controls .btn-small{font-size:12px!important;min-height:42px}.smart-bottom-sheet{bottom:74px;width:calc(100vw - 10px)} }
+.map-floating-controls{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:var(--map-controls-z);}
+.map-floating-controls .btn-small{min-height:42px;padding:0 12px!important;border-radius:12px!important;border:1px solid var(--border-soft)!important;background:rgba(5,10,20,.78)!important;color:var(--text-primary)!important;backdrop-filter:blur(8px);}
+#coordBar{position:absolute;left:12px;bottom:12px;z-index:var(--map-controls-z);border-radius:999px!important;background:rgba(5,10,20,.72)!important;border:1px solid var(--border-soft)!important;font-size:11px!important;padding:8px 11px!important;}
+.smart-bottom-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;width:min(1080px,calc(100vw - 14px));z-index:var(--sheet-z);border-radius:22px 22px 0 0;border:1px solid var(--border-soft);background:linear-gradient(180deg,rgba(12,22,38,.98),rgba(7,12,24,.99));box-shadow:0 -12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;transition:height var(--motion-base) var(--ease-premium);}
+.smart-bottom-sheet.sheet-collapsed{height:136px;}
+.smart-bottom-sheet.sheet-half{height:48vh;}
+.smart-bottom-sheet.sheet-full{height:calc(100vh - 60px);}
+.sheet-head{padding:10px 12px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(10,17,30,.94);}
+.sheet-handle{width:44px;height:5px;border-radius:999px;background:rgba(148,163,184,.55);margin:0 auto 6px;}
+.sheet-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);font-weight:700;}
+.sheet-content{overflow:auto;padding:10px;display:grid;gap:10px;}
+#formContainer,#goldPanel,#settingsPanel,#list{margin:0!important;border-radius:14px!important;border:1px solid var(--border-soft)!important;background:rgba(14,23,39,.68)!important;}
+#formContainer,#goldPanel,#settingsPanel{padding:12px!important;}
+#list{padding:8px!important;max-height:none!important;overflow:visible!important;}
+.item{border-radius:14px!important;background:linear-gradient(180deg,rgba(22,35,56,.82),rgba(14,23,38,.86))!important;}
+@media (min-width:980px){.app-shell{padding-bottom:16px!important;display:grid;grid-template-columns:minmax(320px,390px) minmax(0,1fr);gap:12px;align-items:start;}.app-header,.HeroActionCardRow,.records-toolbar{grid-column:1/2;}.MapViewport{grid-column:2/3;grid-row:1/4;min-height:calc(100vh - 84px);}.smart-bottom-sheet{position:static;transform:none;width:100%;height:auto!important;border-radius:16px;box-shadow:none;grid-column:1/2;}.sheet-snaps{display:none!important;}.mobile-quickbar{display:none!important;}}
+@media (max-width:640px){.HeroActionCardGrid{grid-template-columns:1fr!important;}#map{height:52vh!important;min-height:400px!important;}.app-shell{padding:10px 10px 172px!important;}}
 </style>
 
 <script id="premium-refactor-sheet-script">
 (function(){
   const appShell = document.querySelector('.app-shell');
   const mapWrapper = document.querySelector('.map-wrapper');
-  const toolbar = document.querySelector('.records-toolbar');
+  const toolbar = document.getElementById('recordsToolbar');
   const form = document.getElementById('formContainer');
   const list = document.getElementById('list');
+  const gold = document.getElementById('goldPanel');
+  const settings = document.getElementById('settingsPanel');
   if(!appShell || !mapWrapper || !toolbar || !form || !list) return;
 
   const stage = mapWrapper.querySelector('.map-stage');
   const toolsA = mapWrapper.querySelector('.map-tools');
   const toolsB = mapWrapper.querySelector('.map-tools.secondary');
-  if(stage && (toolsA || toolsB) && !stage.querySelector('.map-floating-controls')){
+  if(stage && !stage.querySelector('.map-floating-controls')){
     const cluster = document.createElement('div');
-    cluster.className = 'map-floating-controls';
+    cluster.className = 'map-floating-controls FloatingMapControls';
     [toolsA, toolsB].forEach(group => {
       if(!group) return;
       Array.from(group.querySelectorAll('button')).forEach(btn => cluster.appendChild(btn));
@@ -17774,31 +17783,53 @@ h1{font-size:clamp(18px,4.8vw,26px)!important;letter-spacing:-.03em!important;}
   if(!sheet){
     sheet = document.createElement('section');
     sheet.id = 'smartBottomSheet';
-    sheet.className = 'smart-bottom-sheet sheet-mid';
+    sheet.className = 'smart-bottom-sheet BottomSheet sheet-half';
     sheet.innerHTML = `
       <div class="sheet-head">
         <div>
           <div class="sheet-handle"></div>
-          <div class="sheet-title">Harita paneli • kayıtlar ve arama</div>
+          <div class="sheet-title">Harita paneli</div>
         </div>
         <div class="sheet-snaps" role="tablist" aria-label="Panel boyutu">
-          <button type="button" class="sheet-snap-btn" data-snap="mini">Mini</button>
-          <button type="button" class="sheet-snap-btn active" data-snap="mid">Orta</button>
-          <button type="button" class="sheet-snap-btn" data-snap="full">Tam</button>
+          <button type="button" class="sheet-snap-btn" data-snap="collapsed">Peek</button>
+          <button type="button" class="sheet-snap-btn active" data-snap="half">Half</button>
+          <button type="button" class="sheet-snap-btn" data-snap="full">Full</button>
         </div>
       </div>
       <div class="sheet-content"></div>`;
     appShell.appendChild(sheet);
     const content = sheet.querySelector('.sheet-content');
-    [toolbar, form, list].forEach(el => content.appendChild(el));
-    sheet.querySelectorAll('.sheet-snap-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        sheet.classList.remove('sheet-mini','sheet-mid','sheet-full');
-        sheet.classList.add(`sheet-${btn.dataset.snap}`);
-        sheet.querySelectorAll('.sheet-snap-btn').forEach(b=>b.classList.toggle('active', b===btn));
-      });
-    });
+    [toolbar, gold, form, settings, list].forEach(el => el && content.appendChild(el));
   }
+
+  const setSnap = (snap) => {
+    sheet.classList.remove('sheet-collapsed','sheet-half','sheet-full');
+    sheet.classList.add(`sheet-${snap}`);
+    sheet.querySelectorAll('.sheet-snap-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.snap === snap));
+  };
+
+  sheet.querySelectorAll('.sheet-snap-btn').forEach(btn => {
+    btn.addEventListener('click', ()=> setSnap(btn.dataset.snap));
+  });
+
+  const updateMode = () => {
+    const mode = !gold.hidden && getComputedStyle(gold).display !== 'none' ? 'guide'
+      : !form.hidden && getComputedStyle(form).display !== 'none' ? 'add'
+      : !settings.hidden && getComputedStyle(settings).display !== 'none' ? 'settings'
+      : 'browse';
+    document.body.dataset.mode = mode;
+  };
+
+  const observer = new MutationObserver(updateMode);
+  [gold, form, settings].forEach(el => el && observer.observe(el, { attributes:true, attributeFilter:['style','hidden','class'] }));
+  updateMode();
+
+  const chips = document.getElementById('filterChipsRow');
+  chips?.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.filter-chip');
+    if(!btn) return;
+    chips.querySelectorAll('.filter-chip').forEach(chip => chip.classList.toggle('active', chip === btn));
+  });
 })();
 </script>
 
