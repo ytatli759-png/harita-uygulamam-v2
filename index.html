@@ -7193,6 +7193,148 @@
     </style>
 
 </head>
+
+<style id="premium-refactor-overrides">
+:root {
+  --bg-app: #050b14;
+  --bg-surface-1: #0b1526;
+  --bg-surface-2: #122038;
+  --bg-surface-3: #1a2a43;
+  --text-primary: #eaf1fb;
+  --text-secondary: #b6c4da;
+  --text-muted: #8093b2;
+  --border-soft: rgba(145, 169, 203, 0.2);
+  --border-strong: rgba(160, 184, 218, 0.4);
+  --accent-primary: #7bc1ff;
+  --accent-amber: #d5a64b;
+  --accent-success: #5bc990;
+  --accent-danger: #be5361;
+  --accent-neutral: #8ca3c6;
+  --shadow-soft: 0 6px 18px rgba(2, 8, 20, 0.34);
+  --shadow-medium: 0 14px 34px rgba(2, 8, 20, 0.45);
+  --shadow-raised: 0 18px 50px rgba(0, 0, 0, 0.58);
+  --radius-sm: 10px; --radius-md: 14px; --radius-lg: 18px; --radius-xl: 24px; --radius-2xl: 30px;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-9: 36px; --space-10: 42px;
+  --font-xs: 11px; --font-sm: 12px; --font-md: 14px; --font-lg: 16px; --font-xl: 20px; --font-2xl: 24px;
+  --motion-fast: 120ms; --motion-base: 180ms; --motion-slow: 260ms;
+  --z-map: 5; --z-controls: 20; --z-sheet: 42; --z-modal: 80;
+}
+body {
+  padding: 0;
+  background: radial-gradient(circle at 8% 0%, rgba(73, 140, 216, 0.2), transparent 34%), var(--bg-app);
+  color: var(--text-secondary);
+}
+#app { width: 100%; }
+.app-shell.AppShell__frame {
+  max-width: 100%; min-height: 100dvh; border-radius: 0; border: 0; box-shadow: none;
+  background: linear-gradient(180deg, rgba(7, 13, 24, 0.96) 0%, rgba(6, 12, 22, 0.97) 20%, rgba(5, 11, 20, 0.96) 100%);
+  padding: max(8px, env(safe-area-inset-top)) var(--space-4) calc(108px + env(safe-area-inset-bottom));
+}
+.app-header.TopAppBar {
+  position: sticky; top: 0; z-index: 30; padding: var(--space-2) 0 var(--space-4); margin-bottom: var(--space-4);
+  backdrop-filter: blur(10px); background: linear-gradient(180deg, rgba(5, 11, 20, 0.94), rgba(5, 11, 20, 0.72));
+}
+.header-topbar {align-items:center; gap:10px;}
+.title-badge {padding: 7px 12px; font-size: var(--font-sm); border-radius: 999px; border: 1px solid var(--border-soft); background: rgba(18, 32, 56, 0.8);}
+.app-header h1 {font-size: var(--font-lg); letter-spacing: .01em; font-weight: 650; color: var(--text-primary); margin-top: 6px;}
+.header-settings-btn {min-height: 42px; border-radius: 999px; background: rgba(16, 28, 48, 0.94); border: 1px solid var(--border-soft); color: var(--text-secondary);}
+.header-settings-btn .settings-btn-text {font-size: var(--font-sm);}
+
+.header-actions {margin-bottom: var(--space-4);}
+.primary-actions.HeroActionCardGrid {display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);}
+.HeroActionCard {
+  min-height: 96px; border-radius: var(--radius-lg); padding: var(--space-4); align-items: flex-start;
+  background: linear-gradient(160deg, rgba(24, 40, 67, 0.95), rgba(14, 25, 42, 0.95));
+  border: 1px solid var(--border-soft); box-shadow: var(--shadow-soft);
+}
+.HeroActionCard .hero-btn-title {font-size: var(--font-md); color: var(--text-primary);}
+.HeroActionCard .hero-btn-subtitle {font-size: var(--font-sm); color: var(--text-secondary);}
+#addBtn { box-shadow: 0 10px 26px rgba(68, 141, 217, 0.2); border-color: rgba(123,193,255,.35);}
+#goldGuideBtn { border-color: rgba(213,166,75,.42); background: linear-gradient(150deg, rgba(59,44,18,0.72), rgba(27,25,32,0.9));}
+#goldGuideBtn .hero-btn-title { color: #f3d89a; }
+
+.records-toolbar.SectionCard {
+  background: rgba(9, 17, 30, 0.88); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+  padding: var(--space-3); margin-bottom: var(--space-5);
+}
+.records-toolbar-top {display:flex; align-items:center; justify-content:space-between; gap:10px;}
+#count.count-badge {background: rgba(22, 35, 57, 1); border:1px solid var(--border-soft); color: var(--text-secondary);}
+.search-shell {min-height: 44px; border-radius: var(--radius-md); background: rgba(17, 30, 49, .9); border:1px solid var(--border-soft);}
+#searchInput {color: var(--text-primary); font-size: var(--font-md);}
+.filter-chips-row {padding-top: var(--space-2); gap: var(--space-2); overflow-x: auto; scrollbar-width: none;}
+.filter-chip {height: 34px; padding: 0 12px; border-radius: 999px; background: rgba(18, 31, 52, .82); border: 1px solid var(--border-soft); color: var(--text-secondary);}
+.filter-chip.active { background: rgba(123,193,255,.16); border-color: rgba(123,193,255,.45); color: #dbeeff;}
+
+.map-wrapper.MapViewport {position: relative; margin-bottom: var(--space-5);}
+.map-stage {
+  border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-raised); min-height: 56dvh; background: var(--bg-surface-2);
+}
+#map { min-height: 56dvh !important; z-index: var(--z-map); }
+.map-hud {padding: var(--space-3);}
+.map-hud-chip {background: rgba(7, 15, 27, .82); border: 1px solid var(--border-soft); backdrop-filter: blur(6px);}
+#mapStatus {left: 50%; transform: translateX(-50%); bottom: 14px; width: calc(100% - 24px); max-width: 380px; z-index: var(--z-controls);}
+
+.map-tools {
+  position: absolute; z-index: var(--z-controls); display: grid; gap: 8px;
+  background: rgba(9, 18, 31, 0.78); border: 1px solid var(--border-soft); border-radius: 14px; padding: 8px; backdrop-filter: blur(7px);
+}
+.map-tools .btn-small {min-width: 44px; min-height: 44px; border-radius: 11px; padding: 0 12px; font-size: var(--font-sm);}
+.map-tools:not(.secondary) {top: 14px; right: 14px; grid-template-columns: 1fr 1fr;}
+.map-tools.secondary {left: 14px; top: 14px; display:flex; flex-direction:column;}
+#locateBtn {position: absolute; right: 14px; bottom: 88px; z-index: var(--z-controls); min-width:52px; min-height:52px; border-radius:999px;}
+#coordBar {position:absolute; left: 14px; bottom: 20px; z-index: var(--z-controls); background: rgba(7,14,26,.8); border:1px solid var(--border-soft); border-radius: 999px; padding: 6px 10px; font-size: var(--font-xs);}
+
+#list.PointListCard {
+  position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom));
+  margin: 0; max-height: 36dvh; overflow: auto; z-index: var(--z-sheet);
+  background: linear-gradient(180deg, rgba(13,23,40,.96), rgba(8,16,30,.98));
+  border-top: 1px solid var(--border-strong); border-radius: 22px 22px 0 0; padding: 18px 14px 18px;
+  box-shadow: 0 -14px 35px rgba(0,0,0,.44);
+}
+#list:before {content:''; width:44px; height:4px; border-radius:999px; background: rgba(163,182,210,.45); display:block; margin: 0 auto 12px;}
+#list li {background: rgba(16,28,47,.92); border: 1px solid var(--border-soft); border-radius: 14px; margin-bottom: 10px; padding: 12px;}
+
+.BottomSheet__formPane, .BottomSheet__guidePane, .BottomSheet__settingsPane {
+  position: fixed !important; left: 0; right: 0; bottom: 0; z-index: calc(var(--z-sheet) + 1);
+  border-radius: 22px 22px 0 0; border: 1px solid var(--border-strong); border-bottom: 0;
+  background: linear-gradient(180deg, rgba(12,22,38,.98), rgba(7,14,26,1));
+  max-height: 78dvh; overflow: auto; padding: 18px 14px calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -18px 42px rgba(0,0,0,.5);
+}
+.BottomSheet__formPane::before, .BottomSheet__guidePane::before, .BottomSheet__settingsPane::before {
+  content:''; width:44px; height:4px; border-radius:999px; background: rgba(164,185,217,.44); display:block; margin: 0 auto 14px;
+}
+.field-card {background: rgba(16, 28, 48, 0.88); border:1px solid var(--border-soft); border-radius: var(--radius-md); padding: 12px;}
+.field-card input, .field-card textarea, .gem-card select, .settings-data-actions input {
+  background: rgba(9,17,30,.9) !important; border:1px solid var(--border-soft) !important; border-radius: 12px !important;
+  color: var(--text-primary) !important; min-height: 44px; padding: 10px 12px !important;
+}
+.field-card textarea {min-height: 112px;}
+.form-buttons {position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, transparent, rgba(8,14,25,.92) 35%);}
+.btn-primary {background: linear-gradient(170deg, #79c0ff, #5ea5e7); color: #051426;}
+.btn-secondary {background: rgba(28,42,64,.9); color: var(--text-secondary);}
+
+.spot-detail-card {background: linear-gradient(180deg, rgba(12,23,39,.98), rgba(7,15,27,1)); border:1px solid var(--border-strong);}
+.spot-detail-actions {display:grid; grid-template-columns: 1fr 1fr; gap:8px;}
+.spot-detail-actions .btn-small.main {grid-column: span 2;}
+.spot-detail-actions .btn-small.danger {background: rgba(94,34,40,.9); border-color: rgba(190,83,97,.44);}
+
+.mobile-quickbar {
+  position: fixed; left: 10px; right: 10px; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 70;
+  border-radius: 18px; background: rgba(11, 20, 34, 0.95); border:1px solid var(--border-soft); box-shadow: var(--shadow-medium);
+}
+.mobile-quickbar button {min-height: 54px;}
+.mobile-quickbar button.quickbar-primary {background: linear-gradient(180deg, rgba(123,193,255,.2), rgba(58,114,167,.28)); color: #def0ff;}
+
+@media (min-width: 980px) {
+  .app-shell.AppShell__frame {padding-bottom: 30px;}
+  #list.PointListCard {position: static; max-height: none; border-radius: var(--radius-lg); margin-top: var(--space-4);}
+  .mobile-quickbar {display:none;}
+  .map-tools:not(.secondary) {right: 18px;}
+}
+</style>
+
 <body>
 
 <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -7788,7 +7930,7 @@
                 </div>
             </div>
 
-            <div class="map-tools">
+            <div class="map-tools FloatingMapControls" role="toolbar" aria-label="Harita yardımcı kontrolleri">
                 <button type="button" id="layerToggleBtn" class="btn-small">🗂 Katmanlar</button>
                 <button type="button" id="markModeBtn" class="btn-small">
                     📌 İşaret koyma: Kapalı
@@ -7801,7 +7943,7 @@
                 </button>
             </div>
 
-            <div class="map-tools secondary">
+            <div class="map-tools secondary FloatingMapControls" role="toolbar" aria-label="Harita gezinme kontrolleri">
                 <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
                 <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
             </div>
