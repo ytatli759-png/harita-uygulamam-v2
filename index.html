@@ -50,17 +50,24 @@
           overflow: hidden;
           touch-action: none;
         }
+        body.is-entering #app {
+          pointer-events: none;
+        }
+        body.is-ready #app {
+          pointer-events: auto;
+        }
 
         #app {
           display: block;
           opacity: 0;
-          transform: translateY(8px) scale(0.996);
-          filter: saturate(0.92) brightness(0.94);
+          transform: translateY(9px) scale(0.995);
+          filter: saturate(0.9) brightness(0.9);
           transition:
-            opacity 560ms var(--ease-premium),
-            transform 620ms var(--ease-premium),
-            filter 680ms var(--ease-premium);
-          transition-delay: 120ms;
+            opacity var(--entry-motion-entry) var(--ease-premium),
+            transform var(--entry-motion-slow) var(--ease-premium),
+            filter var(--entry-motion-slow) var(--ease-soft);
+          transition-delay: var(--entry-phase-delay-2);
+          will-change: transform, opacity, filter;
         }
         #app.is-ready {
           opacity: 1;
@@ -69,19 +76,19 @@
         }
         #app [data-entry-reveal] {
           opacity: 0;
-          transform: translateY(10px);
-          filter: blur(8px);
+          transform: translateY(12px);
+          filter: blur(var(--entry-blur-start));
           transition:
-            opacity 480ms var(--ease-premium),
-            transform 560ms var(--ease-premium),
-            filter 560ms var(--ease-premium);
-          transition-delay: var(--reveal-delay, 120ms);
+            opacity var(--entry-motion-base) var(--ease-soft),
+            transform var(--entry-motion-entry) var(--ease-premium),
+            filter var(--entry-motion-base) var(--ease-soft);
+          transition-delay: var(--reveal-delay, var(--entry-phase-delay-2));
           will-change: transform, opacity, filter;
         }
         #app.is-ready [data-entry-reveal] {
           opacity: 1;
           transform: translateY(0);
-          filter: blur(0);
+          filter: blur(var(--entry-blur-end));
         }
 
         .app-entry {
@@ -92,10 +99,13 @@
           place-items: center;
           padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
           overflow: hidden;
-          background: #03060e;
+          background: #02040a;
           opacity: 1;
           visibility: visible;
-          transition: opacity 620ms var(--ease-premium), visibility 620ms linear;
+          transition:
+            opacity var(--entry-motion-slow) var(--ease-premium),
+            visibility var(--entry-motion-slow) linear;
+          will-change: opacity;
         }
         .app-entry.is-hidden {
           opacity: 0;
@@ -105,6 +115,7 @@
         .entry-backdrop,
         .entry-ambient,
         .entry-grid,
+        .entry-topo,
         .entry-veil {
           position: absolute;
           inset: -8%;
@@ -112,97 +123,122 @@
         }
         .entry-backdrop {
           background:
-            radial-gradient(160% 130% at 12% 8%, rgba(74,113,176,0.22) 0%, transparent 44%),
-            radial-gradient(120% 110% at 84% 92%, rgba(46,107,92,0.20) 0%, transparent 48%),
-            linear-gradient(165deg, #010206 0%, #040915 54%, #050a16 100%);
-          transform: scale(1.03);
+            radial-gradient(140% 125% at 14% 9%, rgba(69,104,164,0.26) 0%, transparent 44%),
+            radial-gradient(128% 112% at 82% 90%, rgba(38,94,88,0.18) 0%, transparent 48%),
+            linear-gradient(162deg, #010208 0%, #040913 56%, #050a16 100%);
+          transform: scale(1.025);
+          animation: entryBackdropWake var(--entry-motion-entry) var(--ease-soft) var(--entry-phase-delay-1) forwards;
         }
         .entry-ambient {
           background:
-            radial-gradient(circle at 50% 56%, rgba(170,193,230,0.11), transparent 52%),
-            radial-gradient(circle at 47% 42%, rgba(79,156,255,0.14), transparent 41%);
+            radial-gradient(circle at 50% 58%, rgba(159,188,227,0.11), transparent 56%),
+            radial-gradient(circle at 50% 44%, rgba(83,155,242,0.14), transparent 42%);
           mix-blend-mode: screen;
           opacity: 0;
-          animation: entryAmbient 920ms var(--ease-premium) 130ms forwards;
+          animation: entryAmbient var(--entry-motion-slow) var(--ease-soft) var(--entry-phase-delay-1) forwards;
         }
         .entry-grid {
           opacity: 0;
           background-image:
-            repeating-linear-gradient(0deg, rgba(146,167,199,0.055) 0 1px, transparent 1px 34px),
-            repeating-linear-gradient(90deg, rgba(146,167,199,0.045) 0 1px, transparent 1px 34px),
-            radial-gradient(circle at 50% 50%, transparent 38%, rgba(133,157,194,0.085) 100%);
-          transform: scale(1.02) translateY(8px);
-          animation: entryGridIn 880ms var(--ease-premium) 230ms forwards;
+            repeating-linear-gradient(0deg, rgba(138,159,190,0.048) 0 1px, transparent 1px 36px),
+            repeating-linear-gradient(90deg, rgba(138,159,190,0.042) 0 1px, transparent 1px 36px);
+          transform: scale(1.015) translateY(9px);
+          animation: entryGridIn var(--entry-motion-slow) var(--ease-premium) var(--entry-phase-delay-2) forwards;
+        }
+        .entry-topo {
+          opacity: 0;
+          background-image:
+            radial-gradient(circle at 50% 50%, transparent 32%, rgba(118,145,187,0.08) 100%),
+            repeating-radial-gradient(circle at 52% 52%, rgba(157,183,216,0.08) 0 1px, transparent 1px 18px);
+          mask-image: radial-gradient(circle at 50% 53%, black 20%, transparent 74%);
+          transform: scale(1.03);
+          animation: entryTopoIn var(--entry-motion-slow) var(--ease-soft) var(--entry-phase-delay-2) forwards;
         }
         .entry-logo-wrap {
           position: relative;
-          width: min(82vw, 336px);
+          width: min(82vw, 332px);
           display: grid;
           place-items: center;
           text-align: center;
-          gap: 12px;
-          padding: 26px 22px;
-          border-radius: 28px;
-          border: 1px solid rgba(123,149,191,0.22);
-          background: linear-gradient(180deg, rgba(11,18,31,0.74), rgba(7,13,24,0.9));
-          box-shadow: 0 24px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(248,251,255,0.10);
-          transform: translateY(14px) scale(0.965);
+          gap: 13px;
+          padding: 24px 22px 20px;
+          border-radius: 30px;
+          border: 1px solid rgba(126,152,194,0.22);
+          background:
+            linear-gradient(180deg, rgba(9,16,29,0.84), rgba(6,11,21,0.96)),
+            radial-gradient(circle at 50% 0%, rgba(123,156,214,0.12), transparent 62%);
+          box-shadow: 0 26px 58px rgba(0,0,0,0.56), inset 0 1px 0 rgba(248,251,255,0.08);
+          transform: translateY(13px) scale(0.972);
           opacity: 0;
-          filter: blur(15px);
-          animation: entryLogoIn 760ms var(--ease-premium) 320ms forwards;
+          filter: blur(calc(var(--entry-blur-start) + 4px));
+          animation: entryLogoIn var(--entry-motion-entry) var(--ease-premium) var(--entry-phase-delay-3) forwards;
           will-change: transform, opacity, filter;
         }
         .entry-logo-mark {
-          width: 72px;
-          height: 72px;
-          border-radius: 22px;
+          width: 74px;
+          height: 74px;
+          border-radius: 20px;
           background:
-            linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.02)),
-            radial-gradient(circle at 24% 22%, rgba(162,211,255,0.36), transparent 52%),
-            linear-gradient(140deg, #14355f, #0f1f38 52%, #0a172b);
-          border: 1px solid rgba(168,192,224,0.36);
-          box-shadow: 0 14px 28px rgba(2,6,23,0.42), inset 0 1px 0 rgba(255,255,255,0.18);
+            linear-gradient(158deg, rgba(255,255,255,0.15), rgba(255,255,255,0.015)),
+            radial-gradient(circle at 20% 18%, rgba(162,214,255,0.36), transparent 48%),
+            linear-gradient(142deg, #14345a, #0e1e36 54%, #09162a);
+          border: 1px solid rgba(167,193,225,0.34);
+          box-shadow: 0 14px 34px rgba(2,6,23,0.48), inset 0 1px 0 rgba(255,255,255,0.17);
           position: relative;
+          overflow: hidden;
         }
-        .entry-logo-mark::before {
+        .entry-logo-mark::after {
           content: "";
           position: absolute;
-          inset: 16px;
-          border-radius: 12px;
-          background: linear-gradient(155deg, rgba(202,227,255,0.72), rgba(126,181,244,0.24));
-          clip-path: polygon(18% 78%, 44% 32%, 57% 54%, 71% 38%, 84% 74%);
-          opacity: 0.9;
+          inset: 0;
+          border-radius: inherit;
+          box-shadow: inset 0 0 0 1px rgba(215,230,255,0.08), inset 0 -10px 20px rgba(2,9,20,0.26);
+          pointer-events: none;
+        }
+        .entry-logo-glyph {
+          width: 46px;
+          height: 46px;
+          color: #d2e8ff;
+          filter: drop-shadow(0 8px 12px rgba(4,10,24,0.34));
         }
         .entry-logo-text {
-          font-size: clamp(22px, 4.8vw, 30px);
-          font-weight: 780;
-          letter-spacing: -0.02em;
-          color: #f4f8ff;
-          text-shadow: 0 0 22px rgba(156,191,242,0.14);
+          font-size: clamp(22px, 4.8vw, 28px);
+          font-weight: 760;
+          letter-spacing: -0.014em;
+          color: #eef4ff;
+          text-shadow: 0 0 24px rgba(139,176,230,0.12);
         }
         .entry-logo-sub {
           font-size: 12px;
-          letter-spacing: 0.11em;
+          letter-spacing: 0.09em;
           text-transform: uppercase;
-          color: rgba(185,202,228,0.76);
+          color: rgba(180,201,230,0.76);
         }
         .entry-veil {
           background: radial-gradient(circle at 50% 50%, rgba(3,6,12,0) 20%, rgba(2,4,9,0.55) 100%);
           opacity: 0.7;
         }
 
+        @keyframes entryBackdropWake {
+          from { transform: scale(1.028); }
+          to { transform: scale(1.002); }
+        }
         @keyframes entryAmbient {
-          from { opacity: 0; transform: scale(1.08); }
-          to { opacity: 1; transform: scale(1); }
+          from { opacity: 0; transform: scale(1.075); }
+          to { opacity: 0.95; transform: scale(1); }
         }
         @keyframes entryGridIn {
-          from { opacity: 0; transform: scale(1.03) translateY(10px); }
-          to { opacity: 0.44; transform: scale(1) translateY(0); }
+          from { opacity: 0; transform: scale(1.02) translateY(10px); }
+          to { opacity: 0.38; transform: scale(1) translateY(0); }
+        }
+        @keyframes entryTopoIn {
+          from { opacity: 0; transform: scale(1.035); }
+          to { opacity: 0.5; transform: scale(1); }
         }
         @keyframes entryLogoIn {
-          0% { opacity: 0; transform: translateY(14px) scale(0.965); filter: blur(15px); }
-          65% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-          100% { opacity: 1; transform: translateY(0) scale(0.998); filter: blur(0); }
+          0% { opacity: 0; transform: translateY(13px) scale(0.972); filter: blur(calc(var(--entry-blur-start) + 4px)); }
+          70% { opacity: 1; transform: translateY(0) scale(1); filter: blur(var(--entry-blur-end)); }
+          100% { opacity: 1; transform: translateY(0) scale(0.998); filter: blur(var(--entry-blur-end)); }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -215,6 +251,7 @@
             filter: none !important;
           }
           .entry-grid { opacity: 0.2; transform: none; }
+          .entry-topo { opacity: 0.16; transform: none; }
           .entry-logo-wrap { opacity: 1; transform: none; }
         }
 
@@ -264,7 +301,27 @@
         }
 
         :root {
+          --entry-motion-fast: 220ms;
+          --entry-motion-base: 420ms;
+          --entry-motion-slow: 640ms;
+          --entry-motion-entry: 780ms;
+          --entry-phase-delay-1: 90ms;
+          --entry-phase-delay-2: 180ms;
+          --entry-phase-delay-3: 290ms;
+          --entry-blur-start: 10px;
+          --entry-blur-end: 0px;
+          --motion-fast: var(--entry-motion-fast);
+          --motion-base: var(--entry-motion-base);
+          --motion-slow: var(--entry-motion-slow);
+          --motion-entry: var(--entry-motion-entry);
+          --entry-delay-1: var(--entry-phase-delay-1);
+          --entry-delay-2: var(--entry-phase-delay-2);
+          --entry-delay-3: var(--entry-phase-delay-3);
+          --blur-start: var(--entry-blur-start);
+          --blur-end: var(--entry-blur-end);
           --ease-premium: cubic-bezier(.22,.78,.26,1);
+          --ease-soft: cubic-bezier(.24,.68,.28,1);
+          --ease-settle: cubic-bezier(.2,.86,.24,1);
           --ease-smooth-out: cubic-bezier(.2,.72,.22,1);
 
           --app-bg: #060b16;
@@ -7311,7 +7368,7 @@
   --radius-sm: 10px; --radius-md: 14px; --radius-lg: 18px; --radius-xl: 24px; --radius-2xl: 30px;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-9: 36px; --space-10: 42px;
   --font-xs: 11px; --font-sm: 12px; --font-md: 14px; --font-lg: 16px; --font-xl: 20px; --font-2xl: 24px;
-  --motion-fast: 120ms; --motion-base: 180ms; --motion-slow: 260ms;
+  --entry-motion-fast: 120ms; --entry-motion-base: 180ms; --entry-motion-slow: 260ms;
   --z-map: 5; --z-controls: 20; --z-sheet: 42; --z-modal: 80;
 }
 body {
@@ -7436,8 +7493,16 @@ body {
     <div class="entry-backdrop" aria-hidden="true"></div>
     <div class="entry-ambient" aria-hidden="true"></div>
     <div class="entry-grid" aria-hidden="true"></div>
+    <div class="entry-topo" aria-hidden="true"></div>
     <div class="entry-logo-wrap" aria-label="Alan Defteri">
-        <div class="entry-logo-mark" aria-hidden="true"></div>
+        <div class="entry-logo-mark" aria-hidden="true">
+            <svg class="entry-logo-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                <path d="M13.5 44.5C13.5 44.5 18.8 36.2 28.3 36.2C37.8 36.2 39.7 46.5 48.8 46.5C55.3 46.5 58.5 41.4 58.5 41.4" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
+                <path d="M12 51.5H52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".52"/>
+                <path d="M32 11.5C38.7 11.5 44 16.8 44 23.5C44 31.8 35.7 41.9 33.6 44.3C32.8 45.2 31.2 45.2 30.4 44.3C28.3 41.9 20 31.8 20 23.5C20 16.8 25.3 11.5 32 11.5Z" fill="currentColor"/>
+                <circle cx="32" cy="23.5" r="4.8" fill="#0B172A"/>
+            </svg>
+        </div>
         <div class="entry-logo-text">Alan Defteri</div>
         <div class="entry-logo-sub">Field Notes • Map Native</div>
     </div>
@@ -9222,6 +9287,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const appContainer = document.getElementById("app");
     const splashScreen = document.getElementById("splashScreen");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.documentElement.classList.add("is-entering");
+    document.body?.classList.add("is-entering");
     document.documentElement.classList.toggle("reduce-motion", prefersReducedMotion.matches);
     prefersReducedMotion.addEventListener?.("change", (event) => {
       document.documentElement.classList.toggle("reduce-motion", event.matches);
@@ -10041,12 +10108,16 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function revealMainApp() {
       if (!appContainer) return;
       appContainer.classList.add("is-ready");
+      document.documentElement.classList.add("is-ready");
+      document.documentElement.classList.remove("is-entering");
+      document.body?.classList.add("is-ready");
+      document.body?.classList.remove("is-entering");
     }
 
     function closeSplash(force = false) {
       if (splashClosed) return;
       const reduced = prefersReducedMotion.matches;
-      const minVisibleMs = reduced ? 120 : (force ? 760 : 980);
+      const minVisibleMs = reduced ? 90 : (force ? 620 : 920);
       const elapsed = Date.now() - splashStartedAt;
       const wait = Math.max(0, minVisibleMs - elapsed);
       setTimeout(() => {
@@ -10054,8 +10125,11 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         splashClosed = true;
         revealMainApp();
         splashScreen?.classList.add("is-hidden");
-        const removeDelay = reduced ? 120 : 760;
-        setTimeout(() => splashScreen?.remove(), removeDelay);
+        const removeDelay = reduced ? 80 : 620;
+        setTimeout(() => {
+          splashScreen?.remove();
+          document.documentElement.style.removeProperty("--entry-lock");
+        }, removeDelay);
       }, wait);
     }
 
@@ -17981,7 +18055,7 @@ function updateHistoryPreview(rawText) {
   --radius-sm:10px;--radius-md:14px;--radius-lg:18px;--radius-xl:22px;--radius-2xl:28px;
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:28px;--space-8:32px;--space-9:40px;--space-10:48px;
   --font-xs:11px;--font-sm:12px;--font-md:14px;--font-lg:16px;--font-xl:20px;--font-2xl:26px;
-  --motion-fast:.16s;--motion-base:.24s;--motion-slow:.32s;
+  --entry-motion-fast:.16s;--entry-motion-base:.24s;--entry-motion-slow:.32s;
   --sheet-z:1450;--map-controls-z:560;--modal-z:1800;
 }
 body{background:radial-gradient(circle at 0 0,rgba(138,197,255,.12),transparent 35%),radial-gradient(circle at 100% 100%,rgba(215,175,98,.1),transparent 24%),var(--bg-app)!important;color:var(--text-secondary)!important;}
@@ -18004,7 +18078,7 @@ h1{font-size:clamp(20px,3.8vw,30px)!important;line-height:1.1!important;}
 .map-floating-controls{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:var(--map-controls-z);}
 .map-floating-controls .btn-small{min-height:42px;padding:0 12px!important;border-radius:12px!important;border:1px solid var(--border-soft)!important;background:rgba(5,10,20,.78)!important;color:var(--text-primary)!important;backdrop-filter:blur(8px);}
 #coordBar{position:absolute;left:12px;bottom:12px;z-index:var(--map-controls-z);border-radius:999px!important;background:rgba(5,10,20,.72)!important;border:1px solid var(--border-soft)!important;font-size:11px!important;padding:8px 11px!important;}
-.smart-bottom-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;width:min(1080px,calc(100vw - 14px));z-index:var(--sheet-z);border-radius:22px 22px 0 0;border:1px solid var(--border-soft);background:linear-gradient(180deg,rgba(12,22,38,.98),rgba(7,12,24,.99));box-shadow:0 -12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;transition:height var(--motion-base) var(--ease-premium);}
+.smart-bottom-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;width:min(1080px,calc(100vw - 14px));z-index:var(--sheet-z);border-radius:22px 22px 0 0;border:1px solid var(--border-soft);background:linear-gradient(180deg,rgba(12,22,38,.98),rgba(7,12,24,.99));box-shadow:0 -12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;transition:height var(--entry-motion-base) var(--ease-premium);}
 .smart-bottom-sheet.sheet-collapsed{height:136px;}
 .smart-bottom-sheet.sheet-half{height:48vh;}
 .smart-bottom-sheet.sheet-full{height:calc(100vh - 60px);}
