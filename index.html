@@ -3022,6 +3022,9 @@
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 10px;
         }
+        .map-eval-grid-rich {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
         .map-eval-metric,
         .map-eval-summary-box {
           padding: 12px;
@@ -3060,6 +3063,23 @@
           line-height: 1.55;
           color: var(--text-secondary);
         }
+        .map-eval-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .map-eval-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(125, 211, 252, 0.28);
+          background: rgba(15, 23, 42, 0.82);
+          color: #e0f2fe;
+          font-size: 12px;
+          font-weight: 700;
+        }
         .map-eval-actions {
           display: flex;
           flex-wrap: wrap;
@@ -3097,9 +3117,24 @@
         }
         @media (max-width: 720px) {
           .map-eval-grid { grid-template-columns: 1fr; }
+          .map-eval-card.show {
+            position: fixed;
+            left: 8px;
+            right: 8px;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+            z-index: 3400;
+            max-height: min(72vh, 620px);
+            overflow: auto;
+            margin: 0;
+            animation: mapEvalSheetIn .22s var(--ease-premium);
+          }
           .map-eval-detail-grid { grid-template-columns: 1fr; }
           .map-eval-actions button { flex: 1 1 180px; }
           .map-eval-detail-toggle { width: 100%; }
+        }
+        @keyframes mapEvalSheetIn {
+          from { transform: translateY(24px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
 
         .map-eval-inline {
@@ -7799,6 +7834,27 @@
                     <div id="mapEvalSummary" class="map-eval-summary">Konum seçilince kısa yorum burada görünür.</div>
                 </div>
 
+                <div class="map-eval-grid map-eval-grid-rich">
+                    <div class="map-eval-metric">
+                        <div class="map-eval-label">Bölge</div>
+                        <div id="mapEvalRegion" class="map-eval-value small">—</div>
+                    </div>
+                    <div class="map-eval-metric">
+                        <div class="map-eval-label">Arazi özeti</div>
+                        <div id="mapEvalTerrain" class="map-eval-value small">Arazi sinyali bekleniyor.</div>
+                    </div>
+                    <div class="map-eval-metric">
+                        <div class="map-eval-label">Taş / mineral sinyali</div>
+                        <div id="mapEvalMineral" class="map-eval-value small">Bölgesel sinyal bekleniyor.</div>
+                    </div>
+                    <div class="map-eval-metric">
+                        <div class="map-eval-label">Yoğunluk / profil / bant</div>
+                        <div id="mapEvalDensity" class="map-eval-value small">Profil bekleniyor.</div>
+                    </div>
+                </div>
+                <div id="mapEvalInterpretation" class="map-eval-sub">Kısa yorum konum seçildiğinde burada detaylanır.</div>
+                <div id="mapEvalTags" class="map-eval-tags"></div>
+
                 <div id="mapEvalCoord" class="map-eval-sub">Koordinat burada görünür.</div>
                 <div id="mapEvalFootnote" class="map-eval-sub">Bu kart kısa ön değerlendirme gösterir.</div>
 
@@ -9055,6 +9111,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const mapEvalConfidence = document.getElementById("mapEvalConfidence");
     const mapEvalAction = document.getElementById("mapEvalAction");
     const mapEvalSummary = document.getElementById("mapEvalSummary");
+    const mapEvalRegion = document.getElementById("mapEvalRegion");
+    const mapEvalTerrain = document.getElementById("mapEvalTerrain");
+    const mapEvalMineral = document.getElementById("mapEvalMineral");
+    const mapEvalDensity = document.getElementById("mapEvalDensity");
+    const mapEvalInterpretation = document.getElementById("mapEvalInterpretation");
+    const mapEvalTags = document.getElementById("mapEvalTags");
     const mapEvalCoord = document.getElementById("mapEvalCoord");
     if (mapEvalCard && mapEvalCoord && !document.getElementById("mapEvalDetailBody")) {
       const actionMetricLabel = mapEvalAction?.closest('.map-eval-metric')?.querySelector('.map-eval-label');
@@ -9108,7 +9170,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const MAP_THEME_STORAGE_KEY = "arazi_map_theme_v2";
     const MAP_VIEW_STORAGE_KEY = "arazi_map_view_v2";
     const MAP_FOCUS_STORAGE_KEY = "arazi_map_focus_v2";
-    let lastMapQuickSelection = { coordText: "", noteText: "", data: null };
+    let lastMapQuickSelection = { coordText: "", noteText: "", data: null, lat: null, lon: null, source: "empty", spotId: null };
     let mapQuickRequestId = 0;
 
     const MAP_UI_COPY = {
@@ -11035,50 +11097,15 @@ function initMap() {
         }
 
         const formOpen = formContainer.style.display === "block";
-        if (!formOpen) {
-          const coordText = lat.toFixed(6) + ", " + lon.toFixed(6);
-          if (!canStartAnalysis("map")) return;
-          runMapQuickEvaluation(coordText);
-          return;
-        }
-
         const coordText = lat.toFixed(6) + ", " + lon.toFixed(6);
-        locationInput.value = coordText;
+        if (!canStartAnalysis("map")) return;
+        await runMapQuickEvaluation(coordText, { lat, lon });
 
-        historicalNoteInput.value = t("history_searching");
-
-        try {
-          const result = await fetchHistoricalNoteFromInternet(coordText);
-          if (!result) {
-            lastAutoHistoryPreview = { text: "", data: null };
-            historicalNoteInput.value = "";
-            updateHistoryPreview("");
-            alert(t("auto_history_not_found"));
-            return;
-          }
-          if (result.notTurkey) {
-            lastAutoHistoryPreview = { text: "", data: null };
-            historicalNoteInput.value = "";
-            updateHistoryPreview("");
-            alert(t("auto_history_outside"));
-            return;
-          }
-          if (result.text || result.gemHint) {
-            const built = buildProfessionalHistoryNote(result, coordText);
-            lastAutoHistoryPreview = { text: built.noteText, data: built.data };
-            historicalNoteInput.value = built.noteText;
-            updateHistoryPreview(historicalNoteInput.value);
-          } else {
-            lastAutoHistoryPreview = { text: "", data: null };
-            historicalNoteInput.value = "";
-            updateHistoryPreview("");
-            alert(t("auto_history_no_details"));
-          }
-        } catch {
-          lastAutoHistoryPreview = { text: "", data: null };
-          historicalNoteInput.value = "";
-          updateHistoryPreview("");
-          alert(t("auto_history_offline"));
+        if (formOpen) {
+          locationInput.value = coordText;
+          historicalNoteInput.value = lastMapQuickSelection.noteText || "";
+          lastAutoHistoryPreview = { text: historicalNoteInput.value, data: lastMapQuickSelection.data || null };
+          updateHistoryPreview(historicalNoteInput.value);
         }
       });
 
@@ -13421,7 +13448,6 @@ out tags geom qt;`;
         let marker = spotMarkersById.get(markerId);
         if (!marker) {
           marker = L.marker([lat, lon], { icon: markerIconForSpot(spot) }).bindPopup(popupHtml);
-          marker.on("click", () => openSpotDetail(spot.id));
           spotMarkersById.set(markerId, marker);
           markersLayer.addLayer(marker);
         } else {
@@ -13431,6 +13457,11 @@ out tags geom qt;`;
           }
           marker.setPopupContent(popupHtml);
         }
+        marker.off("click");
+        marker.on("click", () => {
+          selectedSpotId = String(spot.id);
+          openSavedSpotInEvaluationCard(spot);
+        });
         bounds.push([lat, lon]);
       });
 
@@ -13647,10 +13678,10 @@ out tags geom qt;`;
       }, 120);
     }
 
-    function openFormNew() {
+    function openFormNew(options = {}) {
       closeSpotDetail();
       normalizeViewForForm();
-      resetMapEvaluationCard();
+      if (!options.keepMapEval) resetMapEvaluationCard();
       spotIdInput.value = "";
       nameInput.value = "";
       locationInput.value = "";
@@ -13663,10 +13694,10 @@ out tags geom qt;`;
       nameInput.focus();
     }
 
-    function openEdit(id) {
+    function openEdit(id, options = {}) {
       closeSpotDetail();
       normalizeViewForForm();
-      resetMapEvaluationCard();
+      if (!options.keepMapEval) resetMapEvaluationCard();
       const spots = loadSpots();
       const spot = spots.find((s) => s.id === id);
       if (!spot) return;
@@ -16645,6 +16676,55 @@ function deriveMapEvalSteps(data = {}) {
   return steps.slice(0, 2);
 }
 
+function renderMapEvalTags(tags = []) {
+  if (!mapEvalTags) return;
+  const safeTags = (Array.isArray(tags) ? tags : [])
+    .map((tag) => String(tag || "").trim())
+    .filter(Boolean)
+    .slice(0, 8);
+  if (!safeTags.length) {
+    mapEvalTags.innerHTML = '<span class="map-eval-tag">Sinyal etiketi bekleniyor</span>';
+    return;
+  }
+  mapEvalTags.innerHTML = safeTags.map((tag) => `<span class="map-eval-tag">${escapeHtml(tag)}</span>`).join("");
+}
+
+function syncMapEvalPrimaryButton() {
+  if (!mapEvalSaveBtn) return;
+  if (lastMapQuickSelection.source === "saved") {
+    mapEvalSaveBtn.textContent = "✏️ Kaydı düzenle";
+    return;
+  }
+  mapEvalSaveBtn.textContent = "📝 Kayda başla";
+}
+
+function openSavedSpotInEvaluationCard(spot) {
+  if (!spot) return;
+  const coordText = (spot.location || "").trim();
+  const parsed = extractHistoryPreviewData(spot.historicalNote || "");
+  const fallback = buildMapEvaluationFallback(coordText || "Koordinat yok", "offline");
+  const evalData = parsed || {
+    ...fallback,
+    title: spot.name ? `${spot.name} • kayıtlı nokta` : "Kayıtlı nokta",
+    chipText: "Kaydedildi",
+    region: parsed?.region || coordText || "Konum yok",
+    summary: (spot.historicalNote || "").trim() || fallback.summary,
+    tags: Array.isArray(spot.tags) ? spot.tags : []
+  };
+
+  updateMapEvaluationCard(evalData, coordText || "Koordinat yok");
+  lastMapQuickSelection = {
+    coordText,
+    noteText: spot.historicalNote || "",
+    data: evalData,
+    lat: null,
+    lon: null,
+    source: "saved",
+    spotId: String(spot.id || "")
+  };
+  syncMapEvalPrimaryButton();
+}
+
 function renderMapEvalList(targetEl, items = [], fallbackText = 'Detay bulunamadı.') {
   if (!targetEl) return;
   const normalized = (Array.isArray(items) ? items : [])
@@ -16673,7 +16753,13 @@ function resetMapEvaluationCard() {
   if (mapEvalConfidence) mapEvalConfidence.textContent = "Bekleniyor";
   if (mapEvalAction) mapEvalAction.textContent = "Konum seç";
   if (mapEvalSummary) mapEvalSummary.textContent = "Konum seçilince kısa yorum burada görünür.";
+  if (mapEvalRegion) mapEvalRegion.textContent = "—";
+  if (mapEvalTerrain) mapEvalTerrain.textContent = "Arazi sinyali bekleniyor.";
+  if (mapEvalMineral) mapEvalMineral.textContent = "Bölgesel sinyal bekleniyor.";
+  if (mapEvalDensity) mapEvalDensity.textContent = "Profil bekleniyor.";
+  if (mapEvalInterpretation) mapEvalInterpretation.textContent = "Kısa yorum konum seçildiğinde burada detaylanır.";
   if (mapEvalCoord) mapEvalCoord.textContent = "Koordinat burada görünür.";
+  renderMapEvalTags([]);
   renderMapEvalList(mapEvalReasons, [], "Skorun kısa nedeni burada görünür.");
   renderMapEvalList(mapEvalSteps, [], "Sonraki adım burada görünür.");
   if (mapEvalFootnote) mapEvalFootnote.textContent = "Bu kart kısa ön değerlendirme gösterir.";
@@ -16689,7 +16775,13 @@ function showMapEvaluationLoading(coordText) {
   if (mapEvalConfidence) mapEvalConfidence.textContent = "İşleniyor";
   if (mapEvalAction) mapEvalAction.textContent = "Bekleniyor";
   if (mapEvalSummary) mapEvalSummary.textContent = "Konum için kısa yorum hazırlanıyor.";
+  if (mapEvalRegion) mapEvalRegion.textContent = "Konum çözülüyor…";
+  if (mapEvalTerrain) mapEvalTerrain.textContent = "Arazi profili hazırlanıyor…";
+  if (mapEvalMineral) mapEvalMineral.textContent = "Taş/mineral sinyali toplanıyor…";
+  if (mapEvalDensity) mapEvalDensity.textContent = "Yoğunluk profili hazırlanıyor…";
+  if (mapEvalInterpretation) mapEvalInterpretation.textContent = "Model çıktısı hazırlanıyor.";
   if (mapEvalCoord) mapEvalCoord.textContent = `Koordinat: ${coordText}`;
+  renderMapEvalTags(["Canlı analiz", "Ön değerlendirme"]);
   renderMapEvalList(mapEvalReasons, [], "Skor nedenleri hazırlanıyor.");
   renderMapEvalList(mapEvalSteps, [], "Kısa öneri hazırlanıyor.");
   if (mapEvalFootnote) mapEvalFootnote.textContent = "Sonuç gelmezse koordinat yine kayda alınabilir.";
@@ -16731,18 +16823,30 @@ function updateMapEvaluationCard(data, coordText) {
   if (mapEvalConfidence) mapEvalConfidence.textContent = safeData.confidenceLabel || "Sınırlı";
   if (mapEvalAction) mapEvalAction.textContent = safeData.status || deriveMapEvalStatus(safeData.score) || safeData.action || "Kaydet";
   if (mapEvalSummary) mapEvalSummary.textContent = deriveMapEvalComment(safeData) || safeData.summary || "Seçilen nokta için kısa yorum bulunamadı.";
+  if (mapEvalRegion) mapEvalRegion.textContent = safeData.region || "Bilinmiyor";
+  if (mapEvalTerrain) mapEvalTerrain.textContent = safeData.historyDensityLabel || safeData.settlementLabel || "Arazi sinyali sınırlı";
+  if (mapEvalMineral) mapEvalMineral.textContent = safeData.gemText || safeData.stonePotentialLabel || "Mineral sinyali alınamadı";
+  if (mapEvalDensity) {
+    const densityLabel = safeData.narrativeLevel?.label || safeData.historyDensityLabel || "Düşük";
+    const band = Number.isFinite(safeData.narrativePercent) ? `%${safeData.narrativePercent}` : "Bant bilinmiyor";
+    mapEvalDensity.textContent = `${densityLabel} • ${band}`;
+  }
+  if (mapEvalInterpretation) mapEvalInterpretation.textContent = safeData.summary || "Kısa yorum bulunamadı.";
   if (mapEvalCoord) {
     const region = safeData.region && safeData.region !== coordText ? ` • Bölge: ${safeData.region}` : "";
     mapEvalCoord.textContent = `Koordinat: ${coordText}${region}`;
   }
+  renderMapEvalTags(safeData.tags || []);
   renderMapEvalList(mapEvalReasons, getMapReasonItems(deriveMapEvalReasons(safeData)), "Skor nedenleri sınırlı veriyle üretildi.");
   renderMapEvalList(mapEvalSteps, deriveMapEvalSteps(safeData), "Kaydet ve sonra detaylandır.");
   if (mapEvalFootnote) mapEvalFootnote.textContent = safeData.footnote || "Bu kart kısa ön değerlendirme gösterir.";
+  syncMapEvalPrimaryButton();
 }
 
-async function runMapQuickEvaluation(coordText) {
+async function runMapQuickEvaluation(coordText, meta = {}) {
   const requestId = ++mapQuickRequestId;
-  lastMapQuickSelection = { coordText, noteText: "", data: null };
+  lastMapQuickSelection = { coordText, noteText: "", data: null, lat: meta.lat ?? null, lon: meta.lon ?? null, source: "empty", spotId: null };
+  syncMapEvalPrimaryButton();
   showMapEvaluationLoading(coordText);
 
   try {
@@ -16751,7 +16855,7 @@ async function runMapQuickEvaluation(coordText) {
 
     if (!result) {
       const fallback = buildMapEvaluationFallback(coordText, "offline");
-      lastMapQuickSelection = { coordText, noteText: "", data: fallback };
+      lastMapQuickSelection = { coordText, noteText: "", data: fallback, lat: meta.lat ?? null, lon: meta.lon ?? null, source: "empty", spotId: null };
       updateMapEvaluationCard(fallback, coordText);
       recordAnalysisUse("map");
       return;
@@ -16759,7 +16863,7 @@ async function runMapQuickEvaluation(coordText) {
 
     if (result.notTurkey) {
       const fallback = buildMapEvaluationFallback(coordText, "outside");
-      lastMapQuickSelection = { coordText, noteText: "", data: fallback };
+      lastMapQuickSelection = { coordText, noteText: "", data: fallback, lat: meta.lat ?? null, lon: meta.lon ?? null, source: "empty", spotId: null };
       updateMapEvaluationCard(fallback, coordText);
       recordAnalysisUse("map");
       return;
@@ -16767,20 +16871,20 @@ async function runMapQuickEvaluation(coordText) {
 
     if (result.text || result.gemHint) {
       const built = buildProfessionalHistoryNote(result, coordText);
-      lastMapQuickSelection = { coordText, noteText: built.noteText, data: built.data };
+      lastMapQuickSelection = { coordText, noteText: built.noteText, data: built.data, lat: meta.lat ?? null, lon: meta.lon ?? null, source: "empty", spotId: null };
       updateMapEvaluationCard(built.data, coordText);
       recordAnalysisUse("map");
       return;
     }
 
     const fallback = buildMapEvaluationFallback(coordText, "offline");
-    lastMapQuickSelection = { coordText, noteText: "", data: fallback };
+    lastMapQuickSelection = { coordText, noteText: "", data: fallback, lat: meta.lat ?? null, lon: meta.lon ?? null, source: "empty", spotId: null };
     updateMapEvaluationCard(fallback, coordText);
     recordAnalysisUse("map");
   } catch {
     if (requestId !== mapQuickRequestId) return;
     const fallback = buildMapEvaluationFallback(coordText, "offline");
-    lastMapQuickSelection = { coordText, noteText: "", data: fallback };
+    lastMapQuickSelection = { coordText, noteText: "", data: fallback, lat: meta.lat ?? null, lon: meta.lon ?? null, source: "empty", spotId: null };
     updateMapEvaluationCard(fallback, coordText);
   }
 }
@@ -16792,7 +16896,12 @@ function openQuickSelectionInForm() {
     return;
   }
 
-  openFormNew();
+  if (lastMapQuickSelection.source === "saved" && lastMapQuickSelection.spotId) {
+    openEdit(lastMapQuickSelection.spotId, { keepMapEval: true });
+    return;
+  }
+
+  openFormNew({ keepMapEval: true });
   locationInput.value = coordText;
 
   if (lastMapQuickSelection.noteText) {
