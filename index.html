@@ -9705,6 +9705,10 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let map;
     let markersLayer;
     let freeMarkersLayer;
+    let userLocationMarker = null;
+    let userLocationAccuracyCircle = null;
+    let locateWatchId = null;
+    let locatePending = false;
     let layerControlRef = null;
     let mapInitialized = false;
 
@@ -10708,6 +10712,117 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }
     }
 
+    function clearLocateWatch() {
+      if (!navigator.geolocation || locateWatchId == null) return;
+      try { navigator.geolocation.clearWatch(locateWatchId); } catch {}
+      locateWatchId = null;
+    }
+
+    function describeGeolocationError(error) {
+      const code = Number(error && error.code);
+      if (code === 1) return "Konum izni reddedildi. Tarayıcı izinlerini açıp tekrar dene.";
+      if (code === 2) return "Konum bilgisi şu an alınamıyor. GPS/sinyal durumunu kontrol et.";
+      if (code === 3) return "Konum alma zaman aşımına uğradı. Açık alanda tekrar dene.";
+      return (error && error.message) ? String(error.message) : t("location_failed_default");
+    }
+
+    function updateUserLocationVisual(latlng, accuracy) {
+      if (!mapInitialized || !freeMarkersLayer || !latlng) return;
+      if (!userLocationMarker) {
+        userLocationMarker = L.marker(latlng, {
+          icon: freeMarkerIcon("🧭")
+        }).bindPopup(t("your_location"));
+        userLocationMarker.addTo(freeMarkersLayer);
+      } else {
+        userLocationMarker.setLatLng(latlng);
+      }
+
+      if (Number.isFinite(accuracy) && accuracy > 0) {
+        if (!userLocationAccuracyCircle) {
+          userLocationAccuracyCircle = L.circle(latlng, {
+            radius: accuracy,
+            stroke: true,
+            color: "#38bdf8",
+            weight: 1.5,
+            opacity: 0.8,
+            fillColor: "#0ea5e9",
+            fillOpacity: 0.08
+          }).addTo(freeMarkersLayer);
+        } else {
+          userLocationAccuracyCircle.setLatLng(latlng);
+          userLocationAccuracyCircle.setRadius(accuracy);
+        }
+      } else if (userLocationAccuracyCircle) {
+        freeMarkersLayer.removeLayer(userLocationAccuracyCircle);
+        userLocationAccuracyCircle = null;
+      }
+      updateMapToolStates();
+    }
+
+    function focusMapOnUserLocation(latlng) {
+      if (!mapInitialized || !map || !latlng) return;
+      map.flyTo(latlng, Math.max(map.getZoom(), 16), { duration: 0.45 });
+    }
+
+    function requestCurrentUserLocation() {
+      if (!navigator.geolocation) {
+        showToast(ux('locate_error'), 'error', 2200);
+        alert("Bu cihazda konum desteği bulunamadı.");
+        return;
+      }
+      if (!mapInitialized) bootMap(true);
+      if (!mapInitialized || !map) return;
+      if (locatePending) return;
+
+      locatePending = true;
+      clearLocateWatch();
+
+      const onSuccess = (position) => {
+        const latlng = [position.coords.latitude, position.coords.longitude];
+        setCoordBar(latlng[0], latlng[1]);
+        updateUserLocationVisual(latlng, position.coords.accuracy);
+        focusMapOnUserLocation(latlng);
+        locatePending = false;
+        clearLocateWatch();
+        showToast(ux('locate_success'), 'success');
+      };
+
+      const onError = (error) => {
+        if (Number(error && error.code) === 3) {
+          clearLocateWatch();
+          locateWatchId = navigator.geolocation.watchPosition(onSuccess, (watchError) => {
+            locatePending = false;
+            clearLocateWatch();
+            showToast(ux('locate_error'), 'error', 2200);
+            alert(t("location_failed_prefix") + " " + describeGeolocationError(watchError));
+          }, {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0
+          });
+          setTimeout(() => {
+            if (locatePending) {
+              locatePending = false;
+              clearLocateWatch();
+              showToast(ux('locate_error'), 'error', 2200);
+              alert(t("location_failed_prefix") + " " + describeGeolocationError({ code: 3 }));
+            }
+          }, 12500);
+          return;
+        }
+        locatePending = false;
+        clearLocateWatch();
+        showToast(ux('locate_error'), 'error', 2200);
+        alert(t("location_failed_prefix") + " " + describeGeolocationError(error));
+      };
+
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 15000
+      });
+    }
+
     function markerIconForSpot(spot) {
       const cls = "marker-other";
       const emoji = "📍";
@@ -10975,34 +11090,6 @@ function initMap() {
 
       map.on("mouseout", () => {
         clearCoordBar();
-      });
-
-      map.on("locationfound", (e) => {
-        const latlng = e.latlng;
-        setCoordBar(latlng.lat, latlng.lng);
-        const marker = L.marker(latlng, {
-          icon: freeMarkerIcon("🧭")
-        }).bindPopup(t("your_location"));
-        marker.addTo(freeMarkersLayer);
-        if (e.accuracy && Number.isFinite(e.accuracy)) {
-          L.circle(latlng, {
-            radius: e.accuracy,
-            stroke: true,
-            color: "#38bdf8",
-            weight: 1.5,
-            opacity: 0.8,
-            fillColor: "#0ea5e9",
-            fillOpacity: 0.08
-          }).addTo(freeMarkersLayer);
-        }
-        updateMapToolStates();
-        map.setView(latlng, 16);
-        showToast(ux('locate_success'), 'success');
-      });
-
-      map.on("locationerror", (e) => {
-        showToast(ux('locate_error'), 'error', 2000);
-        alert(t("location_failed_prefix") + " " + (e.message || t("location_failed_default")));
       });
 
       return true;
@@ -17138,15 +17225,17 @@ function updateHistoryPreview(rawText) {
         return;
       }
       freeMarkersLayer.clearLayers();
+      userLocationMarker = null;
+      userLocationAccuracyCircle = null;
+      clearLocateWatch();
+      locatePending = false;
       updateMapToolStates();
       showToast(ux('marks_cleared'), 'success');
     });
 
     safeBindClick(locateBtn, "locateBtn", () => {
-      if (!mapInitialized) bootMap(true);
-      if (!mapInitialized) return;
       showToast(ux('locate_loading'), 'info', 2000);
-      map.locate({ setView: true, maxZoom: 16 });
+      requestCurrentUserLocation();
     });
 
     safeBindClick(fitAllBtn, "fitAllBtn", () => {
@@ -17189,8 +17278,23 @@ function updateHistoryPreview(rawText) {
     }
 
     function registerPwaRuntime() {
-      // Android WebView içinde service worker / PWA runtime kapalı
-      return;
+      // Android WebView içinde service worker çoğu zaman devre dışı.
+      // Yine de daha önce kayıtlı SW kalmışsa eski cache yüzünden stale HTML çalışmasın.
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.getRegistrations()
+        .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+        .then(async () => {
+          if (!("caches" in window)) return;
+          const keys = await caches.keys();
+          await Promise.all(
+            keys
+              .filter((key) => key.startsWith("alan-defteri-"))
+              .map((key) => caches.delete(key))
+          );
+        })
+        .catch((err) => {
+          console.warn("Service worker cleanup atlandı:", err);
+        });
     }
 
     window.addEventListener("error", (event) => {
@@ -17224,7 +17328,10 @@ function updateHistoryPreview(rawText) {
       }
     });
     window.addEventListener("load", () => closeSplash(true));
-    window.addEventListener("beforeunload", commitSpotsNow);
+    window.addEventListener("beforeunload", () => {
+      clearLocateWatch();
+      commitSpotsNow();
+    });
     setTimeout(() => {
       try { closeSplash(true); } catch (_) {}
       try { window.__forceRevealAppFallback(); } catch (_) {}
