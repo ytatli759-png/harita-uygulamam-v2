@@ -27,6 +27,37 @@
             src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.__rewardedAdReady = false;
+        window.__lastRewardedAdResult = null;
+
+        window.__updateRewardedAdAvailability = function (isReady) {
+          window.__rewardedAdReady = !!isReady;
+        };
+
+        window.__handleRewardedAdResult = function (status, amount, reason) {
+          window.__lastRewardedAdResult = {
+            status: String(status || ""),
+            amount: Number(amount || 0),
+            reason: String(reason || ""),
+            at: Date.now()
+          };
+        };
+
+        window.__forceRevealAppFallback = function () {
+          try {
+            var app = document.getElementById("app");
+            if (app) {
+              app.style.display = "block";
+              app.classList.add("is-ready");
+            }
+            var splash = document.getElementById("splashScreen");
+            if (splash) splash.classList.add("is-hidden");
+          } catch (e) {
+            console.error("Fallback reveal error:", e);
+          }
+        };
+    </script>
 
     <style>
         * {
@@ -50,209 +81,77 @@
           overflow: hidden;
           touch-action: none;
         }
-        body.is-entering #app {
-          pointer-events: none;
-        }
-        body.is-ready #app {
-          pointer-events: auto;
-        }
 
         #app {
           display: block;
           opacity: 0;
-          transform: translateY(9px) scale(0.995);
-          filter: saturate(0.9) brightness(0.9);
-          transition:
-            opacity var(--entry-motion-entry) var(--ease-premium),
-            transform var(--entry-motion-slow) var(--ease-premium),
-            filter var(--entry-motion-slow) var(--ease-soft);
-          transition-delay: var(--entry-phase-delay-2);
-          will-change: transform, opacity, filter;
+          transform: translateY(6px);
+          transition: opacity .24s ease, transform .24s ease;
         }
         #app.is-ready {
           opacity: 1;
-          transform: translateY(0) scale(1);
-          filter: saturate(1) brightness(1);
-        }
-        #app [data-entry-reveal] {
-          opacity: 0;
-          transform: translateY(12px);
-          filter: blur(var(--entry-blur-start));
-          transition:
-            opacity var(--entry-motion-base) var(--ease-soft),
-            transform var(--entry-motion-entry) var(--ease-premium),
-            filter var(--entry-motion-base) var(--ease-soft);
-          transition-delay: var(--reveal-delay, var(--entry-phase-delay-2));
-          will-change: transform, opacity, filter;
-        }
-        #app.is-ready [data-entry-reveal] {
-          opacity: 1;
           transform: translateY(0);
-          filter: blur(var(--entry-blur-end));
         }
 
-        .app-entry {
+        .splash-screen {
           position: fixed;
           inset: 0;
           z-index: 4200;
           display: grid;
           place-items: center;
           padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
-          overflow: hidden;
-          background: #02040a;
+          background:
+            radial-gradient(circle at 14% 18%, rgba(56,189,248,0.20), transparent 40%),
+            radial-gradient(circle at 84% 78%, rgba(34,197,94,0.18), transparent 44%),
+            linear-gradient(180deg, rgba(2,6,23,0.98), rgba(2,6,23,1));
           opacity: 1;
           visibility: visible;
-          transition:
-            opacity var(--entry-motion-slow) var(--ease-premium),
-            visibility var(--entry-motion-slow) linear;
-          will-change: opacity;
+          transition: opacity .34s ease, visibility .34s ease;
         }
-        .app-entry.is-hidden {
+        .splash-screen.is-hidden {
           opacity: 0;
           visibility: hidden;
           pointer-events: none;
         }
-        .entry-backdrop,
-        .entry-ambient,
-        .entry-grid,
-        .entry-topo,
-        .entry-veil {
-          position: absolute;
-          inset: -8%;
-          pointer-events: none;
-        }
-        .entry-backdrop {
-          background:
-            radial-gradient(140% 125% at 14% 9%, rgba(69,104,164,0.26) 0%, transparent 44%),
-            radial-gradient(128% 112% at 82% 90%, rgba(38,94,88,0.18) 0%, transparent 48%),
-            linear-gradient(162deg, #010208 0%, #040913 56%, #050a16 100%);
-          transform: scale(1.025);
-          animation: entryBackdropWake var(--entry-motion-entry) var(--ease-soft) var(--entry-phase-delay-1) forwards;
-        }
-        .entry-ambient {
-          background:
-            radial-gradient(circle at 50% 58%, rgba(159,188,227,0.11), transparent 56%),
-            radial-gradient(circle at 50% 44%, rgba(83,155,242,0.14), transparent 42%);
-          mix-blend-mode: screen;
-          opacity: 0;
-          animation: entryAmbient var(--entry-motion-slow) var(--ease-soft) var(--entry-phase-delay-1) forwards;
-        }
-        .entry-grid {
-          opacity: 0;
-          background-image:
-            repeating-linear-gradient(0deg, rgba(138,159,190,0.048) 0 1px, transparent 1px 36px),
-            repeating-linear-gradient(90deg, rgba(138,159,190,0.042) 0 1px, transparent 1px 36px);
-          transform: scale(1.015) translateY(9px);
-          animation: entryGridIn var(--entry-motion-slow) var(--ease-premium) var(--entry-phase-delay-2) forwards;
-        }
-        .entry-topo {
-          opacity: 0;
-          background-image:
-            radial-gradient(circle at 50% 50%, transparent 32%, rgba(118,145,187,0.08) 100%),
-            repeating-radial-gradient(circle at 52% 52%, rgba(157,183,216,0.08) 0 1px, transparent 1px 18px);
-          mask-image: radial-gradient(circle at 50% 53%, black 20%, transparent 74%);
-          transform: scale(1.03);
-          animation: entryTopoIn var(--entry-motion-slow) var(--ease-soft) var(--entry-phase-delay-2) forwards;
-        }
-        .entry-logo-wrap {
-          position: relative;
-          width: min(82vw, 332px);
-          display: grid;
-          place-items: center;
+        .splash-card {
+          width: min(100%, 360px);
+          border-radius: 24px;
+          border: 1px solid rgba(71,85,105,0.62);
+          padding: 22px 18px;
           text-align: center;
-          gap: 13px;
-          padding: 24px 22px 20px;
-          border-radius: 30px;
-          border: 1px solid rgba(126,152,194,0.22);
-          background:
-            linear-gradient(180deg, rgba(9,16,29,0.84), rgba(6,11,21,0.96)),
-            radial-gradient(circle at 50% 0%, rgba(123,156,214,0.12), transparent 62%);
-          box-shadow: 0 26px 58px rgba(0,0,0,0.56), inset 0 1px 0 rgba(248,251,255,0.08);
-          transform: translateY(13px) scale(0.972);
+          background: rgba(15,23,42,0.9);
+          box-shadow: 0 26px 50px rgba(2,6,23,0.58), inset 0 1px 0 rgba(255,255,255,0.08);
+          transform: translateY(8px) scale(.985);
           opacity: 0;
-          filter: blur(calc(var(--entry-blur-start) + 4px));
-          animation: entryLogoIn var(--entry-motion-entry) var(--ease-premium) var(--entry-phase-delay-3) forwards;
-          will-change: transform, opacity, filter;
+          animation: splashIn .36s cubic-bezier(.22, .8, .28, 1) .06s forwards;
         }
-        .entry-logo-mark {
-          width: 74px;
-          height: 74px;
-          border-radius: 20px;
-          background:
-            linear-gradient(158deg, rgba(255,255,255,0.15), rgba(255,255,255,0.015)),
-            radial-gradient(circle at 20% 18%, rgba(162,214,255,0.36), transparent 48%),
-            linear-gradient(142deg, #14345a, #0e1e36 54%, #09162a);
-          border: 1px solid rgba(167,193,225,0.34);
-          box-shadow: 0 14px 34px rgba(2,6,23,0.48), inset 0 1px 0 rgba(255,255,255,0.17);
-          position: relative;
-          overflow: hidden;
+        .splash-icon {
+          width: 54px;
+          height: 54px;
+          border-radius: 18px;
+          margin: 0 auto 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          background: linear-gradient(135deg, rgba(56,189,248,0.28), rgba(34,197,94,0.24));
+          border: 1px solid rgba(148,163,184,0.4);
+          box-shadow: 0 12px 24px rgba(2,6,23,0.34);
         }
-        .entry-logo-mark::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          box-shadow: inset 0 0 0 1px rgba(215,230,255,0.08), inset 0 -10px 20px rgba(2,9,20,0.26);
-          pointer-events: none;
+        .splash-title {
+          font-size: 24px;
+          font-weight: 900;
+          letter-spacing: -0.03em;
+          color: var(--text-primary);
+          margin-bottom: 5px;
         }
-        .entry-logo-glyph {
-          width: 46px;
-          height: 46px;
-          color: #d2e8ff;
-          filter: drop-shadow(0 8px 12px rgba(4,10,24,0.34));
+        .splash-subtitle {
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--text-secondary);
         }
-        .entry-logo-text {
-          font-size: clamp(22px, 4.8vw, 28px);
-          font-weight: 760;
-          letter-spacing: -0.014em;
-          color: #eef4ff;
-          text-shadow: 0 0 24px rgba(139,176,230,0.12);
-        }
-        .entry-logo-sub {
-          font-size: 12px;
-          letter-spacing: 0.09em;
-          text-transform: uppercase;
-          color: rgba(180,201,230,0.76);
-        }
-        .entry-veil {
-          background: radial-gradient(circle at 50% 50%, rgba(3,6,12,0) 20%, rgba(2,4,9,0.55) 100%);
-          opacity: 0.7;
-        }
-
-        @keyframes entryBackdropWake {
-          from { transform: scale(1.028); }
-          to { transform: scale(1.002); }
-        }
-        @keyframes entryAmbient {
-          from { opacity: 0; transform: scale(1.075); }
-          to { opacity: 0.95; transform: scale(1); }
-        }
-        @keyframes entryGridIn {
-          from { opacity: 0; transform: scale(1.02) translateY(10px); }
-          to { opacity: 0.38; transform: scale(1) translateY(0); }
-        }
-        @keyframes entryTopoIn {
-          from { opacity: 0; transform: scale(1.035); }
-          to { opacity: 0.5; transform: scale(1); }
-        }
-        @keyframes entryLogoIn {
-          0% { opacity: 0; transform: translateY(13px) scale(0.972); filter: blur(calc(var(--entry-blur-start) + 4px)); }
-          70% { opacity: 1; transform: translateY(0) scale(1); filter: blur(var(--entry-blur-end)); }
-          100% { opacity: 1; transform: translateY(0) scale(0.998); filter: blur(var(--entry-blur-end)); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .app-entry *,
-          #app,
-          #app [data-entry-reveal] {
-            animation: none !important;
-            transition-duration: 1ms !important;
-            transition-delay: 0ms !important;
-            filter: none !important;
-          }
-          .entry-grid { opacity: 0.2; transform: none; }
-          .entry-topo { opacity: 0.16; transform: none; }
-          .entry-logo-wrap { opacity: 1; transform: none; }
+        @keyframes splashIn {
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .app-shell {
@@ -301,27 +200,7 @@
         }
 
         :root {
-          --entry-motion-fast: 220ms;
-          --entry-motion-base: 420ms;
-          --entry-motion-slow: 640ms;
-          --entry-motion-entry: 780ms;
-          --entry-phase-delay-1: 90ms;
-          --entry-phase-delay-2: 180ms;
-          --entry-phase-delay-3: 290ms;
-          --entry-blur-start: 10px;
-          --entry-blur-end: 0px;
-          --motion-fast: var(--entry-motion-fast);
-          --motion-base: var(--entry-motion-base);
-          --motion-slow: var(--entry-motion-slow);
-          --motion-entry: var(--entry-motion-entry);
-          --entry-delay-1: var(--entry-phase-delay-1);
-          --entry-delay-2: var(--entry-phase-delay-2);
-          --entry-delay-3: var(--entry-phase-delay-3);
-          --blur-start: var(--entry-blur-start);
-          --blur-end: var(--entry-blur-end);
           --ease-premium: cubic-bezier(.22,.78,.26,1);
-          --ease-soft: cubic-bezier(.24,.68,.28,1);
-          --ease-settle: cubic-bezier(.2,.86,.24,1);
           --ease-smooth-out: cubic-bezier(.2,.72,.22,1);
 
           --app-bg: #060b16;
@@ -6418,7 +6297,7 @@
         .gold-result-level-row { grid-template-columns: 1fr; }
       }
 
-    
+
         .gold-early-access-notice {
           width: min(238px, calc(100% - 8px));
           margin: 8px 0 12px;
@@ -6555,7 +6434,7 @@
           }
         }
 
-</style>
+    </style>
 
     <style id="compact-sticky-search-override">
         /* Arama alanı: daha küçük, zarif ve sürekli görünür */
@@ -7345,168 +7224,14 @@
     </style>
 
 </head>
-
-<style id="premium-refactor-overrides">
-:root {
-  --bg-app: #050b14;
-  --bg-surface-1: #0b1526;
-  --bg-surface-2: #122038;
-  --bg-surface-3: #1a2a43;
-  --text-primary: #eaf1fb;
-  --text-secondary: #b6c4da;
-  --text-muted: #8093b2;
-  --border-soft: rgba(145, 169, 203, 0.2);
-  --border-strong: rgba(160, 184, 218, 0.4);
-  --accent-primary: #7bc1ff;
-  --accent-amber: #d5a64b;
-  --accent-success: #5bc990;
-  --accent-danger: #be5361;
-  --accent-neutral: #8ca3c6;
-  --shadow-soft: 0 6px 18px rgba(2, 8, 20, 0.34);
-  --shadow-medium: 0 14px 34px rgba(2, 8, 20, 0.45);
-  --shadow-raised: 0 18px 50px rgba(0, 0, 0, 0.58);
-  --radius-sm: 10px; --radius-md: 14px; --radius-lg: 18px; --radius-xl: 24px; --radius-2xl: 30px;
-  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-9: 36px; --space-10: 42px;
-  --font-xs: 11px; --font-sm: 12px; --font-md: 14px; --font-lg: 16px; --font-xl: 20px; --font-2xl: 24px;
-  --entry-motion-fast: 120ms; --entry-motion-base: 180ms; --entry-motion-slow: 260ms;
-  --z-map: 5; --z-controls: 20; --z-sheet: 42; --z-modal: 80;
-}
-body {
-  padding: 0;
-  background: radial-gradient(circle at 8% 0%, rgba(73, 140, 216, 0.2), transparent 34%), var(--bg-app);
-  color: var(--text-secondary);
-}
-#app { width: 100%; }
-.app-shell.AppShell__frame {
-  max-width: 100%; min-height: 100dvh; border-radius: 0; border: 0; box-shadow: none;
-  background: linear-gradient(180deg, rgba(7, 13, 24, 0.96) 0%, rgba(6, 12, 22, 0.97) 20%, rgba(5, 11, 20, 0.96) 100%);
-  padding: max(8px, env(safe-area-inset-top)) var(--space-4) calc(108px + env(safe-area-inset-bottom));
-}
-.app-header.TopAppBar {
-  position: sticky; top: 0; z-index: 30; padding: var(--space-2) 0 var(--space-4); margin-bottom: var(--space-4);
-  backdrop-filter: blur(10px); background: linear-gradient(180deg, rgba(5, 11, 20, 0.94), rgba(5, 11, 20, 0.72));
-}
-.header-topbar {align-items:center; gap:10px;}
-.title-badge {padding: 7px 12px; font-size: var(--font-sm); border-radius: 999px; border: 1px solid var(--border-soft); background: rgba(18, 32, 56, 0.8);}
-.app-header h1 {font-size: var(--font-lg); letter-spacing: .01em; font-weight: 650; color: var(--text-primary); margin-top: 6px;}
-.header-settings-btn {min-height: 42px; border-radius: 999px; background: rgba(16, 28, 48, 0.94); border: 1px solid var(--border-soft); color: var(--text-secondary);}
-.header-settings-btn .settings-btn-text {font-size: var(--font-sm);}
-
-.header-actions {margin-bottom: var(--space-4);}
-.primary-actions.HeroActionCardGrid {display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);}
-.HeroActionCard {
-  min-height: 96px; border-radius: var(--radius-lg); padding: var(--space-4); align-items: flex-start;
-  background: linear-gradient(160deg, rgba(24, 40, 67, 0.95), rgba(14, 25, 42, 0.95));
-  border: 1px solid var(--border-soft); box-shadow: var(--shadow-soft);
-}
-.HeroActionCard .hero-btn-title {font-size: var(--font-md); color: var(--text-primary);}
-.HeroActionCard .hero-btn-subtitle {font-size: var(--font-sm); color: var(--text-secondary);}
-#addBtn { box-shadow: 0 10px 26px rgba(68, 141, 217, 0.2); border-color: rgba(123,193,255,.35);}
-#goldGuideBtn { border-color: rgba(213,166,75,.42); background: linear-gradient(150deg, rgba(59,44,18,0.72), rgba(27,25,32,0.9));}
-#goldGuideBtn .hero-btn-title { color: #f3d89a; }
-
-.records-toolbar.SectionCard {
-  background: rgba(9, 17, 30, 0.88); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
-  padding: var(--space-3); margin-bottom: var(--space-5);
-}
-.records-toolbar-top {display:flex; align-items:center; justify-content:space-between; gap:10px;}
-#count.count-badge {background: rgba(22, 35, 57, 1); border:1px solid var(--border-soft); color: var(--text-secondary);}
-.search-shell {min-height: 44px; border-radius: var(--radius-md); background: rgba(17, 30, 49, .9); border:1px solid var(--border-soft);}
-#searchInput {color: var(--text-primary); font-size: var(--font-md);}
-.filter-chips-row {padding-top: var(--space-2); gap: var(--space-2); overflow-x: auto; scrollbar-width: none;}
-.filter-chip {height: 34px; padding: 0 12px; border-radius: 999px; background: rgba(18, 31, 52, .82); border: 1px solid var(--border-soft); color: var(--text-secondary);}
-.filter-chip.active { background: rgba(123,193,255,.16); border-color: rgba(123,193,255,.45); color: #dbeeff;}
-
-.map-wrapper.MapViewport {position: relative; margin-bottom: var(--space-5);}
-.map-stage {
-  border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-raised); min-height: 56dvh; background: var(--bg-surface-2);
-}
-#map { min-height: 56dvh !important; z-index: var(--z-map); }
-.map-hud {padding: var(--space-3);}
-.map-hud-chip {background: rgba(7, 15, 27, .82); border: 1px solid var(--border-soft); backdrop-filter: blur(6px);}
-#mapStatus {left: 50%; transform: translateX(-50%); bottom: 14px; width: calc(100% - 24px); max-width: 380px; z-index: var(--z-controls);}
-
-.map-tools {
-  position: absolute; z-index: var(--z-controls); display: grid; gap: 8px;
-  background: rgba(9, 18, 31, 0.78); border: 1px solid var(--border-soft); border-radius: 14px; padding: 8px; backdrop-filter: blur(7px);
-}
-.map-tools .btn-small {min-width: 44px; min-height: 44px; border-radius: 11px; padding: 0 12px; font-size: var(--font-sm);}
-.map-tools:not(.secondary) {top: 14px; right: 14px; grid-template-columns: 1fr 1fr;}
-.map-tools.secondary {left: 14px; top: 14px; display:flex; flex-direction:column;}
-#locateBtn {position: absolute; right: 14px; bottom: 88px; z-index: var(--z-controls); min-width:52px; min-height:52px; border-radius:999px;}
-#coordBar {position:absolute; left: 14px; bottom: 20px; z-index: var(--z-controls); background: rgba(7,14,26,.8); border:1px solid var(--border-soft); border-radius: 999px; padding: 6px 10px; font-size: var(--font-xs);}
-
-#list.PointListCard {
-  position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom));
-  margin: 0; max-height: 36dvh; overflow: auto; z-index: var(--z-sheet);
-  background: linear-gradient(180deg, rgba(13,23,40,.96), rgba(8,16,30,.98));
-  border-top: 1px solid var(--border-strong); border-radius: 22px 22px 0 0; padding: 18px 14px 18px;
-  box-shadow: 0 -14px 35px rgba(0,0,0,.44);
-}
-#list:before {content:''; width:44px; height:4px; border-radius:999px; background: rgba(163,182,210,.45); display:block; margin: 0 auto 12px;}
-#list li {background: rgba(16,28,47,.92); border: 1px solid var(--border-soft); border-radius: 14px; margin-bottom: 10px; padding: 12px;}
-
-.BottomSheet__formPane, .BottomSheet__guidePane, .BottomSheet__settingsPane {
-  position: fixed !important; left: 0; right: 0; bottom: 0; z-index: calc(var(--z-sheet) + 1);
-  border-radius: 22px 22px 0 0; border: 1px solid var(--border-strong); border-bottom: 0;
-  background: linear-gradient(180deg, rgba(12,22,38,.98), rgba(7,14,26,1));
-  max-height: 78dvh; overflow: auto; padding: 18px 14px calc(16px + env(safe-area-inset-bottom));
-  box-shadow: 0 -18px 42px rgba(0,0,0,.5);
-}
-.BottomSheet__formPane::before, .BottomSheet__guidePane::before, .BottomSheet__settingsPane::before {
-  content:''; width:44px; height:4px; border-radius:999px; background: rgba(164,185,217,.44); display:block; margin: 0 auto 14px;
-}
-.field-card {background: rgba(16, 28, 48, 0.88); border:1px solid var(--border-soft); border-radius: var(--radius-md); padding: 12px;}
-.field-card input, .field-card textarea, .gem-card select, .settings-data-actions input {
-  background: rgba(9,17,30,.9) !important; border:1px solid var(--border-soft) !important; border-radius: 12px !important;
-  color: var(--text-primary) !important; min-height: 44px; padding: 10px 12px !important;
-}
-.field-card textarea {min-height: 112px;}
-.form-buttons {position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, transparent, rgba(8,14,25,.92) 35%);}
-.btn-primary {background: linear-gradient(170deg, #79c0ff, #5ea5e7); color: #051426;}
-.btn-secondary {background: rgba(28,42,64,.9); color: var(--text-secondary);}
-
-.spot-detail-card {background: linear-gradient(180deg, rgba(12,23,39,.98), rgba(7,15,27,1)); border:1px solid var(--border-strong);}
-.spot-detail-actions {display:grid; grid-template-columns: 1fr 1fr; gap:8px;}
-.spot-detail-actions .btn-small.main {grid-column: span 2;}
-.spot-detail-actions .btn-small.danger {background: rgba(94,34,40,.9); border-color: rgba(190,83,97,.44);}
-
-.mobile-quickbar {
-  position: fixed; left: 10px; right: 10px; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 70;
-  border-radius: 18px; background: rgba(11, 20, 34, 0.95); border:1px solid var(--border-soft); box-shadow: var(--shadow-medium);
-}
-.mobile-quickbar button {min-height: 54px;}
-.mobile-quickbar button.quickbar-primary {background: linear-gradient(180deg, rgba(123,193,255,.2), rgba(58,114,167,.28)); color: #def0ff;}
-
-@media (min-width: 980px) {
-  .app-shell.AppShell__frame {padding-bottom: 30px;}
-  #list.PointListCard {position: static; max-height: none; border-radius: var(--radius-lg); margin-top: var(--space-4);}
-  .mobile-quickbar {display:none;}
-  .map-tools:not(.secondary) {right: 18px;}
-}
-</style>
-
 <body>
 
-<div id="splashScreen" class="app-entry" aria-hidden="true">
-    <div class="entry-backdrop" aria-hidden="true"></div>
-    <div class="entry-ambient" aria-hidden="true"></div>
-    <div class="entry-grid" aria-hidden="true"></div>
-    <div class="entry-topo" aria-hidden="true"></div>
-    <div class="entry-logo-wrap" aria-label="Alan Defteri">
-        <div class="entry-logo-mark" aria-hidden="true">
-            <svg class="entry-logo-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-                <path d="M13.5 44.5C13.5 44.5 18.8 36.2 28.3 36.2C37.8 36.2 39.7 46.5 48.8 46.5C55.3 46.5 58.5 41.4 58.5 41.4" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
-                <path d="M12 51.5H52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".52"/>
-                <path d="M32 11.5C38.7 11.5 44 16.8 44 23.5C44 31.8 35.7 41.9 33.6 44.3C32.8 45.2 31.2 45.2 30.4 44.3C28.3 41.9 20 31.8 20 23.5C20 16.8 25.3 11.5 32 11.5Z" fill="currentColor"/>
-                <circle cx="32" cy="23.5" r="4.8" fill="#0B172A"/>
-            </svg>
-        </div>
-        <div class="entry-logo-text">Alan Defteri</div>
-        <div class="entry-logo-sub">Field Notes • Map Native</div>
+<div id="splashScreen" class="splash-screen" aria-hidden="true">
+    <div class="splash-card">
+        <div class="splash-icon">🧭</div>
+        <div class="splash-title">Alan Defteri</div>
+        <div class="splash-subtitle">Harita, saha notu ve işaret yönetimi</div>
     </div>
-    <div class="entry-veil" aria-hidden="true"></div>
 </div>
 
 <!-- ✅ Toast -->
@@ -7599,9 +7324,9 @@ body {
 
 <!-- 🔐 GİRİŞ EKRANI -->
 
-<div id="app" class="AppShell">
-    <div class="app-shell AppShell__frame">
-        <div class="app-header TopAppBar">
+<div id="app">
+    <div class="app-shell">
+        <div class="app-header">
             <div class="header-topbar">
                 <div class="header-brand">
                     <div class="title-badge">
@@ -7617,16 +7342,16 @@ body {
             <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
         </div>
 
-        <div class="header-actions HeroActionCardRow">
-            <div class="primary-actions HeroActionCardGrid">
-                <button type="button" id="addBtn" class="HeroActionCard PrimaryButton">
+        <div class="header-actions">
+            <div class="primary-actions">
+                <button type="button" id="addBtn">
                     <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">＋</span></span>
                     <span class="hero-btn-copy">
               <span class="hero-btn-title">Yeni nokta ekle</span>
               <span class="hero-btn-subtitle">Haritada seç, kısa bilgi ekle, kaydet</span>
             </span>
                 </button>
-                <button type="button" id="goldGuideBtn" class="HeroActionCard HeroActionCard--guide SecondaryButton">
+                <button type="button" id="goldGuideBtn">
                     <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">✦</span></span>
                     <span class="hero-btn-copy">
               <span class="hero-btn-title">Hızlı saha analizi</span>
@@ -7636,7 +7361,7 @@ body {
             </div>
         </div>
 
-        <div class="records-toolbar SectionCard" id="recordsToolbar">
+        <div class="records-toolbar">
             <div class="records-toolbar-top">
                 <div id="count" class="count-badge">0 nokta</div>
                 <button type="button" id="searchToggleBtn" class="search-toggle-btn" aria-expanded="false" aria-controls="recordsSearchPanel">
@@ -7645,23 +7370,15 @@ body {
                 </button>
             </div>
             <div id="recordsSearchPanel" class="records-search-panel" hidden>
-                <div class="search-shell compact-search-shell SearchBar">
+                <div class="search-shell compact-search-shell">
                     <span class="search-icon">🔎</span>
                     <input id="searchInput" placeholder="Başlık veya bölge notu içinde ara..." />
                 </div>
             </div>
-            <div class="filter-chips-row FilterChipsRow" id="filterChipsRow" role="tablist" aria-label="Kayıt filtreleri">
-                <button type="button" class="filter-chip active" data-filter="all">En yeni</button>
-                <button type="button" class="filter-chip" data-filter="near">En yakın</button>
-                <button type="button" class="filter-chip" data-filter="photo">Fotoğraflı</button>
-                <button type="button" class="filter-chip" data-filter="tag">Etiketli</button>
-                <button type="button" class="filter-chip" data-filter="score">Puanı yüksek</button>
-                <button type="button" class="filter-chip" data-filter="visited">Ziyaret edilen</button>
-            </div>
         </div>
 
         <!-- 🏞 Altın tozu rehberi paneli -->
-        <div id="goldPanel" class="BottomSheet__guidePane">
+        <div id="goldPanel">
             <div class="gallery-header">
                 <div class="gallery-title">
                     <span class="icon">🏞️</span>
@@ -7774,7 +7491,7 @@ body {
         </div>
 
         <!-- ⚙️ Ayarlar / Bilgilendirme paneli -->
-        <div id="settingsPanel" class="BottomSheet__settingsPane">
+        <div id="settingsPanel">
             <div class="gallery-header">
                 <div class="gallery-title">
                     <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
@@ -7897,7 +7614,7 @@ body {
         </div>
 
         <!-- Nokta formu -->
-        <div id="formContainer" class="BottomSheet__formPane">
+        <div id="formContainer">
             <form id="spotForm">
                 <input type="hidden" id="spotId" />
 
@@ -8027,7 +7744,7 @@ body {
             </form>
         </div>
 
-        <div class="map-wrapper MapViewport">
+        <div class="map-wrapper">
 
             <div id="analysisUsageBanner" class="analysis-usage-banner" aria-live="polite">
                 <div class="analysis-usage-copy">
@@ -8044,7 +7761,7 @@ body {
 
             <div class="map-stage">
                 <div id="map"></div>
-                <div class="map-hud InfoPills">
+                <div class="map-hud">
                     <div class="map-hud-left">
                         <div class="map-hud-chip live" id="mapHudZoom">Yakınlık: <strong>6x</strong></div>
                         <div class="map-hud-chip" id="mapHudCount">Kayıtlı nokta: <strong>0</strong></div>
@@ -8053,7 +7770,7 @@ body {
                 <div id="mapStatus" class="map-status" aria-live="polite"></div>
             </div>
 
-            <div id="mapEvalCard" class="map-eval-card PointDetailCard" aria-live="polite">
+            <div id="mapEvalCard" class="map-eval-card" aria-live="polite">
                 <div class="map-eval-top">
                     <div>
                         <div class="map-eval-kicker">Seçili nokta</div>
@@ -8094,7 +7811,7 @@ body {
                 </div>
             </div>
 
-            <div class="map-tools FloatingMapControls" role="toolbar" aria-label="Harita yardımcı kontrolleri">
+            <div class="map-tools">
                 <button type="button" id="layerToggleBtn" class="btn-small">🗂 Katmanlar</button>
                 <button type="button" id="markModeBtn" class="btn-small">
                     📌 İşaret koyma: Kapalı
@@ -8107,7 +7824,7 @@ body {
                 </button>
             </div>
 
-            <div class="map-tools secondary FloatingMapControls" role="toolbar" aria-label="Harita gezinme kontrolleri">
+            <div class="map-tools secondary">
                 <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
                 <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
             </div>
@@ -8115,7 +7832,7 @@ body {
             <div id="coordBar">İmleç: –</div>
         </div>
 
-        <ul id="list" class="PointListCard"></ul>
+        <ul id="list"></ul>
     </div>
 </div>
 
@@ -9286,31 +9003,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     const appContainer = document.getElementById("app");
     const splashScreen = document.getElementById("splashScreen");
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    document.documentElement.classList.add("is-entering");
-    document.body?.classList.add("is-entering");
-    document.documentElement.classList.toggle("reduce-motion", prefersReducedMotion.matches);
-    prefersReducedMotion.addEventListener?.("change", (event) => {
-      document.documentElement.classList.toggle("reduce-motion", event.matches);
-    });
     const splashStartedAt = Date.now();
     let splashClosed = false;
-
-    const entryRevealSelectors = [
-      ".app-header",
-      ".header-actions",
-      ".records-toolbar",
-      ".map-wrapper",
-      "#list",
-      ".mobile-quickbar"
-    ];
-    const entryRevealNodes = entryRevealSelectors
-      .map((selector) => document.querySelector(selector))
-      .filter(Boolean);
-    entryRevealNodes.forEach((node, index) => {
-      node.setAttribute("data-entry-reveal", "");
-      node.style.setProperty("--reveal-delay", `${160 + index * 60}ms`);
-    });
 
     function openSurfacePanel(panel) {
       if (!panel) return;
@@ -10108,28 +9802,18 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function revealMainApp() {
       if (!appContainer) return;
       appContainer.classList.add("is-ready");
-      document.documentElement.classList.add("is-ready");
-      document.documentElement.classList.remove("is-entering");
-      document.body?.classList.add("is-ready");
-      document.body?.classList.remove("is-entering");
     }
 
     function closeSplash(force = false) {
       if (splashClosed) return;
-      const reduced = prefersReducedMotion.matches;
-      const minVisibleMs = reduced ? 90 : (force ? 620 : 920);
+      const minVisibleMs = force ? 900 : 1100;
       const elapsed = Date.now() - splashStartedAt;
       const wait = Math.max(0, minVisibleMs - elapsed);
       setTimeout(() => {
         if (splashClosed) return;
         splashClosed = true;
-        revealMainApp();
         splashScreen?.classList.add("is-hidden");
-        const removeDelay = reduced ? 80 : 620;
-        setTimeout(() => {
-          splashScreen?.remove();
-          document.documentElement.style.removeProperty("--entry-lock");
-        }, removeDelay);
+        revealMainApp();
       }, wait);
     }
 
@@ -17505,10 +17189,8 @@ function updateHistoryPreview(rawText) {
     }
 
     function registerPwaRuntime() {
-      if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register("./sw.js").catch((error) => {
-        console.warn("Service worker register failed:", error);
-      });
+      // Android WebView içinde service worker / PWA runtime kapalı
+      return;
     }
 
     window.addEventListener("error", (event) => {
@@ -17522,21 +17204,31 @@ function updateHistoryPreview(rawText) {
     });
 
     document.addEventListener("DOMContentLoaded", () => {
-      const initialLang = getDefaultLang();
-      applyLanguage(initialLang);
-      const langSelect = document.getElementById('langSelect');
-      if (langSelect) {
-        langSelect.value = initialLang;
-        langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
-      }
+      try {
+        const initialLang = getDefaultLang();
+        applyLanguage(initialLang);
+        const langSelect = document.getElementById('langSelect');
+        if (langSelect) {
+          langSelect.value = initialLang;
+          langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
+        }
 
-      registerPwaRuntime();
-      startApp();
-      requestAnimationFrame(() => closeSplash(false));
+        registerPwaRuntime();
+        startApp();
+        requestAnimationFrame(() => closeSplash(false));
+      } catch (error) {
+        console.error("Startup error:", error);
+        try { window.__forceRevealAppFallback(); } catch (_) {}
+        try { setMapStatus("Uygulama başlatılırken hata oluştu. Sayfayı yeniden açıp tekrar dene.", "error", true); } catch (_) {}
+        try { showToast("Başlatma hatası oluştu.", "error", 2200); } catch (_) {}
+      }
     });
     window.addEventListener("load", () => closeSplash(true));
     window.addEventListener("beforeunload", commitSpotsNow);
-    setTimeout(() => closeSplash(true), 1800);
+    setTimeout(() => {
+      try { closeSplash(true); } catch (_) {}
+      try { window.__forceRevealAppFallback(); } catch (_) {}
+    }, 1800);
 </script>
 <script>
     // 📱 Android klavye açıldığında görünür alan yüksekliğini doğru hesapla
@@ -18044,132 +17736,16 @@ function updateHistoryPreview(rawText) {
     }
 </style>
 
-
-<style id="premium-refactor-2026">
-:root{
-  --bg-app:#060b15;--bg-surface-1:#0d1627;--bg-surface-2:#111d32;--bg-surface-3:#17253f;
-  --text-primary:#edf3ff;--text-secondary:#c7d4ea;--text-muted:#8ea0bd;
-  --border-soft:rgba(148,163,184,.2);--border-strong:rgba(148,163,184,.38);
-  --accent-primary:#8ac5ff;--accent-amber:#d7af62;--accent-success:#42bf88;--accent-danger:#de6a73;
-  --shadow-soft:0 10px 24px rgba(2,6,20,.28);--shadow-raised:0 18px 44px rgba(2,6,20,.45);
-  --radius-sm:10px;--radius-md:14px;--radius-lg:18px;--radius-xl:22px;--radius-2xl:28px;
-  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:28px;--space-8:32px;--space-9:40px;--space-10:48px;
-  --font-xs:11px;--font-sm:12px;--font-md:14px;--font-lg:16px;--font-xl:20px;--font-2xl:26px;
-  --entry-motion-fast:.16s;--entry-motion-base:.24s;--entry-motion-slow:.32s;
-  --sheet-z:1450;--map-controls-z:560;--modal-z:1800;
-}
-body{background:radial-gradient(circle at 0 0,rgba(138,197,255,.12),transparent 35%),radial-gradient(circle at 100% 100%,rgba(215,175,98,.1),transparent 24%),var(--bg-app)!important;color:var(--text-secondary)!important;}
-.app-shell{max-width:1080px!important;padding:12px 12px 170px!important;border-radius:var(--radius-2xl)!important;background:linear-gradient(180deg,rgba(9,16,31,.95),rgba(7,12,23,.98))!important;border:1px solid var(--border-soft)!important;box-shadow:var(--shadow-raised)!important;}
-.TopAppBar{position:sticky;top:0;z-index:40;padding-top:env(safe-area-inset-top,0px);background:linear-gradient(180deg,rgba(9,16,31,.95),rgba(9,16,31,.68) 70%,transparent);backdrop-filter:blur(10px);}
-h1{font-size:clamp(20px,3.8vw,30px)!important;line-height:1.1!important;}
-.HeroActionCardGrid{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;}
-.HeroActionCard{min-height:88px!important;border-radius:var(--radius-xl)!important;border:1px solid var(--border-soft)!important;box-shadow:var(--shadow-soft)!important;}
-#addBtn{background:linear-gradient(140deg,rgba(28,99,178,.75),rgba(19,43,84,.95))!important;}
-#goldGuideBtn{background:linear-gradient(140deg,rgba(82,64,24,.82),rgba(31,26,18,.95))!important;border-color:rgba(215,175,98,.3)!important;}
-.records-toolbar{display:grid;gap:10px;padding:10px!important;border-radius:var(--radius-xl)!important;background:rgba(11,20,36,.8)!important;border:1px solid var(--border-soft)!important;}
-.filter-chips-row{display:flex;gap:8px;overflow:auto;padding-bottom:2px;scrollbar-width:none;}
-.filter-chips-row::-webkit-scrollbar{display:none;}
-.filter-chip{height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--border-soft);background:rgba(16,30,52,.7);color:var(--text-secondary);font-size:var(--font-sm);font-weight:700;white-space:nowrap;}
-.filter-chip.active{background:rgba(138,197,255,.18);border-color:rgba(138,197,255,.5);color:var(--text-primary);}
-.MapViewport{position:relative!important;margin:10px 0 0!important;padding:10px!important;border:1px solid var(--border-soft)!important;border-radius:var(--radius-xl)!important;background:linear-gradient(180deg,rgba(12,21,37,.9),rgba(8,14,27,.96))!important;}
-.map-stage{position:relative;border-radius:var(--radius-lg)!important;overflow:hidden;}
-#map{height:min(58vh,640px)!important;min-height:420px!important;border-radius:14px!important;}
-.map-tools,.map-tools.secondary{display:none!important;}
-.map-floating-controls{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:var(--map-controls-z);}
-.map-floating-controls .btn-small{min-height:42px;padding:0 12px!important;border-radius:12px!important;border:1px solid var(--border-soft)!important;background:rgba(5,10,20,.78)!important;color:var(--text-primary)!important;backdrop-filter:blur(8px);}
-#coordBar{position:absolute;left:12px;bottom:12px;z-index:var(--map-controls-z);border-radius:999px!important;background:rgba(5,10,20,.72)!important;border:1px solid var(--border-soft)!important;font-size:11px!important;padding:8px 11px!important;}
-.smart-bottom-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;width:min(1080px,calc(100vw - 14px));z-index:var(--sheet-z);border-radius:22px 22px 0 0;border:1px solid var(--border-soft);background:linear-gradient(180deg,rgba(12,22,38,.98),rgba(7,12,24,.99));box-shadow:0 -12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;transition:height var(--entry-motion-base) var(--ease-premium);}
-.smart-bottom-sheet.sheet-collapsed{height:136px;}
-.smart-bottom-sheet.sheet-half{height:48vh;}
-.smart-bottom-sheet.sheet-full{height:calc(100vh - 60px);}
-.sheet-head{padding:10px 12px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(10,17,30,.94);}
-.sheet-handle{width:44px;height:5px;border-radius:999px;background:rgba(148,163,184,.55);margin:0 auto 6px;}
-.sheet-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);font-weight:700;}
-.sheet-content{overflow:auto;padding:10px;display:grid;gap:10px;}
-#formContainer,#goldPanel,#settingsPanel,#list{margin:0!important;border-radius:14px!important;border:1px solid var(--border-soft)!important;background:rgba(14,23,39,.68)!important;}
-#formContainer,#goldPanel,#settingsPanel{padding:12px!important;}
-#list{padding:8px!important;max-height:none!important;overflow:visible!important;}
-.item{border-radius:14px!important;background:linear-gradient(180deg,rgba(22,35,56,.82),rgba(14,23,38,.86))!important;}
-@media (min-width:980px){.app-shell{padding-bottom:16px!important;display:grid;grid-template-columns:minmax(320px,390px) minmax(0,1fr);gap:12px;align-items:start;}.app-header,.HeroActionCardRow,.records-toolbar{grid-column:1/2;}.MapViewport{grid-column:2/3;grid-row:1/4;min-height:calc(100vh - 84px);}.smart-bottom-sheet{position:static;transform:none;width:100%;height:auto!important;border-radius:16px;box-shadow:none;grid-column:1/2;}.sheet-snaps{display:none!important;}.mobile-quickbar{display:none!important;}}
-@media (max-width:640px){.HeroActionCardGrid{grid-template-columns:1fr!important;}#map{height:52vh!important;min-height:400px!important;}.app-shell{padding:10px 10px 172px!important;}}
-</style>
-
-<script id="premium-refactor-sheet-script">
-(function(){
-  const appShell = document.querySelector('.app-shell');
-  const mapWrapper = document.querySelector('.map-wrapper');
-  const toolbar = document.getElementById('recordsToolbar');
-  const form = document.getElementById('formContainer');
-  const list = document.getElementById('list');
-  const gold = document.getElementById('goldPanel');
-  const settings = document.getElementById('settingsPanel');
-  if(!appShell || !mapWrapper || !toolbar || !form || !list) return;
-
-  const stage = mapWrapper.querySelector('.map-stage');
-  const toolsA = mapWrapper.querySelector('.map-tools');
-  const toolsB = mapWrapper.querySelector('.map-tools.secondary');
-  if(stage && !stage.querySelector('.map-floating-controls')){
-    const cluster = document.createElement('div');
-    cluster.className = 'map-floating-controls FloatingMapControls';
-    [toolsA, toolsB].forEach(group => {
-      if(!group) return;
-      Array.from(group.querySelectorAll('button')).forEach(btn => cluster.appendChild(btn));
-    });
-    stage.appendChild(cluster);
-  }
-
-  let sheet = document.getElementById('smartBottomSheet');
-  if(!sheet){
-    sheet = document.createElement('section');
-    sheet.id = 'smartBottomSheet';
-    sheet.className = 'smart-bottom-sheet BottomSheet sheet-half';
-    sheet.innerHTML = `
-      <div class="sheet-head">
-        <div>
-          <div class="sheet-handle"></div>
-          <div class="sheet-title">Harita paneli</div>
-        </div>
-        <div class="sheet-snaps" role="tablist" aria-label="Panel boyutu">
-          <button type="button" class="sheet-snap-btn" data-snap="collapsed">Peek</button>
-          <button type="button" class="sheet-snap-btn active" data-snap="half">Half</button>
-          <button type="button" class="sheet-snap-btn" data-snap="full">Full</button>
-        </div>
-      </div>
-      <div class="sheet-content"></div>`;
-    appShell.appendChild(sheet);
-    const content = sheet.querySelector('.sheet-content');
-    [toolbar, gold, form, settings, list].forEach(el => el && content.appendChild(el));
-  }
-
-  const setSnap = (snap) => {
-    sheet.classList.remove('sheet-collapsed','sheet-half','sheet-full');
-    sheet.classList.add(`sheet-${snap}`);
-    sheet.querySelectorAll('.sheet-snap-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.snap === snap));
-  };
-
-  sheet.querySelectorAll('.sheet-snap-btn').forEach(btn => {
-    btn.addEventListener('click', ()=> setSnap(btn.dataset.snap));
-  });
-
-  const updateMode = () => {
-    const mode = !gold.hidden && getComputedStyle(gold).display !== 'none' ? 'guide'
-      : !form.hidden && getComputedStyle(form).display !== 'none' ? 'add'
-      : !settings.hidden && getComputedStyle(settings).display !== 'none' ? 'settings'
-      : 'browse';
-    document.body.dataset.mode = mode;
-  };
-
-  const observer = new MutationObserver(updateMode);
-  [gold, form, settings].forEach(el => el && observer.observe(el, { attributes:true, attributeFilter:['style','hidden','class'] }));
-  updateMode();
-
-  const chips = document.getElementById('filterChipsRow');
-  chips?.addEventListener('click', (e)=>{
-    const btn = e.target.closest('.filter-chip');
-    if(!btn) return;
-    chips.querySelectorAll('.filter-chip').forEach(chip => chip.classList.toggle('active', chip === btn));
-  });
-})();
+<script>
+    (function () {
+      if (!window.AndroidAds) {
+        window.AndroidAds = {
+          showRewardedAd: function () {
+            console.warn("AndroidAds bridge bulunamadı.");
+          }
+        };
+      }
+    })();
 </script>
 
 </body>
