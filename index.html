@@ -2397,7 +2397,7 @@
             0 0 0 1px rgba(31,41,55,1);
         }
 
-        /* ✅ Mini toast */
+        /* ✓ Mini toast */
         #toast {
           position: fixed;
           left: 50%;
@@ -6478,6 +6478,116 @@
           }
         }
 
+
+        /* === Premium mobile UI refresh (visual-only overrides) === */
+        :root {
+          --app-bg: #050912;
+          --app-bg-soft: #0a1324;
+          --app-surface: rgba(10, 20, 35, 0.78);
+          --app-surface-elevated: rgba(15, 28, 47, 0.9);
+          --app-surface-panel: rgba(8, 16, 30, 0.92);
+          --border-subtle: rgba(155, 183, 223, 0.24);
+          --border-strong: rgba(162, 197, 238, 0.42);
+          --accent-primary: #67b2ff;
+          --gold-primary: #c8a15a;
+          --text-primary: #eef5ff;
+          --text-secondary: #cad7ea;
+          --text-muted: #8fa3bf;
+        }
+        body {
+          padding: 10px;
+          background:
+            radial-gradient(circle at 12% 2%, rgba(86, 147, 238, 0.28), transparent 42%),
+            radial-gradient(circle at 85% 22%, rgba(61, 95, 156, 0.18), transparent 44%),
+            linear-gradient(180deg, #030712 0%, #060d18 48%, #050a12 100%);
+        }
+        .app-shell {
+          width: min(100%, 440px);
+          border-radius: 30px;
+          border: 1px solid rgba(162, 197, 238, 0.2);
+          background: linear-gradient(180deg, rgba(7,14,27,0.94), rgba(8,16,29,0.9));
+          box-shadow: 0 24px 56px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.06);
+          padding: max(12px, env(safe-area-inset-top)) 12px calc(20px + env(safe-area-inset-bottom));
+        }
+        .header-topbar {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; margin-bottom: 10px;
+        }
+        .title-badge {
+          background: rgba(11, 25, 44, 0.85);
+          border: 1px solid rgba(146,173,211,.42);
+          border-radius: 999px;
+          padding: 8px 14px;
+          font-size: 12px; font-weight: 700; letter-spacing: .01em;
+        }
+        h1 { font-size: 25px; letter-spacing: -.02em; margin: 4px 0 2px; }
+        .header-actions { margin: 8px 0 10px; }
+        .primary-actions { gap: 8px; }
+        #addBtn, #goldGuideBtn, .primary-actions #addBtn, .primary-actions #goldGuideBtn {
+          min-height: 62px; border-radius: 18px; padding: 10px 12px;
+          border: 1px solid rgba(146,173,211,.28); box-shadow: 0 10px 24px rgba(2,6,23,.32);
+        }
+        #addBtn { background: linear-gradient(145deg, rgba(31,74,130,.95), rgba(56,113,184,.95));}
+        #goldGuideBtn { background: linear-gradient(145deg, rgba(76,58,24,.94), rgba(137,101,42,.92));}
+        .hero-btn-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+        .hero-btn-title { font-size: 14px; }
+        .hero-btn-subtitle { font-size: 11px; opacity: .8; }
+        .records-toolbar-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+        .count-badge, #count, .search-toggle-btn, .sort-shell {
+          background: rgba(10,20,35,.76); border-color: rgba(146,173,211,.28);
+          backdrop-filter: blur(10px); border-radius: 14px;
+        }
+        .map-wrapper { gap: 12px; }
+        .map-stage { border-radius: 24px; border: 1px solid rgba(167,197,235,.24); overflow: hidden; }
+        #map { height: min(47vh, 390px); min-height: 300px; border-radius: 22px; }
+        .map-hud-chip { background: rgba(5,12,23,.78); border-color: rgba(157,193,235,.28); }
+        .map-eval-card {
+          border-radius: 24px; border: 1px solid rgba(162,197,238,.23);
+          background: linear-gradient(180deg, rgba(10,21,39,.9), rgba(7,14,28,.92));
+          box-shadow: 0 16px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04);
+        }
+        .map-eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .map-eval-metric {
+          background: rgba(10,21,38,.62); border: 1px solid rgba(146,173,211,.2); border-radius: 16px;
+        }
+        .map-eval-actions button, .btn-small, .quick-tag-btn, .inline-btn {
+          border-radius: 14px; border-color: rgba(146,173,211,.3);
+          background: rgba(10,21,38,.72);
+        }
+        .map-eval-actions button.primary, .btn-primary {
+          background: linear-gradient(145deg, rgba(155,121,62,.96), rgba(199,160,88,.95));
+          border-color: rgba(226,198,141,.56); color: #231809;
+        }
+        #formContainer, #goldPanel, #settingsPanel, .gem-card, .field-card, #list > li, .item-card {
+          border-radius: 20px;
+          border: 1px solid rgba(151,181,219,.2);
+          background: linear-gradient(180deg, rgba(9,18,33,.86), rgba(8,16,29,.9));
+          box-shadow: 0 14px 32px rgba(0,0,0,.28);
+        }
+        #list { display: grid; gap: 10px; margin-top: 10px; }
+        .item-header { font-size: 15px; }
+        .map-marker {
+          width: 22px; height: 22px; border-radius: 999px;
+          border: 1.5px solid rgba(235,243,255,.85);
+          background: radial-gradient(circle at 35% 35%, #8fc0ff, #2a4e79 68%);
+          box-shadow: 0 0 0 2px rgba(4,9,19,.85), 0 10px 20px rgba(0,0,0,.45);
+        }
+        .map-marker .pin-core { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,250,255,.95);}
+        .marker-free { background: radial-gradient(circle at 35% 35%, #ebcf99, #89672f 68%); }
+        .map-marker.is-user { background: radial-gradient(circle at 35% 35%, #89e0ff, #267492 68%); }
+        .leaflet-control-zoom a, .leaflet-control-layers-toggle, .leaflet-control-scale-line {
+          background: rgba(8,16,30,.84) !important;
+          color: #e6efff !important; border-color: rgba(163,196,235,.28) !important;
+          backdrop-filter: blur(6px);
+        }
+        .mobile-quickbar {
+          background: rgba(8, 16, 30, .9);
+          border-top: 1px solid rgba(160,190,225,.24);
+          backdrop-filter: blur(14px);
+        }
+        .mobile-quickbar button { color: #a9bdd9; }
+        .mobile-quickbar button.active, .mobile-quickbar .quickbar-primary { color: #e9f2ff; }
+
     </style>
 
     <style id="compact-sticky-search-override">
@@ -6575,6 +6685,116 @@
             font-size: 11px !important;
           }
         }
+
+        /* === Premium mobile UI refresh (visual-only overrides) === */
+        :root {
+          --app-bg: #050912;
+          --app-bg-soft: #0a1324;
+          --app-surface: rgba(10, 20, 35, 0.78);
+          --app-surface-elevated: rgba(15, 28, 47, 0.9);
+          --app-surface-panel: rgba(8, 16, 30, 0.92);
+          --border-subtle: rgba(155, 183, 223, 0.24);
+          --border-strong: rgba(162, 197, 238, 0.42);
+          --accent-primary: #67b2ff;
+          --gold-primary: #c8a15a;
+          --text-primary: #eef5ff;
+          --text-secondary: #cad7ea;
+          --text-muted: #8fa3bf;
+        }
+        body {
+          padding: 10px;
+          background:
+            radial-gradient(circle at 12% 2%, rgba(86, 147, 238, 0.28), transparent 42%),
+            radial-gradient(circle at 85% 22%, rgba(61, 95, 156, 0.18), transparent 44%),
+            linear-gradient(180deg, #030712 0%, #060d18 48%, #050a12 100%);
+        }
+        .app-shell {
+          width: min(100%, 440px);
+          border-radius: 30px;
+          border: 1px solid rgba(162, 197, 238, 0.2);
+          background: linear-gradient(180deg, rgba(7,14,27,0.94), rgba(8,16,29,0.9));
+          box-shadow: 0 24px 56px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.06);
+          padding: max(12px, env(safe-area-inset-top)) 12px calc(20px + env(safe-area-inset-bottom));
+        }
+        .header-topbar {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; margin-bottom: 10px;
+        }
+        .title-badge {
+          background: rgba(11, 25, 44, 0.85);
+          border: 1px solid rgba(146,173,211,.42);
+          border-radius: 999px;
+          padding: 8px 14px;
+          font-size: 12px; font-weight: 700; letter-spacing: .01em;
+        }
+        h1 { font-size: 25px; letter-spacing: -.02em; margin: 4px 0 2px; }
+        .header-actions { margin: 8px 0 10px; }
+        .primary-actions { gap: 8px; }
+        #addBtn, #goldGuideBtn, .primary-actions #addBtn, .primary-actions #goldGuideBtn {
+          min-height: 62px; border-radius: 18px; padding: 10px 12px;
+          border: 1px solid rgba(146,173,211,.28); box-shadow: 0 10px 24px rgba(2,6,23,.32);
+        }
+        #addBtn { background: linear-gradient(145deg, rgba(31,74,130,.95), rgba(56,113,184,.95));}
+        #goldGuideBtn { background: linear-gradient(145deg, rgba(76,58,24,.94), rgba(137,101,42,.92));}
+        .hero-btn-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+        .hero-btn-title { font-size: 14px; }
+        .hero-btn-subtitle { font-size: 11px; opacity: .8; }
+        .records-toolbar-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+        .count-badge, #count, .search-toggle-btn, .sort-shell {
+          background: rgba(10,20,35,.76); border-color: rgba(146,173,211,.28);
+          backdrop-filter: blur(10px); border-radius: 14px;
+        }
+        .map-wrapper { gap: 12px; }
+        .map-stage { border-radius: 24px; border: 1px solid rgba(167,197,235,.24); overflow: hidden; }
+        #map { height: min(47vh, 390px); min-height: 300px; border-radius: 22px; }
+        .map-hud-chip { background: rgba(5,12,23,.78); border-color: rgba(157,193,235,.28); }
+        .map-eval-card {
+          border-radius: 24px; border: 1px solid rgba(162,197,238,.23);
+          background: linear-gradient(180deg, rgba(10,21,39,.9), rgba(7,14,28,.92));
+          box-shadow: 0 16px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04);
+        }
+        .map-eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .map-eval-metric {
+          background: rgba(10,21,38,.62); border: 1px solid rgba(146,173,211,.2); border-radius: 16px;
+        }
+        .map-eval-actions button, .btn-small, .quick-tag-btn, .inline-btn {
+          border-radius: 14px; border-color: rgba(146,173,211,.3);
+          background: rgba(10,21,38,.72);
+        }
+        .map-eval-actions button.primary, .btn-primary {
+          background: linear-gradient(145deg, rgba(155,121,62,.96), rgba(199,160,88,.95));
+          border-color: rgba(226,198,141,.56); color: #231809;
+        }
+        #formContainer, #goldPanel, #settingsPanel, .gem-card, .field-card, #list > li, .item-card {
+          border-radius: 20px;
+          border: 1px solid rgba(151,181,219,.2);
+          background: linear-gradient(180deg, rgba(9,18,33,.86), rgba(8,16,29,.9));
+          box-shadow: 0 14px 32px rgba(0,0,0,.28);
+        }
+        #list { display: grid; gap: 10px; margin-top: 10px; }
+        .item-header { font-size: 15px; }
+        .map-marker {
+          width: 22px; height: 22px; border-radius: 999px;
+          border: 1.5px solid rgba(235,243,255,.85);
+          background: radial-gradient(circle at 35% 35%, #8fc0ff, #2a4e79 68%);
+          box-shadow: 0 0 0 2px rgba(4,9,19,.85), 0 10px 20px rgba(0,0,0,.45);
+        }
+        .map-marker .pin-core { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,250,255,.95);}
+        .marker-free { background: radial-gradient(circle at 35% 35%, #ebcf99, #89672f 68%); }
+        .map-marker.is-user { background: radial-gradient(circle at 35% 35%, #89e0ff, #267492 68%); }
+        .leaflet-control-zoom a, .leaflet-control-layers-toggle, .leaflet-control-scale-line {
+          background: rgba(8,16,30,.84) !important;
+          color: #e6efff !important; border-color: rgba(163,196,235,.28) !important;
+          backdrop-filter: blur(6px);
+        }
+        .mobile-quickbar {
+          background: rgba(8, 16, 30, .9);
+          border-top: 1px solid rgba(160,190,225,.24);
+          backdrop-filter: blur(14px);
+        }
+        .mobile-quickbar button { color: #a9bdd9; }
+        .mobile-quickbar button.active, .mobile-quickbar .quickbar-primary { color: #e9f2ff; }
+
     </style>
 
 
@@ -6724,6 +6944,116 @@
             font-size: 12.5px;
           }
         }
+
+        /* === Premium mobile UI refresh (visual-only overrides) === */
+        :root {
+          --app-bg: #050912;
+          --app-bg-soft: #0a1324;
+          --app-surface: rgba(10, 20, 35, 0.78);
+          --app-surface-elevated: rgba(15, 28, 47, 0.9);
+          --app-surface-panel: rgba(8, 16, 30, 0.92);
+          --border-subtle: rgba(155, 183, 223, 0.24);
+          --border-strong: rgba(162, 197, 238, 0.42);
+          --accent-primary: #67b2ff;
+          --gold-primary: #c8a15a;
+          --text-primary: #eef5ff;
+          --text-secondary: #cad7ea;
+          --text-muted: #8fa3bf;
+        }
+        body {
+          padding: 10px;
+          background:
+            radial-gradient(circle at 12% 2%, rgba(86, 147, 238, 0.28), transparent 42%),
+            radial-gradient(circle at 85% 22%, rgba(61, 95, 156, 0.18), transparent 44%),
+            linear-gradient(180deg, #030712 0%, #060d18 48%, #050a12 100%);
+        }
+        .app-shell {
+          width: min(100%, 440px);
+          border-radius: 30px;
+          border: 1px solid rgba(162, 197, 238, 0.2);
+          background: linear-gradient(180deg, rgba(7,14,27,0.94), rgba(8,16,29,0.9));
+          box-shadow: 0 24px 56px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.06);
+          padding: max(12px, env(safe-area-inset-top)) 12px calc(20px + env(safe-area-inset-bottom));
+        }
+        .header-topbar {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; margin-bottom: 10px;
+        }
+        .title-badge {
+          background: rgba(11, 25, 44, 0.85);
+          border: 1px solid rgba(146,173,211,.42);
+          border-radius: 999px;
+          padding: 8px 14px;
+          font-size: 12px; font-weight: 700; letter-spacing: .01em;
+        }
+        h1 { font-size: 25px; letter-spacing: -.02em; margin: 4px 0 2px; }
+        .header-actions { margin: 8px 0 10px; }
+        .primary-actions { gap: 8px; }
+        #addBtn, #goldGuideBtn, .primary-actions #addBtn, .primary-actions #goldGuideBtn {
+          min-height: 62px; border-radius: 18px; padding: 10px 12px;
+          border: 1px solid rgba(146,173,211,.28); box-shadow: 0 10px 24px rgba(2,6,23,.32);
+        }
+        #addBtn { background: linear-gradient(145deg, rgba(31,74,130,.95), rgba(56,113,184,.95));}
+        #goldGuideBtn { background: linear-gradient(145deg, rgba(76,58,24,.94), rgba(137,101,42,.92));}
+        .hero-btn-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+        .hero-btn-title { font-size: 14px; }
+        .hero-btn-subtitle { font-size: 11px; opacity: .8; }
+        .records-toolbar-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+        .count-badge, #count, .search-toggle-btn, .sort-shell {
+          background: rgba(10,20,35,.76); border-color: rgba(146,173,211,.28);
+          backdrop-filter: blur(10px); border-radius: 14px;
+        }
+        .map-wrapper { gap: 12px; }
+        .map-stage { border-radius: 24px; border: 1px solid rgba(167,197,235,.24); overflow: hidden; }
+        #map { height: min(47vh, 390px); min-height: 300px; border-radius: 22px; }
+        .map-hud-chip { background: rgba(5,12,23,.78); border-color: rgba(157,193,235,.28); }
+        .map-eval-card {
+          border-radius: 24px; border: 1px solid rgba(162,197,238,.23);
+          background: linear-gradient(180deg, rgba(10,21,39,.9), rgba(7,14,28,.92));
+          box-shadow: 0 16px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04);
+        }
+        .map-eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .map-eval-metric {
+          background: rgba(10,21,38,.62); border: 1px solid rgba(146,173,211,.2); border-radius: 16px;
+        }
+        .map-eval-actions button, .btn-small, .quick-tag-btn, .inline-btn {
+          border-radius: 14px; border-color: rgba(146,173,211,.3);
+          background: rgba(10,21,38,.72);
+        }
+        .map-eval-actions button.primary, .btn-primary {
+          background: linear-gradient(145deg, rgba(155,121,62,.96), rgba(199,160,88,.95));
+          border-color: rgba(226,198,141,.56); color: #231809;
+        }
+        #formContainer, #goldPanel, #settingsPanel, .gem-card, .field-card, #list > li, .item-card {
+          border-radius: 20px;
+          border: 1px solid rgba(151,181,219,.2);
+          background: linear-gradient(180deg, rgba(9,18,33,.86), rgba(8,16,29,.9));
+          box-shadow: 0 14px 32px rgba(0,0,0,.28);
+        }
+        #list { display: grid; gap: 10px; margin-top: 10px; }
+        .item-header { font-size: 15px; }
+        .map-marker {
+          width: 22px; height: 22px; border-radius: 999px;
+          border: 1.5px solid rgba(235,243,255,.85);
+          background: radial-gradient(circle at 35% 35%, #8fc0ff, #2a4e79 68%);
+          box-shadow: 0 0 0 2px rgba(4,9,19,.85), 0 10px 20px rgba(0,0,0,.45);
+        }
+        .map-marker .pin-core { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,250,255,.95);}
+        .marker-free { background: radial-gradient(circle at 35% 35%, #ebcf99, #89672f 68%); }
+        .map-marker.is-user { background: radial-gradient(circle at 35% 35%, #89e0ff, #267492 68%); }
+        .leaflet-control-zoom a, .leaflet-control-layers-toggle, .leaflet-control-scale-line {
+          background: rgba(8,16,30,.84) !important;
+          color: #e6efff !important; border-color: rgba(163,196,235,.28) !important;
+          backdrop-filter: blur(6px);
+        }
+        .mobile-quickbar {
+          background: rgba(8, 16, 30, .9);
+          border-top: 1px solid rgba(160,190,225,.24);
+          backdrop-filter: blur(14px);
+        }
+        .mobile-quickbar button { color: #a9bdd9; }
+        .mobile-quickbar button.active, .mobile-quickbar .quickbar-primary { color: #e9f2ff; }
+
     </style>
 
 
@@ -6840,6 +7170,116 @@
         padding: 4px 8px !important;
       }
     }
+
+        /* === Premium mobile UI refresh (visual-only overrides) === */
+        :root {
+          --app-bg: #050912;
+          --app-bg-soft: #0a1324;
+          --app-surface: rgba(10, 20, 35, 0.78);
+          --app-surface-elevated: rgba(15, 28, 47, 0.9);
+          --app-surface-panel: rgba(8, 16, 30, 0.92);
+          --border-subtle: rgba(155, 183, 223, 0.24);
+          --border-strong: rgba(162, 197, 238, 0.42);
+          --accent-primary: #67b2ff;
+          --gold-primary: #c8a15a;
+          --text-primary: #eef5ff;
+          --text-secondary: #cad7ea;
+          --text-muted: #8fa3bf;
+        }
+        body {
+          padding: 10px;
+          background:
+            radial-gradient(circle at 12% 2%, rgba(86, 147, 238, 0.28), transparent 42%),
+            radial-gradient(circle at 85% 22%, rgba(61, 95, 156, 0.18), transparent 44%),
+            linear-gradient(180deg, #030712 0%, #060d18 48%, #050a12 100%);
+        }
+        .app-shell {
+          width: min(100%, 440px);
+          border-radius: 30px;
+          border: 1px solid rgba(162, 197, 238, 0.2);
+          background: linear-gradient(180deg, rgba(7,14,27,0.94), rgba(8,16,29,0.9));
+          box-shadow: 0 24px 56px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.06);
+          padding: max(12px, env(safe-area-inset-top)) 12px calc(20px + env(safe-area-inset-bottom));
+        }
+        .header-topbar {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; margin-bottom: 10px;
+        }
+        .title-badge {
+          background: rgba(11, 25, 44, 0.85);
+          border: 1px solid rgba(146,173,211,.42);
+          border-radius: 999px;
+          padding: 8px 14px;
+          font-size: 12px; font-weight: 700; letter-spacing: .01em;
+        }
+        h1 { font-size: 25px; letter-spacing: -.02em; margin: 4px 0 2px; }
+        .header-actions { margin: 8px 0 10px; }
+        .primary-actions { gap: 8px; }
+        #addBtn, #goldGuideBtn, .primary-actions #addBtn, .primary-actions #goldGuideBtn {
+          min-height: 62px; border-radius: 18px; padding: 10px 12px;
+          border: 1px solid rgba(146,173,211,.28); box-shadow: 0 10px 24px rgba(2,6,23,.32);
+        }
+        #addBtn { background: linear-gradient(145deg, rgba(31,74,130,.95), rgba(56,113,184,.95));}
+        #goldGuideBtn { background: linear-gradient(145deg, rgba(76,58,24,.94), rgba(137,101,42,.92));}
+        .hero-btn-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+        .hero-btn-title { font-size: 14px; }
+        .hero-btn-subtitle { font-size: 11px; opacity: .8; }
+        .records-toolbar-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+        .count-badge, #count, .search-toggle-btn, .sort-shell {
+          background: rgba(10,20,35,.76); border-color: rgba(146,173,211,.28);
+          backdrop-filter: blur(10px); border-radius: 14px;
+        }
+        .map-wrapper { gap: 12px; }
+        .map-stage { border-radius: 24px; border: 1px solid rgba(167,197,235,.24); overflow: hidden; }
+        #map { height: min(47vh, 390px); min-height: 300px; border-radius: 22px; }
+        .map-hud-chip { background: rgba(5,12,23,.78); border-color: rgba(157,193,235,.28); }
+        .map-eval-card {
+          border-radius: 24px; border: 1px solid rgba(162,197,238,.23);
+          background: linear-gradient(180deg, rgba(10,21,39,.9), rgba(7,14,28,.92));
+          box-shadow: 0 16px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04);
+        }
+        .map-eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .map-eval-metric {
+          background: rgba(10,21,38,.62); border: 1px solid rgba(146,173,211,.2); border-radius: 16px;
+        }
+        .map-eval-actions button, .btn-small, .quick-tag-btn, .inline-btn {
+          border-radius: 14px; border-color: rgba(146,173,211,.3);
+          background: rgba(10,21,38,.72);
+        }
+        .map-eval-actions button.primary, .btn-primary {
+          background: linear-gradient(145deg, rgba(155,121,62,.96), rgba(199,160,88,.95));
+          border-color: rgba(226,198,141,.56); color: #231809;
+        }
+        #formContainer, #goldPanel, #settingsPanel, .gem-card, .field-card, #list > li, .item-card {
+          border-radius: 20px;
+          border: 1px solid rgba(151,181,219,.2);
+          background: linear-gradient(180deg, rgba(9,18,33,.86), rgba(8,16,29,.9));
+          box-shadow: 0 14px 32px rgba(0,0,0,.28);
+        }
+        #list { display: grid; gap: 10px; margin-top: 10px; }
+        .item-header { font-size: 15px; }
+        .map-marker {
+          width: 22px; height: 22px; border-radius: 999px;
+          border: 1.5px solid rgba(235,243,255,.85);
+          background: radial-gradient(circle at 35% 35%, #8fc0ff, #2a4e79 68%);
+          box-shadow: 0 0 0 2px rgba(4,9,19,.85), 0 10px 20px rgba(0,0,0,.45);
+        }
+        .map-marker .pin-core { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,250,255,.95);}
+        .marker-free { background: radial-gradient(circle at 35% 35%, #ebcf99, #89672f 68%); }
+        .map-marker.is-user { background: radial-gradient(circle at 35% 35%, #89e0ff, #267492 68%); }
+        .leaflet-control-zoom a, .leaflet-control-layers-toggle, .leaflet-control-scale-line {
+          background: rgba(8,16,30,.84) !important;
+          color: #e6efff !important; border-color: rgba(163,196,235,.28) !important;
+          backdrop-filter: blur(6px);
+        }
+        .mobile-quickbar {
+          background: rgba(8, 16, 30, .9);
+          border-top: 1px solid rgba(160,190,225,.24);
+          backdrop-filter: blur(14px);
+        }
+        .mobile-quickbar button { color: #a9bdd9; }
+        .mobile-quickbar button.active, .mobile-quickbar .quickbar-primary { color: #e9f2ff; }
+
     </style>
 
 
@@ -7265,6 +7705,116 @@
             flex: 1 1 100% !important;
           }
         }
+
+        /* === Premium mobile UI refresh (visual-only overrides) === */
+        :root {
+          --app-bg: #050912;
+          --app-bg-soft: #0a1324;
+          --app-surface: rgba(10, 20, 35, 0.78);
+          --app-surface-elevated: rgba(15, 28, 47, 0.9);
+          --app-surface-panel: rgba(8, 16, 30, 0.92);
+          --border-subtle: rgba(155, 183, 223, 0.24);
+          --border-strong: rgba(162, 197, 238, 0.42);
+          --accent-primary: #67b2ff;
+          --gold-primary: #c8a15a;
+          --text-primary: #eef5ff;
+          --text-secondary: #cad7ea;
+          --text-muted: #8fa3bf;
+        }
+        body {
+          padding: 10px;
+          background:
+            radial-gradient(circle at 12% 2%, rgba(86, 147, 238, 0.28), transparent 42%),
+            radial-gradient(circle at 85% 22%, rgba(61, 95, 156, 0.18), transparent 44%),
+            linear-gradient(180deg, #030712 0%, #060d18 48%, #050a12 100%);
+        }
+        .app-shell {
+          width: min(100%, 440px);
+          border-radius: 30px;
+          border: 1px solid rgba(162, 197, 238, 0.2);
+          background: linear-gradient(180deg, rgba(7,14,27,0.94), rgba(8,16,29,0.9));
+          box-shadow: 0 24px 56px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.06);
+          padding: max(12px, env(safe-area-inset-top)) 12px calc(20px + env(safe-area-inset-bottom));
+        }
+        .header-topbar {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; margin-bottom: 10px;
+        }
+        .title-badge {
+          background: rgba(11, 25, 44, 0.85);
+          border: 1px solid rgba(146,173,211,.42);
+          border-radius: 999px;
+          padding: 8px 14px;
+          font-size: 12px; font-weight: 700; letter-spacing: .01em;
+        }
+        h1 { font-size: 25px; letter-spacing: -.02em; margin: 4px 0 2px; }
+        .header-actions { margin: 8px 0 10px; }
+        .primary-actions { gap: 8px; }
+        #addBtn, #goldGuideBtn, .primary-actions #addBtn, .primary-actions #goldGuideBtn {
+          min-height: 62px; border-radius: 18px; padding: 10px 12px;
+          border: 1px solid rgba(146,173,211,.28); box-shadow: 0 10px 24px rgba(2,6,23,.32);
+        }
+        #addBtn { background: linear-gradient(145deg, rgba(31,74,130,.95), rgba(56,113,184,.95));}
+        #goldGuideBtn { background: linear-gradient(145deg, rgba(76,58,24,.94), rgba(137,101,42,.92));}
+        .hero-btn-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+        .hero-btn-title { font-size: 14px; }
+        .hero-btn-subtitle { font-size: 11px; opacity: .8; }
+        .records-toolbar-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+        .count-badge, #count, .search-toggle-btn, .sort-shell {
+          background: rgba(10,20,35,.76); border-color: rgba(146,173,211,.28);
+          backdrop-filter: blur(10px); border-radius: 14px;
+        }
+        .map-wrapper { gap: 12px; }
+        .map-stage { border-radius: 24px; border: 1px solid rgba(167,197,235,.24); overflow: hidden; }
+        #map { height: min(47vh, 390px); min-height: 300px; border-radius: 22px; }
+        .map-hud-chip { background: rgba(5,12,23,.78); border-color: rgba(157,193,235,.28); }
+        .map-eval-card {
+          border-radius: 24px; border: 1px solid rgba(162,197,238,.23);
+          background: linear-gradient(180deg, rgba(10,21,39,.9), rgba(7,14,28,.92));
+          box-shadow: 0 16px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04);
+        }
+        .map-eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .map-eval-metric {
+          background: rgba(10,21,38,.62); border: 1px solid rgba(146,173,211,.2); border-radius: 16px;
+        }
+        .map-eval-actions button, .btn-small, .quick-tag-btn, .inline-btn {
+          border-radius: 14px; border-color: rgba(146,173,211,.3);
+          background: rgba(10,21,38,.72);
+        }
+        .map-eval-actions button.primary, .btn-primary {
+          background: linear-gradient(145deg, rgba(155,121,62,.96), rgba(199,160,88,.95));
+          border-color: rgba(226,198,141,.56); color: #231809;
+        }
+        #formContainer, #goldPanel, #settingsPanel, .gem-card, .field-card, #list > li, .item-card {
+          border-radius: 20px;
+          border: 1px solid rgba(151,181,219,.2);
+          background: linear-gradient(180deg, rgba(9,18,33,.86), rgba(8,16,29,.9));
+          box-shadow: 0 14px 32px rgba(0,0,0,.28);
+        }
+        #list { display: grid; gap: 10px; margin-top: 10px; }
+        .item-header { font-size: 15px; }
+        .map-marker {
+          width: 22px; height: 22px; border-radius: 999px;
+          border: 1.5px solid rgba(235,243,255,.85);
+          background: radial-gradient(circle at 35% 35%, #8fc0ff, #2a4e79 68%);
+          box-shadow: 0 0 0 2px rgba(4,9,19,.85), 0 10px 20px rgba(0,0,0,.45);
+        }
+        .map-marker .pin-core { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,250,255,.95);}
+        .marker-free { background: radial-gradient(circle at 35% 35%, #ebcf99, #89672f 68%); }
+        .map-marker.is-user { background: radial-gradient(circle at 35% 35%, #89e0ff, #267492 68%); }
+        .leaflet-control-zoom a, .leaflet-control-layers-toggle, .leaflet-control-scale-line {
+          background: rgba(8,16,30,.84) !important;
+          color: #e6efff !important; border-color: rgba(163,196,235,.28) !important;
+          backdrop-filter: blur(6px);
+        }
+        .mobile-quickbar {
+          background: rgba(8, 16, 30, .9);
+          border-top: 1px solid rgba(160,190,225,.24);
+          backdrop-filter: blur(14px);
+        }
+        .mobile-quickbar button { color: #a9bdd9; }
+        .mobile-quickbar button.active, .mobile-quickbar .quickbar-primary { color: #e9f2ff; }
+
     </style>
 
 </head>
@@ -7272,13 +7822,13 @@
 
 <div id="splashScreen" class="splash-screen" aria-hidden="true">
     <div class="splash-card">
-        <div class="splash-icon">🧭</div>
+        <div class="splash-icon">⌖</div>
         <div class="splash-title">Alan Defteri</div>
         <div class="splash-subtitle">Harita, saha notu ve işaret yönetimi</div>
     </div>
 </div>
 
-<!-- ✅ Toast -->
+<!-- ✓ Toast -->
 <div id="toast"></div>
 
 <div id="confirmSheet" class="confirm-sheet" aria-hidden="true">
@@ -7356,12 +7906,12 @@
             </div>
         </div>
         <div class="spot-detail-actions">
-            <button type="button" id="spotDetailVisitBtn" class="btn-small main">✅ Ziyaret ekle</button>
-            <button type="button" id="spotDetailFocusBtn" class="btn-small">🗺️ Haritada aç</button>
-            <button type="button" id="spotDetailRouteBtn" class="btn-small">🧭 Yol tarifi</button>
-            <button type="button" id="spotDetailCopyBtn" class="btn-small">📋 Konumu kopyala</button>
-            <button type="button" id="spotDetailEditBtn" class="btn-small">✏️ Düzenle</button>
-            <button type="button" id="spotDetailDeleteBtn" class="btn-small danger">🗑 Sil</button>
+            <button type="button" id="spotDetailVisitBtn" class="btn-small main">✓ Ziyaret ekle</button>
+            <button type="button" id="spotDetailFocusBtn" class="btn-small">◧ Haritada aç</button>
+            <button type="button" id="spotDetailRouteBtn" class="btn-small">⌖ Yol tarifi</button>
+            <button type="button" id="spotDetailCopyBtn" class="btn-small">⎘ Konumu kopyala</button>
+            <button type="button" id="spotDetailEditBtn" class="btn-small">✎ Düzenle</button>
+            <button type="button" id="spotDetailDeleteBtn" class="btn-small danger">✕ Sil</button>
         </div>
     </div>
 </div>
@@ -7374,7 +7924,7 @@
             <div class="header-topbar">
                 <div class="header-brand">
                     <div class="title-badge">
-                        <span>🧭</span>
+                        <span>⌖</span>
                         <span>Alan Defteri</span>
                     </div>
                 </div>
@@ -7409,13 +7959,13 @@
             <div class="records-toolbar-top">
                 <div id="count" class="count-badge">0 nokta</div>
                 <button type="button" id="searchToggleBtn" class="search-toggle-btn" aria-expanded="false" aria-controls="recordsSearchPanel">
-                    <span class="search-toggle-icon">🔎</span>
+                    <span class="search-toggle-icon">⌕</span>
                     <span class="search-toggle-text">Ara</span>
                 </button>
             </div>
             <div id="recordsSearchPanel" class="records-search-panel" hidden>
                 <div class="search-shell compact-search-shell">
-                    <span class="search-icon">🔎</span>
+                    <span class="search-icon">⌕</span>
                     <input id="searchInput" placeholder="Başlık veya bölge notu içinde ara..." />
                 </div>
             </div>
@@ -7425,7 +7975,7 @@
         <div id="goldPanel">
             <div class="gallery-header">
                 <div class="gallery-title">
-                    <span class="icon">🏞️</span>
+                    <span class="icon">◫</span>
                     <span>Altın tozu rehberi</span>
                 </div>
                 <button id="goldCloseBtn">Kapat</button>
@@ -7444,7 +7994,7 @@
             </div>
 
             <div class="guide-howto compact-guide">
-                <div class="guide-howto-title">🧭 Kısa kullanım</div>
+                <div class="guide-howto-title">⌖ Kısa kullanım</div>
                 <ol class="guide-howto-list compact-guide-list">
                     <li>Haritada dereye yaklaş. <strong>Zoom 12+</strong>, küçük kollar için <strong>14+</strong> daha iyi çalışır.</li>
                     <li><strong>Mavi dere/nehir çizgisine dokun.</strong> Sistem eğim ve açık veriye göre kısa analiz çıkarır.</li>
@@ -7459,8 +8009,8 @@
                 </div>
 
                 <div class="gold-toolbar">
-                    <button id="goldReloadWaterBtn" class="btn-small main" type="button">🌊 Akar suları yenile</button>
-                    <button id="goldBgToggleBtn" class="btn-small" type="button">🛰 Arka plan: Açık</button>
+                    <button id="goldReloadWaterBtn" class="btn-small main" type="button">≈ Akar suları yenile</button>
+                    <button id="goldBgToggleBtn" class="btn-small" type="button">◍ Arka plan: Açık</button>
                     <button id="goldMicroToggleBtn" class="btn-small" type="button">🧵 Mikro dereler: Açık</button>
                     <span id="goldStatus" class="gold-toolbar-status">Hazır</span>
                 </div>
@@ -7548,7 +8098,7 @@
                 Burada dil seçimi, veri saklama ve kısa kullanım notlarını görebilirsin.
             </div>
 
-            <div class="gallery-section-title" id="i18nTitle">🌍 0) Dil / Language</div>
+            <div class="gallery-section-title" id="i18nTitle">◎ 0) Dil / Language</div>
             <div class="gem-card">
                 <div class="gem-desc" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     <label for="langSelect" style="margin:0; font-size:12px; color:#9ca3af;"><span id="settingsLangLabel">Dil / Language</span></label>
@@ -7587,20 +8137,20 @@
                     <input id="authPassword" type="password" placeholder="Şifre" autocomplete="current-password" style="min-height:44px; border-radius:12px; border:1px solid var(--border-subtle); background:rgba(10,18,34,0.72); color:var(--text-primary); padding:0 12px;" />
                 </div>
                 <div class="settings-data-actions">
-                    <button type="button" id="authRegisterBtn"><span class="icon">🆕</span><span>Kayıt ol</span></button>
-                    <button type="button" id="authLoginBtn"><span class="icon">🔑</span><span>Giriş yap</span></button>
-                    <button type="button" id="authLogoutBtn"><span class="icon">🚪</span><span>Çıkış yap</span></button>
-                    <button type="button" id="syncNowBtn"><span class="icon">🔄</span><span>Şimdi senkronize et</span></button>
+                    <button type="button" id="authRegisterBtn"><span class="icon">＋</span><span>Kayıt ol</span></button>
+                    <button type="button" id="authLoginBtn"><span class="icon">◇</span><span>Giriş yap</span></button>
+                    <button type="button" id="authLogoutBtn"><span class="icon">↗</span><span>Çıkış yap</span></button>
+                    <button type="button" id="syncNowBtn"><span class="icon">↻</span><span>Şimdi senkronize et</span></button>
                 </div>
             </div>
 
-            <div class="gallery-section-title" id="settingsSec2Title">🗺️ 2) Nokta ekleme akışı</div>
+            <div class="gallery-section-title" id="settingsSec2Title">◧ 2) Nokta ekleme akışı</div>
             <div class="gem-card">
                 <div class="gem-desc" id="settingsSec2Body">
                     1. <strong>"Yeni nokta ekle"</strong> butonuna bas.<br/>
                     2. Başlık gir ve haritada yer seç.<br/>
                     3. Koordinat otomatik dolsun.<br/>
-                    4. İstersen <strong>"📍 Konumdan tarih özeti oluştur"</strong> ile kısa bağlam ekle.<br/>
+                    4. İstersen <strong>"◎ Konumdan tarih özeti oluştur"</strong> ile kısa bağlam ekle.<br/>
                     5. Kaydettiğinde nokta listede ve haritada görünür.
                 </div>
             </div>
@@ -7610,8 +8160,8 @@
                 <div class="gem-desc" id="settingsSec3Body">
                     • <strong>"📌 İşaret koyma"</strong> açıkken haritaya dokununca geçici pin eklenir.<br/>
                     • Bu işaretler kayıtlı noktalardan ayrıdır; hızlı referans içindir.<br/>
-                    • <strong>"🧹 İşaretleri temizle"</strong> ile hepsini silebilirsin.<br/>
-                    • <strong>"📍 Buradayım"</strong> ile kendi konumuna hızlıca gidebilirsin.
+                    • <strong>"◌ İşaretleri temizle"</strong> ile hepsini silebilirsin.<br/>
+                    • <strong>"◎ Buradayım"</strong> ile kendi konumuna hızlıca gidebilirsin.
                 </div>
             </div>
 
@@ -7633,15 +8183,15 @@
                     • <strong>Noktaları içe aktar</strong> ile kayıtlarını başka cihaza taşıyabilirsin.
                 </div>
                 <div class="settings-data-actions">
-                    <button type="button" id="exportBtn"><span class="icon">⬇️</span><span>Yedeği indir</span></button>
-                    <button type="button" id="importBtn"><span class="icon">⬆️</span><span>Yedek yükle</span></button>
+                    <button type="button" id="exportBtn"><span class="icon">↓</span><span>Yedeği indir</span></button>
+                    <button type="button" id="importBtn"><span class="icon">↑</span><span>Yedek yükle</span></button>
                 </div>
                 <input id="importFile" type="file" accept="application/json" hidden />
             </div>
 
             <div class="gallery-sub" style="margin-top:8px;">
                 ℹ️ Bu panel kısa kullanım ve veri bilgileri içindir.
-                <div class="gallery-section-title">🛡️ 5) Tarih verisi doğrulama durumu</div>
+                <div class="gallery-section-title">◍ 5) Tarih verisi doğrulama durumu</div>
                 <div class="verify-card" id="historyVerifyCard">
                     <div class="verify-meta">
                         İl ve ilçe özetleri uygulama içine yerel veri olarak eklendi. Canlı resmî metin tek tek doğrulanmadan bu alanlar <strong>taslak</strong> kabul edilir.
@@ -7650,7 +8200,7 @@
                     <div class="verify-meta" id="historyVerifySummary"></div>
                     <div class="verify-next" id="historyVerifyNext"></div>
                     <div class="verify-priority-wrap">
-                        <div class="verify-priority-title">🎯 İlk sağlamlaştırma paketi</div>
+                        <div class="verify-priority-title">◉ İlk sağlamlaştırma paketi</div>
                         <div class="verify-priority-list" id="historyVerifyPriorityList"></div>
                     </div>
                 </div>
@@ -7705,10 +8255,10 @@
                     <div class="field-help">Taş, dere yatağı veya genel alan fotoğrafını kayda ekleyebilirsin. Fotoğraflar cihazda küçültülerek saklanır.</div>
                     <input id="photoInput" type="file" accept="image/*" capture="environment" multiple hidden />
                     <div class="photo-upload-row">
-                        <button type="button" id="photoPickBtn" class="photo-upload-trigger">📷 Fotoğraf seç / çek</button>
-                        <button type="button" id="photoClearBtn" class="photo-clear-btn">🧹 Fotoğrafları temizle</button>
+                        <button type="button" id="photoPickBtn" class="photo-upload-trigger">◉ Fotoğraf seç / çek</button>
+                        <button type="button" id="photoClearBtn" class="photo-clear-btn">◌ Fotoğrafları temizle</button>
                     </div>
-                    <div id="photoCountChip" class="photo-count-chip" style="display:none;">📸 0/4 fotoğraf eklendi</div>
+                    <div id="photoCountChip" class="photo-count-chip" style="display:none;">◉ 0/4 fotoğraf eklendi</div>
                     <div id="formPhotoPreview" class="photo-preview-grid"></div>
                     <div class="photo-upload-note">Öneri: En iyi sonuç için yakın plan taş, su hattı ve genel alan olmak üzere 2-3 fotoğraf yeterli olur.</div>
                 </div>
@@ -7716,7 +8266,7 @@
                     <div class="field-top">
                         <label for="historicalNote">
                             Bölge notu
-                            <button type="button" id="autoHistoryBtn" class="inline-btn">📍 Konumdan tarih özeti oluştur</button>
+                            <button type="button" id="autoHistoryBtn" class="inline-btn">◎ Konumdan tarih özeti oluştur</button>
                         </label>
                     </div>
                     <div class="field-help">Kısa bir not yazabilir ya da otomatik oluştur ile kısa bağlam ekleyebilirsin.</div>
@@ -7756,7 +8306,7 @@
                         </div>
 
                         <div class="history-gem-box">
-                            <div class="history-gem-title">💎 Bölgesel taş sinyali</div>
+                            <div class="history-gem-title">◈ Bölgesel taş sinyali</div>
                             <div id="historyGemText" class="history-gem-text">Bölgesel taş sinyali burada görünür.</div>
                         </div>
 
@@ -7798,7 +8348,7 @@
                 </div>
                 <div class="analysis-usage-actions">
                     <div id="analysisUsagePill" class="analysis-usage-pill">10 hak kaldı</div>
-                    <button type="button" id="analysisAdBtn" class="analysis-usage-btn ad">🎬 Reklam</button>
+                    <button type="button" id="analysisAdBtn" class="analysis-usage-btn ad">▶ Reklam</button>
                     <button type="button" id="analysisPremiumBtn" class="analysis-usage-btn">Premium</button>
                 </div>
             </div>
@@ -7847,10 +8397,10 @@
                 <div id="mapEvalFootnote" class="map-eval-sub">Bu kart kısa ön değerlendirme gösterir.</div>
 
                 <div class="map-eval-actions">
-                    <button type="button" id="mapEvalSaveBtn" class="primary">📝 Kayda başla</button>
-                    <button type="button" id="mapEvalRouteBtn" class="ghost">🧭 Yol tarifi</button>
-                    <button type="button" id="mapEvalOpenBtn" class="ghost">🗺️ Haritada aç</button>
-                    <button type="button" id="mapEvalCopyBtn" class="ghost">📋 Koordinatı kopyala</button>
+                    <button type="button" id="mapEvalSaveBtn" class="primary">▣ Kayda başla</button>
+                    <button type="button" id="mapEvalRouteBtn" class="ghost">⌖ Yol tarifi</button>
+                    <button type="button" id="mapEvalOpenBtn" class="ghost">◧ Haritada aç</button>
+                    <button type="button" id="mapEvalCopyBtn" class="ghost">⎘ Koordinatı kopyala</button>
                     <button type="button" id="mapEvalCloseBtn" class="ghost">Kapat</button>
                 </div>
             </div>
@@ -7861,16 +8411,16 @@
                     📌 İşaret koyma: Kapalı
                 </button>
                 <button type="button" id="clearMarksBtn" class="btn-small danger">
-                    🧹 İşaretleri temizle
+                    ◌ İşaretleri temizle
                 </button>
                 <button type="button" id="locateBtn" class="btn-small">
-                    📍 Buradayım
+                    ◎ Buradayım
                 </button>
             </div>
 
             <div class="map-tools secondary">
-                <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
-                <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
+                <button type="button" id="fitAllBtn" class="btn-small">⌖ Tüm noktaları göster</button>
+                <button type="button" id="focusMapBtn" class="btn-small">▭ Haritayı büyüt</button>
             </div>
 
             <div id="coordBar">İmleç: –</div>
@@ -7881,11 +8431,11 @@
 </div>
 
 <div class="mobile-quickbar" id="mobileQuickbar" aria-label="Hızlı gezinme">
-    <button type="button" data-quickbar-action="home" class="active"><span>🏠</span><small>Ana</small></button>
-    <button type="button" data-quickbar-action="map"><span>🗺️</span><small>Harita</small></button>
+    <button type="button" data-quickbar-action="home" class="active"><span>◩</span><small>Ana</small></button>
+    <button type="button" data-quickbar-action="map"><span>◧</span><small>Harita</small></button>
     <button type="button" data-quickbar-action="add" class="quickbar-primary"><span>＋</span><small>Yeni</small></button>
     <button type="button" data-quickbar-action="guide"><span>✦</span><small>Analiz</small></button>
-    <button type="button" data-quickbar-action="records"><span>📍</span><small>Kayıtlar</small></button>
+    <button type="button" data-quickbar-action="records"><span>◎</span><small>Kayıtlar</small></button>
 </div>
 
 
@@ -7896,11 +8446,11 @@
     const SYNC_RETRY_BASE_MS = 1400;
 
 
-    // ✅ Otomatik tarih metni sınırı
+    // ✓ Otomatik tarih metni sınırı
     const HISTORY_MAX_CHARS = 8000;
     let lastAutoHistoryPreview = { text: "", data: null };
 
-    // 🌍 i18n (multi-language) — sales-ready
+    // ◎ i18n (multi-language) — sales-ready
     const LANG_STORAGE_KEY = "arazi_lang";
 
     const I18N_STRINGS = {
@@ -7934,23 +8484,23 @@
         layersClose: "🗂 Close layers",
         markModeOn: "📌 Mark mode: On",
         markModeOff: "📌 Mark mode: Off",
-        clearMarks: "🧹 Clear marks",
-        locateMe: "📍 Locate me",
+        clearMarks: "◌ Clear marks",
+        locateMe: "◎ Locate me",
         cursor: "Cursor: –",
-        seePhotos: "📷 View photos",
+        seePhotos: "◉ View photos",
         microOn: "🧵 Micro streams: On",
         microOff: "🧵 Micro streams: Off",
-        bgOn: "🛰 Background: On",
-        bgOff: "🛰 Background: Off",
+        bgOn: "◍ Background: On",
+        bgOff: "◍ Background: Off",
         historyPh: "Write a short note or create one from the selected location.",
         noResults: "No records match your search.",
         noRecords: "No records yet. Start with 'Add new point'.",
         noTitle: "(No title)",
         pointDefault: "Point",
-        visitBtn: "✅ Save visit",
-        openMapBtn: "🗺️ Open in Maps",
-        editBtn: "✏️ Edit",
-        deleteBtn: "🗑 Delete",
+        visitBtn: "✓ Save visit",
+        openMapBtn: "◧ Open in Maps",
+        editBtn: "✎ Edit",
+        deleteBtn: "✕ Delete",
         firstRecord: "First saved: {date}",
         lastVisitNever: "Last visit: —",
         lastVisit: "Last visit: {date}",
@@ -8016,14 +8566,14 @@
         layersClose: "🗂 Close layers",
         markModeOn: "📌 Mark mode: On",
         markModeOff: "📌 Mark mode: Off",
-        clearMarks: "🧹 Clear markers",
-        locateMe: "📍 Locate me",
+        clearMarks: "◌ Clear markers",
+        locateMe: "◎ Locate me",
         cursor: "Cursor",
         microOn: "🧵 Micro streams: On",
         microOff: "🧵 Micro streams: Off",
-        bgOn: "🛰 Background: On",
-        bgOff: "🛰 Background: Off",
-        seePhotos: "📷 See photos",
+        bgOn: "◍ Background: On",
+        bgOff: "◍ Background: Off",
+        seePhotos: "◉ See photos",
         nameLabel: "Title *",
         typeLabel: "Type",
         chanceLabel: "Confidence",
@@ -8041,8 +8591,8 @@
         mapLabel: "Map tools",
         markModeOff: "📌 Mark mode: Off",
         markModeOn: "📌 Mark mode: On",
-        clearMarks: "🧹 Clear marks",
-        locateMe: "📍 Locate me",
+        clearMarks: "◌ Clear marks",
+        locateMe: "◎ Locate me",
         cursor: "Cursor",
         typeGold: "Gold / Treasure",
         typeStone: "Stone / Mineral",
@@ -8053,9 +8603,9 @@
         chanceHigh: "High",
         microOn: "🧵 Micro streams: On",
         microOff: "🧵 Micro streams: Off",
-        bgOn: "🛰 Background: On",
-        bgOff: "🛰 Background: Off",
-        seePhotos: "📷 See photos",
+        bgOn: "◍ Background: On",
+        bgOff: "◍ Background: Off",
+        seePhotos: "◉ See photos",
         // Gold-mode click output
         goldSelWater: 'Selected waterway: {name}',
         goldTypeLine: 'Type: {type}{seasonal}',
@@ -8083,7 +8633,7 @@
         settings_lang_saved: "(Saved on this device)",
         settings_sec1_title: "🧷 1) Data storage & backup",
         settings_sec1_html: "• Saved points stay in this device’s <strong>browser storage</strong>.<br/>• Data is not sent online automatically.<br/>• Use <strong>Download points</strong> regularly to keep a backup.<br/>• If browser data is cleared, records can be removed too.",
-        settings_sec2_title: "🗺️ 2) Adding a point",
+        settings_sec2_title: "◧ 2) Adding a point",
         settings_sec2_html: "1. Tap <strong>‘Add new point’</strong>.<br/>2. Enter a title and pick a place on the map.<br/>3. Coordinates fill automatically.<br/>4. If you want, use <strong>Create note from location</strong> for short context.<br/>5. After saving, the point appears on the list and map.",
         settings_sec3_title: "📌 3) Temporary markers",
         settings_sec3_html: "• When <strong>Mark mode</strong> is on, tapping the map drops a temporary pin.<br/>• These markers are separate from saved points.<br/>• Use <strong>Clear marks</strong> to remove them.<br/>• Use <strong>Locate me</strong> to jump to your current location quickly.",
@@ -8093,14 +8643,14 @@
         settings_sec5_html: "• Records stay on this device and do not appear automatically on another one.<br/>• Use <strong>Download points</strong> to export a backup.<br/>• Use <strong>Import points</strong> to move your records to another device.",
         // Map click texts
         gold_need_blue: "Tap a blue stream/river line. (Zoom ≥ 12)",
-        gold_mode_toast: "Gold mode: tap the blue line ✅",
-        coord_copied: "Coordinates copied ✅",
+        gold_mode_toast: "Gold mode: tap the blue line ✓",
+        coord_copied: "Coordinates copied ✓",
         coord_prefix: "Coordinates:",
         history_searching: "Searching for local history context for these coordinates…",
         auto_history_not_found: "No automatic history info found for this point.",
         auto_history_outside: "This coordinate seems outside Turkey. Auto history works for Turkey only.",
         auto_history_no_details: "Inside Turkey, but no detailed history info was found for this area.",
-        gem_hint_header: "💎 Gemstone hint for this area:",
+        gem_hint_header: "◈ Gemstone hint for this area:",
 
       },
       tr: {
@@ -8121,35 +8671,35 @@
         labelNote: "Not",
         phNote: "Örn: Kuvars yoğun, akış orta, mıknatıs denenecek…",
         labelHistory: "Bölge notu",
-        autoFill: "📍 Konumdan tarih özeti oluştur",
+        autoFill: "◎ Konumdan tarih özeti oluştur",
         cancel: "Vazgeç",
         save: "Kaydet",
         points0: "0 nokta",
         points1: "1 nokta",
         pointsN: "{n} nokta",
-        mapLabel: "🗺️ Harita araçları",
+        mapLabel: "◧ Harita araçları",
         mapSubhelp: "Haritaya dokununca koordinat görünür. Katman ve konum araçları sadeleştirildi.",
         layersOpen: "🗂 Katmanları aç",
         layersClose: "🗂 Katmanları kapat",
         markModeOn: "📌 İşaret koyma: Açık",
         markModeOff: "📌 İşaret koyma: Kapalı",
-        clearMarks: "🧹 İşaretleri temizle",
-        locateMe: "📍 Buradayım",
+        clearMarks: "◌ İşaretleri temizle",
+        locateMe: "◎ Buradayım",
         cursor: "İmleç: –",
-        seePhotos: "📷 Fotoğrafları gör",
+        seePhotos: "◉ Fotoğrafları gör",
         microOn: "🧵 Mikro dereler: Açık",
         microOff: "🧵 Mikro dereler: Kapalı",
-        bgOn: "🛰 Arka plan: Açık",
-        bgOff: "🛰 Arka plan: Kapalı",
+        bgOn: "◍ Arka plan: Açık",
+        bgOff: "◍ Arka plan: Kapalı",
         historyPh: "Kısa bir not yazabilir ya da konuma göre tarih özeti oluşturabilirsin.",
         noResults: "Aramana uygun kayıt bulunamadı.",
         noRecords: "Henüz kayıt yok. 'Yeni nokta ekle' ile başlayabilirsin.",
         noTitle: "(Başlık yok)",
         pointDefault: "Nokta",
-        visitBtn: "✅ Ziyaret kaydet",
-        openMapBtn: "🗺️ Haritada aç",
-        editBtn: "✏️ Düzenle",
-        deleteBtn: "🗑 Sil",
+        visitBtn: "✓ Ziyaret kaydet",
+        openMapBtn: "◧ Haritada aç",
+        editBtn: "✎ Düzenle",
+        deleteBtn: "✕ Sil",
         firstRecord: "İlk kayıt: {date}",
         lastVisitNever: "Son ziyaret: —",
         lastVisit: "Son ziyaret: {date}",
@@ -8209,17 +8759,17 @@
         cancel: "Vazgeç",
         save: "Kaydet",
         points: "nokta",
-        mapLabel: "🗺️ Harita araçları",
+        mapLabel: "◧ Harita araçları",
         markModeOn: "📌 İşaret koyma: Açık",
         markModeOff: "📌 İşaret koyma: Kapalı",
-        clearMarks: "🧹 İşaretleri temizle",
-        locateMe: "📍 Buradayım",
+        clearMarks: "◌ İşaretleri temizle",
+        locateMe: "◎ Buradayım",
         cursor: "İmleç",
         microOn: "🧵 Mikro dereler: Açık",
         microOff: "🧵 Mikro dereler: Kapalı",
-        bgOn: "🛰 Arka plan: Açık",
-        bgOff: "🛰 Arka plan: Kapalı",
-        seePhotos: "📷 Fotoğrafları gör",
+        bgOn: "◍ Arka plan: Açık",
+        bgOff: "◍ Arka plan: Kapalı",
+        seePhotos: "◉ Fotoğrafları gör",
         nameLabel: "Başlık *",
         typeLabel: "Tür",
         chanceLabel: "İhtimal",
@@ -8234,11 +8784,11 @@
         cancel: "Vazgeç",
         save: "Kaydet",
         points: "nokta",
-        mapLabel: "🗺️ Harita araçları",
+        mapLabel: "◧ Harita araçları",
         markModeOff: "📌 İşaret koyma: Kapalı",
         markModeOn: "📌 İşaret koyma: Açık",
-        clearMarks: "🧹 İşaretleri temizle",
-        locateMe: "📍 Buradayım",
+        clearMarks: "◌ İşaretleri temizle",
+        locateMe: "◎ Buradayım",
         cursor: "İmleç",
         typeGold: "Altın / Define",
         typeStone: "Taş / Mineral",
@@ -8249,9 +8799,9 @@
         chanceHigh: "Yüksek",
         microOn: "🧵 Mikro dereler: Açık",
         microOff: "🧵 Mikro dereler: Kapalı",
-        bgOn: "🛰 Arka plan: Açık",
-        bgOff: "🛰 Arka plan: Kapalı",
-        seePhotos: "📷 Fotoğrafları gör",
+        bgOn: "◍ Arka plan: Açık",
+        bgOff: "◍ Arka plan: Kapalı",
+        seePhotos: "◉ Fotoğrafları gör",
         goldSelWater: 'Seçilen su yolu: {name}',
         goldType: ': {type}{seasonal}',
         goldSeasonal: ' (mevsimsel)',
@@ -8298,7 +8848,7 @@
         settings_lang_saved: "(Bu cihazda saklanır)",
         settings_sec1_title: "🧷 1) Veri saklama ve yedek",
         settings_sec1_html: "• Tüm kayıtlar bu cihazın <strong>tarayıcı yerel depolamasında</strong> tutulur.<br/>• Veriler otomatik olarak internete gönderilmez.<br/>• Düzenli olarak <strong>Noktaları indir</strong> ile yedek alman iyi olur.<br/>• Tarayıcı verileri silinirse kayıtlar da silinebilir.",
-        settings_sec2_title: "🗺️ 2) Nokta ekleme akışı",
+        settings_sec2_title: "◧ 2) Nokta ekleme akışı",
         settings_sec2_html: "1. <strong>‘Yeni nokta ekle’</strong> butonuna bas.<br/>2. Başlık gir ve haritada yer seç.<br/>3. Koordinat otomatik dolsun.<br/>4. İstersen <strong>Konumdan tarih özeti oluştur</strong> ile kısa bağlam ekle.<br/>5. Kaydettiğinde nokta listede ve haritada görünür.",
         settings_sec3_title: "📌 3) Geçici işaretler",
         settings_sec3_html: "• <strong>İşaret koyma</strong> açıkken haritaya dokununca geçici pin eklenir.<br/>• Bu işaretler kayıtlı noktalardan ayrıdır; hızlı referans içindir.<br/>• <strong>İşaretleri temizle</strong> ile hepsini silebilirsin.<br/>• <strong>Buradayım</strong> ile kendi konumuna hızlıca gidebilirsin.",
@@ -8308,14 +8858,14 @@
         settings_sec5_html: "• Kayıtlar bu cihazda saklanır; başka cihazda otomatik görünmez.<br/>• <strong>Noktaları indir</strong> ile yedek dışa aktarabilirsin.<br/>• <strong>Noktaları içe aktar</strong> ile kayıtlarını başka cihaza taşıyabilirsin.",
         // Harita tıklama metinleri
         gold_need_blue: "Mavi dere/nehir çizgisine dokun. (Zoom ≥ 12)",
-        gold_mode_toast: "Altın Modu: mavi çizgiye dokun ✅",
-        coord_copied: "Koordinat kopyalandı ✅",
+        gold_mode_toast: "Altın Modu: mavi çizgiye dokun ✓",
+        coord_copied: "Koordinat kopyalandı ✓",
         coord_prefix: "Koordinat:",
         history_searching: "Bu koordinat için tarih/bağlam bilgisi aranıyor…",
         auto_history_not_found: "Bu nokta için otomatik tarih bilgisi bulunamadı.",
         auto_history_outside: "Bu koordinat Türkiye dışında görünüyor. Otomatik tarih sadece Türkiye için çalışır.",
         auto_history_no_details: "Türkiye içinde ama bu bölge için detaylı tarih bilgisi bulunamadı.",
-        gem_hint_header: "💎 Bu bölge için değerli taş tahmini:",
+        gem_hint_header: "◈ Bu bölge için değerli taş tahmini:",
 
       },
       es: {
@@ -8389,7 +8939,7 @@
         settings_lang_saved: "(Guardado en este dispositivo)",
         settings_sec1_title: "🧷 1) PIN y seguridad",
         settings_sec1_html: "• Tu PIN se guarda <strong>solo en este dispositivo (localStorage)</strong> y no se envía a Internet.<br/>• Se almacena como <strong>hash</strong> con <strong>salt</strong> del dispositivo.<br/>• Si lo olvidas, usa <strong>Restablecer</strong> para borrar todo.",
-        settings_sec2_title: "🗺️ 2) Añadir puntos y mapa",
+        settings_sec2_title: "◧ 2) Añadir puntos y mapa",
         settings_sec2_html: "1. Toca <strong>‘Añadir punto’</strong>.<br/>2. Escribe un título y elige categoría/confianza.<br/>3. Toca el mapa para rellenar coordenadas.<br/>4. <strong>Autocompletar por ubicación</strong> intenta obtener un resumen de Wikipedia + notas de afición.<br/>5. Los puntos se ven en lista y mapa.",
         settings_sec3_title: "📌 3) Mis marcadores (temporales)",
         settings_sec3_html: "• Con <strong>Modo marcador</strong> activado, tocar el mapa deja pines naranjas.<br/>• Son temporales y separados de los puntos guardados.<br/>• <strong>Limpiar marcas</strong> los elimina.<br/>• <strong>Ubícame</strong> solicita ubicación y deja un pin.",
@@ -8398,14 +8948,14 @@
         settings_sec5_title: "💾 5) ¿Dónde están mis datos?",
         settings_sec5_html: "• Todo queda en el <strong>almacenamiento local</strong> del navegador de este dispositivo.<br/>• <strong>Descargar</strong> exporta un JSON.<br/>• <strong>Importar</strong> restaura en otro dispositivo.",
         gold_need_blue: "Toca una línea azul de arroyo/río. (Zoom ≥ 12)",
-        gold_mode_toast: "Modo oro: toca la línea azul ✅",
-        coord_copied: "Coordenadas copiadas ✅",
+        gold_mode_toast: "Modo oro: toca la línea azul ✓",
+        coord_copied: "Coordenadas copiadas ✓",
         coord_prefix: "Coordenadas:",
         history_searching: "Buscando contexto histórico para estas coordenadas…",
         auto_history_not_found: "No se encontró información automática para este punto.",
         auto_history_outside: "Parece estar fuera de Turquía. El autollenado funciona solo en Turquía.",
         auto_history_no_details: "Dentro de Turquía, pero no hay detalles para esta zona.",
-        gem_hint_header: "💎 Pista de gema para esta zona:",
+        gem_hint_header: "◈ Pista de gema para esta zona:",
 
       },
         pointDefault: "Punto",
@@ -8480,7 +9030,7 @@
         settings_lang_saved: "(Salvo neste dispositivo)",
         settings_sec1_title: "🧷 1) PIN e segurança",
         settings_sec1_html: "• Seu PIN fica <strong>somente neste dispositivo (localStorage)</strong> e não é enviado para a internet.<br/>• Guardado como <strong>hash</strong> com <strong>salt</strong> do aparelho.<br/>• Se esquecer, use <strong>Redefinir</strong> para apagar tudo.",
-        settings_sec2_title: "🗺️ 2) Adicionar pontos e mapa",
+        settings_sec2_title: "◧ 2) Adicionar pontos e mapa",
         settings_sec2_html: "1. Toque em <strong>‘Adicionar ponto’</strong>.<br/>2. Digite um título e escolha categoria/confiança.<br/>3. Toque no mapa para preencher coordenadas.<br/>4. <strong>Auto-preencher</strong> tenta um resumo da Wikipedia + notas de hobby.<br/>5. Pontos aparecem na lista e no mapa.",
         settings_sec3_title: "📌 3) Meus marcadores (temporários)",
         settings_sec3_html: "• Com <strong>Modo marcação</strong> ligado, tocar no mapa cria pinos laranja.<br/>• São temporários e separados dos pontos salvos.<br/>• <strong>Limpar marcas</strong> remove.<br/>• <strong>Me localizar</strong> pede localização e solta um pino.",
@@ -8489,14 +9039,14 @@
         settings_sec5_title: "💾 5) Onde estão meus dados?",
         settings_sec5_html: "• Tudo fica no <strong>armazenamento local</strong> do navegador neste dispositivo.<br/>• <strong>Baixar</strong> exporta JSON.<br/>• <strong>Importar</strong> restaura em outro dispositivo.",
         gold_need_blue: "Toque em uma linha azul de riacho/rio. (Zoom ≥ 12)",
-        gold_mode_toast: "Modo ouro: toque na linha azul ✅",
-        coord_copied: "Coordenadas copiadas ✅",
+        gold_mode_toast: "Modo ouro: toque na linha azul ✓",
+        coord_copied: "Coordenadas copiadas ✓",
         coord_prefix: "Coordenadas:",
         history_searching: "Buscando contexto histórico para estas coordenadas…",
         auto_history_not_found: "Nenhuma informação automática encontrada.",
         auto_history_outside: "Parece fora da Turquia. Auto-história só funciona na Turquia.",
         auto_history_no_details: "Na Turquia, mas sem detalhes para esta área.",
-        gem_hint_header: "💎 Dica de gema para esta área:",
+        gem_hint_header: "◈ Dica de gema para esta área:",
 
       },
         pointDefault: "Ponto",
@@ -8571,7 +9121,7 @@
         settings_lang_saved: "(Enregistré sur cet appareil)",
         settings_sec1_title: "🧷 1) PIN & sécurité",
         settings_sec1_html: "• Votre PIN est stocké <strong>uniquement sur cet appareil (localStorage)</strong> et jamais envoyé en ligne.<br/>• Stocké en <strong>hash</strong> avec <strong>sel</strong> de l’appareil.<br/>• En cas d’oubli, <strong>Réinitialiser</strong> efface tout.",
-        settings_sec2_title: "🗺️ 2) Ajouter des points & carte",
+        settings_sec2_title: "◧ 2) Ajouter des points & carte",
         settings_sec2_html: "1. Touchez <strong>‘Ajouter un point’</strong>.<br/>2. Titre + catégorie/confiance.<br/>3. Touchez la carte pour remplir les coordonnées.<br/>4. <strong>Auto-remplir</strong> tente un résumé Wikipédia + notes hobby.<br/>5. Les points apparaissent sur la liste et la carte.",
         settings_sec3_title: "📌 3) Mes marqueurs (temporaires)",
         settings_sec3_html: "• Avec <strong>Mode marqueur</strong>, toucher la carte ajoute des épingles orange.<br/>• Temporaires et séparés des points enregistrés.<br/>• <strong>Effacer</strong> pour supprimer.<br/>• <strong>Me localiser</strong> demande la position et place une épingle.",
@@ -8580,14 +9130,14 @@
         settings_sec5_title: "💾 5) Où sont mes données ?",
         settings_sec5_html: "• Tout reste dans le <strong>stockage local</strong> du navigateur sur cet appareil.<br/>• <strong>Télécharger</strong> exporte un JSON.<br/>• <strong>Importer</strong> restaure ailleurs.",
         gold_need_blue: "Touchez une ligne bleue de ruisseau/rivière. (Zoom ≥ 12)",
-        gold_mode_toast: "Mode or : touchez la ligne bleue ✅",
-        coord_copied: "Coordonnées copiées ✅",
+        gold_mode_toast: "Mode or : touchez la ligne bleue ✓",
+        coord_copied: "Coordonnées copiées ✓",
         coord_prefix: "Coordonnées :",
         history_searching: "Recherche d’un contexte historique pour ces coordonnées…",
         auto_history_not_found: "Aucune info automatique trouvée.",
         auto_history_outside: "Hors Turquie. L’auto-histoire fonctionne seulement en Turquie.",
         auto_history_no_details: "En Turquie, mais pas de détails pour cette zone.",
-        gem_hint_header: "💎 Indice de gemme pour cette zone :",
+        gem_hint_header: "◈ Indice de gemme pour cette zone :",
 
       },
         pointDefault: "Point",
@@ -8643,7 +9193,7 @@
         settings_lang_saved: "(Auf diesem Gerät gespeichert)",
         settings_sec1_title: "🧷 1) PIN & Sicherheit",
         settings_sec1_html: "• Deine PIN wird <strong>nur auf diesem Gerät (localStorage)</strong> gespeichert und nie online gesendet.<br/>• Als <strong>Hash</strong> mit gerätespezifischem <strong>Salt</strong> gespeichert.<br/>• Bei Verlust: <strong>Zurücksetzen</strong> löscht alles.",
-        settings_sec2_title: "🗺️ 2) Punkte & Karte",
+        settings_sec2_title: "◧ 2) Punkte & Karte",
         settings_sec2_html: "1. Tippe <strong>‘Neuen Punkt’</strong>.<br/>2. Titel + Kategorie/Confidence.<br/>3. Tippe auf die Karte für Koordinaten.<br/>4. <strong>Auto-Fill</strong> versucht Wikipedia-Zusammenfassung + Hobby-Notizen.<br/>5. Punkte erscheinen in Liste und Karte.",
         settings_sec3_title: "📌 3) Meine Marker (temporär)",
         settings_sec3_html: "• Mit <strong>Markiermodus</strong> setzt Tippen orange Pins.<br/>• Temporär, getrennt von gespeicherten Punkten.<br/>• <strong>Marken löschen</strong> entfernt alle.<br/>• <strong>Finde mich</strong> fragt Standort an.",
@@ -8652,14 +9202,14 @@
         settings_sec5_title: "💾 5) Wo sind meine Daten?",
         settings_sec5_html: "• Alles bleibt im <strong>lokalen Browser-Speicher</strong> dieses Geräts.<br/>• <strong>Download</strong> exportiert JSON.<br/>• <strong>Import</strong> stellt wieder her.",
         gold_need_blue: "Tippe auf eine blaue Bach-/Flusslinie. (Zoom ≥ 12)",
-        gold_mode_toast: "Goldmodus: blaue Linie antippen ✅",
-        coord_copied: "Koordinaten kopiert ✅",
+        gold_mode_toast: "Goldmodus: blaue Linie antippen ✓",
+        coord_copied: "Koordinaten kopiert ✓",
         coord_prefix: "Koordinaten:",
         history_searching: "Suche nach historischem Kontext für diese Koordinaten…",
         auto_history_not_found: "Keine automatische Info gefunden.",
         auto_history_outside: "Außerhalb der Türkei. Auto-History nur für die Türkei.",
         auto_history_no_details: "In der Türkei, aber keine Details für dieses Gebiet.",
-        gem_hint_header: "💎 Edelstein-Hinweis für diese Region:",
+        gem_hint_header: "◈ Edelstein-Hinweis für diese Region:",
 
       },
         pointDefault: "Punkt",
@@ -8762,7 +9312,7 @@
         settings_lang_saved: "(محفوظ على هذا الجهاز)",
         settings_sec1_title: "🧷 1) الرقم السري والأمان",
         settings_sec1_html: "• يتم حفظ الرقم السري <strong>على هذا الجهاز فقط (localStorage)</strong> ولا يُرسل للإنترنت.<br/>• يُحفظ كـ <strong>هاش</strong> مع <strong>ملح</strong> خاص بالجهاز.<br/>• إذا نسيته، استخدم <strong>إعادة الضبط</strong> لحذف كل شيء.",
-        settings_sec2_title: "🗺️ 2) إضافة نقاط واستخدام الخريطة",
+        settings_sec2_title: "◧ 2) إضافة نقاط واستخدام الخريطة",
         settings_sec2_html: "1. اضغط <strong>‘إضافة نقطة’</strong>.<br/>2. اكتب عنواناً واختر الفئة/الثقة.<br/>3. اضغط على الخريطة لملء الإحداثيات.<br/>4. <strong>التعبئة التلقائية</strong> تحاول جلب ملخص ويكيبيديا + ملاحظات هواية.<br/>5. ستظهر النقاط في القائمة والخريطة.",
         settings_sec3_title: "📌 3) علاماتي (مؤقتة)",
         settings_sec3_html: "• عند تفعيل <strong>وضع العلامات</strong>، الضغط على الخريطة يضع دبابيس برتقالية.<br/>• مؤقتة ومنفصلة عن النقاط المحفوظة.<br/>• <strong>مسح العلامات</strong> لحذفها.<br/>• <strong>حدد موقعي</strong> يطلب الموقع ويضع دبوساً.",
@@ -8771,14 +9321,14 @@
         settings_sec5_title: "💾 5) أين بياناتي؟",
         settings_sec5_html: "• كل شيء يبقى في <strong>التخزين المحلي</strong> للمتصفح على هذا الجهاز.<br/>• <strong>تنزيل</strong> لتصدير JSON.<br/>• <strong>استيراد</strong> للاستعادة على جهاز آخر.",
         gold_need_blue: "اضغط على خط أزرق لمجرى/نهر. (تكبير ≥ 12)",
-        gold_mode_toast: "وضع الذهب: اضغط على الخط الأزرق ✅",
-        coord_copied: "تم نسخ الإحداثيات ✅",
+        gold_mode_toast: "وضع الذهب: اضغط على الخط الأزرق ✓",
+        coord_copied: "تم نسخ الإحداثيات ✓",
         coord_prefix: "الإحداثيات:",
         history_searching: "جارٍ البحث عن سياق تاريخي لهذه الإحداثيات…",
         auto_history_not_found: "لم يتم العثور على معلومات تلقائية لهذا الموقع.",
         auto_history_outside: "يبدو خارج تركيا. تعمل الميزة تلقائياً داخل تركيا فقط.",
         auto_history_no_details: "داخل تركيا، لكن لا توجد تفاصيل لهذه المنطقة.",
-        gem_hint_header: "💎 تلميح الأحجار الكريمة لهذه المنطقة:",
+        gem_hint_header: "◈ تلميح الأحجار الكريمة لهذه المنطقة:",
 
       },
     };
@@ -8849,7 +9399,7 @@
       const badge = document.querySelector('.title-badge span:nth-child(2)');
       if (badge) badge.textContent = t('appBadge');
       const hype = document.querySelector('.hype-strip');
-      if (hype) hype.innerHTML = `<span class="spark">⚡</span> ${t('hype')} <span class="spark">⚡</span>`;
+      if (hype) hype.innerHTML = `<span class="spark">✧</span> ${t('hype')} <span class="spark">✧</span>`;
       const h1 = document.querySelector('h1');
       if (h1) h1.innerHTML = `<span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>${t('h1')}`;
       const sub = document.querySelector('.subtitle');
@@ -8868,8 +9418,8 @@
       renderHeroBtn(addBtn, '＋', 'addPoint', 'addPointSub');
       renderHeroBtn(goldGuideBtn, '✦', 'goldGuide', 'goldGuideSub');
       if (settingsBtn) { settingsBtn.innerHTML = `<span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span><span class="settings-btn-text">${t('settings')}</span>`; settingsBtn.setAttribute('aria-label', t('settings')); settingsBtn.title = t('settings'); }
-      if (exportBtn) exportBtn.innerHTML = `<span class="icon">⬇️</span>${t('export')}`;
-      if (importBtn) importBtn.innerHTML = `<span class="icon">⬆️</span>${t('import')}`;
+      if (exportBtn) exportBtn.innerHTML = `<span class="icon">↓</span>${t('export')}`;
+      if (importBtn) importBtn.innerHTML = `<span class="icon">↑</span>${t('import')}`;
 
       if (searchInput) searchInput.placeholder = t('searchPh');
 
@@ -8908,7 +9458,7 @@
       if (s5b) s5b.innerHTML = t('settings_sec5_html');
       // Settings language title
       const i18nTitle = document.getElementById('i18nTitle');
-      if (i18nTitle) i18nTitle.textContent = `🌍 0) ${t('langTitle')}`;
+      if (i18nTitle) i18nTitle.textContent = `◎ 0) ${t('langTitle')}`;
 
       // Form labels / placeholders
       const formHeaderTitle = document.getElementById('formHeaderTitle');
@@ -9238,7 +9788,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function setMapFocusMode(enabled) {
       const on = !!enabled;
       if (mapWrapper) mapWrapper.classList.toggle("focus-mode", on);
-      if (focusMapBtn) focusMapBtn.textContent = on ? `🗕 ${mapUi('mapNormal')}` : `🖥️ ${mapUi('mapBig')}`;
+      if (focusMapBtn) focusMapBtn.textContent = on ? `${mapUi('mapNormal')}` : `${mapUi('mapBig')}`;
       try { localStorage.setItem(MAP_FOCUS_STORAGE_KEY, on ? "1" : "0"); } catch {}
       if (map) {
         setTimeout(() => {
@@ -9295,8 +9845,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       mapPresetButtons.forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.theme === themeKey);
       });
-      if (fitAllBtn) fitAllBtn.textContent = `🧭 ${mapUi('fitAll')}`;
-      if (focusMapBtn) focusMapBtn.textContent = (mapWrapper && mapWrapper.classList.contains("focus-mode")) ? `🗕 ${mapUi('mapNormal')}` : `🖥️ ${mapUi('mapBig')}`;
+      if (fitAllBtn) fitAllBtn.textContent = `${mapUi('fitAll')}`;
+      if (focusMapBtn) focusMapBtn.textContent = (mapWrapper && mapWrapper.classList.contains("focus-mode")) ? `${mapUi('mapNormal')}` : `${mapUi('mapBig')}`;
     }
 
     function applyBaseLayerByTheme(themeKey) {
@@ -9505,8 +10055,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     }
 
     function updatePremiumFeatureLabels() {
-      if (exportBtn) exportBtn.innerHTML = `<span class="icon">⬇️</span>Noktaları indir`;
-      if (importBtn) importBtn.innerHTML = `<span class="icon">⬆️</span>Noktaları içe aktar`;
+      if (exportBtn) exportBtn.innerHTML = `<span class="icon">↓</span>Noktaları indir`;
+      if (importBtn) importBtn.innerHTML = `<span class="icon">↑</span>Noktaları içe aktar`;
       if (photoFieldHelp) {
         photoFieldHelp.innerHTML = 'Taş, dere yatağı veya genel alan fotoğrafını kayda ekleyebilirsin. En fazla 4 fotoğraf saklanır.';
       }
@@ -9618,7 +10168,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         analysisUsagePill.textContent = `${remaining} hak kaldı`;
         analysisUsagePill.className = `analysis-usage-pill${low ? ' low' : ''}`;
       }
-      if (analysisAdBtn) analysisAdBtn.textContent = remaining > 0 ? "🎬 Reklam" : "🎬 +1 hak";
+      if (analysisAdBtn) analysisAdBtn.textContent = remaining > 0 ? "▶ Reklam" : "▶ +1 hak";
       if (analysisPremiumBtn) analysisPremiumBtn.textContent = remaining > 0 ? "Premium" : "Kilidi aç";
     }
 
@@ -9734,7 +10284,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return isPhoneViewport() ? 0 : TILE_BUFFER;
     }
 
-    // ✅ Altın Modu su ağı cache (hızlı tekrar yükleme için)
+    // ✓ Altın Modu su ağı cache (hızlı tekrar yükleme için)
     const GOLD_WATER_CACHE_PREFIX = "ai_gold_water_tile_v2:";
     const GOLD_WATER_CACHE_INDEX_KEY = "ai_gold_water_tile_index_v2";
     const GOLD_WATER_CACHE_MAX = 28;           // cihazda tutulacak tile sayısı (yaklaşık)
@@ -9745,7 +10295,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const GOLD_POINT_RESULT_CACHE_PREFIX = "ai_gold_point_result_v2:";
     const GOLD_POINT_RESULT_TTL_MS = 1000 * 60 * 30; // 30 dakika
 
-    // ✅ Su yollarını özel renderer ile çiziyoruz; doğruluk ve görünürlük hızdan daha önemli.
+    // ✓ Su yollarını özel renderer ile çiziyoruz; doğruluk ve görünürlük hızdan daha önemli.
     let goldWaterRenderer = null;
 
     function ensureGoldWaterRenderer(forceRecreate = false) {
@@ -9788,7 +10338,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     let markingMode = false;
 
-    // ✅ Harita zıplamasını azaltmak için
+    // ✓ Harita zıplamasını azaltmak için
     let didAutoFit = false;
 
     const UX_COPY = {
@@ -9937,7 +10487,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       });
     }
 
-    // ✅ Basit HTML escape (popup güvenliği)
+    // ✓ Basit HTML escape (popup güvenliği)
     function escapeHtml(s = "") {
       return String(s).replace(/[&<>"']/g, (m) => ({
         "&":"&amp;",
@@ -10069,7 +10619,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }
       photoCountChip.style.display = "inline-flex";
       const limit = getFormPhotoLimit();
-      photoCountChip.textContent = `📸 ${selectedFormPhotos.length}/${limit} fotoğraf`;
+      photoCountChip.textContent = `◉ ${selectedFormPhotos.length}/${limit} fotoğraf`;
     }
 
     function openPhotoLightbox(dataUrl, caption = "Saha fotoğrafı") {
@@ -10627,7 +11177,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return !!sanitizeSpotRecord(s);
     }
 
-    // ✅ Import: version + geriye uyum
+    // ✓ Import: version + geriye uyum
     async function importSpotsFromFile(file) {
       let data;
       try {
@@ -10687,7 +11237,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return `${g}.${a}.${y} ${s}:${dk}`;
     }
 
-    // ✅ Lat/Lon doğrulama ekli
+    // ✓ Lat/Lon doğrulama ekli
     function getSpotLatLng(spot) {
       const txt = (spot.location || "").trim();
       if (!txt) return null;
@@ -10820,7 +11370,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!mapInitialized || !freeMarkersLayer || !latlng) return;
       if (!userLocationMarker) {
         userLocationMarker = L.marker(latlng, {
-          icon: freeMarkerIcon("🧭")
+          icon: freeMarkerIcon("user")
         }).bindPopup(t("your_location"));
         userLocationMarker.addTo(freeMarkersLayer);
       } else {
@@ -10915,8 +11465,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function markerIconForSpot(spot) {
       const cls = "marker-other";
-      const emoji = "📍";
-      const html = `<div class="map-marker ${cls}">${emoji}</div>`;
+      const html = `<div class="map-marker ${cls}"><span class="pin-core"></span></div>`;
       return L.divIcon({
         html,
         className: "",
@@ -10926,8 +11475,9 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       });
     }
 
-    function freeMarkerIcon(labelEmoji = "📌") {
-      const html = `<div class="map-marker marker-free">${labelEmoji}</div>`;
+    function freeMarkerIcon(labelEmoji = "pin") {
+      const extraCls = labelEmoji === "user" ? "is-user" : "";
+      const html = `<div class="map-marker marker-free ${extraCls}"><span class="pin-core"></span></div>`;
       return L.divIcon({
         html,
         className: "",
@@ -10961,7 +11511,7 @@ function initMap() {
         tap: false
       }).setView(savedView.center, savedView.zoom);
 
-      // ✅ Altın Modu su ağı: ayrı pane + özel renderer
+      // ✓ Altın Modu su ağı: ayrı pane + özel renderer
       // Bazı telefonlarda Canvas çizimi yüklenip renk vermeyebildiği için
       // su katmanını güvenilir SVG renderer ile kuruyoruz.
       ensureGoldWaterRenderer(true);
@@ -11378,8 +11928,8 @@ function initMap() {
       if (!goldResultEl) return;
       const chips = [];
       if (payload.wName) chips.push(`<span class="gold-result-chip">🏞 <strong>${escapeHtml(goldUiText('selected'))}:</strong> ${escapeHtml(payload.wName)}</span>`);
-      if (payload.wType) chips.push(`<span class="gold-result-chip">🧭 <strong>${escapeHtml(goldUiText('type'))}:</strong> ${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</span>`);
-      if (payload.location) chips.push(`<span class="gold-result-chip">📍 <strong>${escapeHtml(goldUiText('location'))}:</strong> ${escapeHtml(payload.location)}</span>`);
+      if (payload.wType) chips.push(`<span class="gold-result-chip">⌖ <strong>${escapeHtml(goldUiText('type'))}:</strong> ${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</span>`);
+      if (payload.location) chips.push(`<span class="gold-result-chip">◎ <strong>${escapeHtml(goldUiText('location'))}:</strong> ${escapeHtml(payload.location)}</span>`);
       const loadingText = payload.loadingText || goldUiText(navigator.onLine ? 'loadingText' : 'loadingTextOffline');
 
       updateGoldResultMarkup(`
@@ -12257,7 +12807,7 @@ function goldResetWater() {
         // Water layer oluştur
         ensureGoldWaterRenderer(true);
         if (!goldWaterLayer) {
-          // ✅ FeatureGroup: tek bir click handler ile binlerce polyline'da daha akıcı
+          // ✓ FeatureGroup: tek bir click handler ile binlerce polyline'da daha akıcı
           goldWaterLayer = L.featureGroup();
 
           goldWaterLayer.on("click", (e) => {
@@ -12611,7 +13161,7 @@ out tags geom qt;`;
         return;
       }
 
-      // ✅ Öncelik: ekran merkezine yakın tile'lar önce yüklensin (daha hızlı "görünür" sonuç)
+      // ✓ Öncelik: ekran merkezine yakın tile'lar önce yüklensin (daha hızlı "görünür" sonuç)
       const c = map.getCenter();
       const cx = lon2tile(c.lng, tZ);
       const cy = lat2tile(c.lat, tZ);
@@ -12859,7 +13409,7 @@ out tags geom qt;`;
 
         const zoomNow = map ? map.getZoom() : 13;
 
-        // ✅ Önce cache'e bak (geri dönülen bölgelerde anında yükleme)
+        // ✓ Önce cache'e bak (geri dönülen bölgelerde anında yükleme)
         const cached = goldLoadCachedTile(key, wRegex, { allowStale: true });
         if (cached && Array.isArray(cached.elements) && cached.elements.length) {
           await renderGoldWaterItems(cached.elements, zoomNow);
@@ -13509,7 +14059,7 @@ out tags geom qt;`;
       }
     }
 
-    // ✅ 3) fitBounds kontrolü: aramada auto-fit yok, ilk dolu listede 1 kez
+    // ✓ 3) fitBounds kontrolü: aramada auto-fit yok, ilk dolu listede 1 kez
     function updateMapMarkers(spots, opts = {}) {
       if (!mapInitialized || !markersLayer) return;
       const activeIds = new Set();
@@ -13563,7 +14113,7 @@ out tags geom qt;`;
           didAutoFit = true;
         }
       } else {
-        // ✅ Liste boşaldığında tekrar auto-fit hakkını sıfırla
+        // ✓ Liste boşaldığında tekrar auto-fit hakkını sıfırla
         didAutoFit = false;
         map.setView([39, 35], 6);
       }
@@ -13628,7 +14178,7 @@ out tags geom qt;`;
       else countEl.textContent = t('pointsN').replace('{n}', String(n));
     }
 
-      // ✅ Arama varken auto-fit kapalı
+      // ✓ Arama varken auto-fit kapalı
       updateMapMarkers(allSpots, { autoFit: !q });
 
       if (!allSpots.length) {
@@ -13671,7 +14221,7 @@ out tags geom qt;`;
         const lastVisitText = spot.lastVisitAt ? formatDate(spot.lastVisitAt) : "Henüz yok";
         [
           `👣 <strong>${visits}</strong> ziyaret`,
-          `📷 <strong>${photos}</strong> fotoğraf`,
+          `◉ <strong>${photos}</strong> fotoğraf`,
           `🏷 <strong>${tags}</strong> etiket`,
           `🕒 <strong>${escapeHtml(lastVisitText)}</strong>`
         ].forEach((chipHtml) => {
@@ -13710,7 +14260,7 @@ out tags geom qt;`;
 
         const focusBtn = document.createElement("button");
         focusBtn.className = "btn-small";
-        focusBtn.textContent = "🗺️ Haritada aç";
+        focusBtn.textContent = "◧ Haritada aç";
         focusBtn.onclick = (ev) => {
           ev.stopPropagation();
           focusSpotOnMap(spot);
@@ -13825,7 +14375,7 @@ out tags geom qt;`;
              da.getDate() === db.getDate();
     }
 
-    // ✅ Yeni ziyaret modeli
+    // ✓ Yeni ziyaret modeli
     function markVisitedToday(id) {
       let spots = loadSpots();
       const now = Date.now();
@@ -13859,7 +14409,7 @@ out tags geom qt;`;
         const params = new URLSearchParams({
           action: "query",
           prop: "extracts",
-          // ✅ DÜZELTME: doğru parametre
+          // ✓ DÜZELTME: doğru parametre
           explaintext: "1",
           exsentences: "10",
           redirects: "1",
@@ -14023,7 +14573,7 @@ out tags geom qt;`;
       return { found, extraScore };
     }
 
-    // ✅ Daha nötr metinler
+    // ✓ Daha nötr metinler
     function buildFolklorikCommentaryFromText(text) {
       const t = (text || "").toLowerCase();
       let score = 0;
@@ -14164,12 +14714,12 @@ out tags geom qt;`;
         const folklorikYorum = buildFolklorikCommentaryFromText(mainText);
 
         const out =
-          "📍 Vikipedi özeti: " +
+          "◎ Vikipedi özeti: " +
           displayTitle +
           "\n\n" +
           mainText.trim() +
           "\n\n────────────────────────\n\n" +
-          "🧭 Tarih, uygarlık ve hobi amaçlı folklorik analiz (otomatik yorum)\n\n" +
+          "⌖ Tarih, uygarlık ve hobi amaçlı folklorik analiz (otomatik yorum)\n\n" +
           folklorikYorum +
           "\n\n(Kaynak: Vikipedi - " +
           displayTitle +
@@ -14230,7 +14780,7 @@ out tags geom qt;`;
       }
     }
 
-    // ✅ NOMINATIM - Kibar kullanım (rate limit + cache)
+    // ✓ NOMINATIM - Kibar kullanım (rate limit + cache)
     const NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
     const NOMINATIM_DELAY_MS = 1100;
 
@@ -16838,7 +17388,7 @@ function resetMapEvaluationCard() {
   if (mapEvalProfileText) mapEvalProfileText.textContent = "Yoğunluk yorumu burada görünür.";
   if (mapEvalInterpretation) mapEvalInterpretation.textContent = "Kısa yorum burada görünür.";
   renderMapEvalTags([]);
-  if (mapEvalSaveBtn) mapEvalSaveBtn.textContent = "📝 Kayda başla";
+  if (mapEvalSaveBtn) mapEvalSaveBtn.textContent = "▣ Kayda başla";
 }
 
 function showMapEvaluationLoading(coordText) {
@@ -16862,7 +17412,7 @@ function showMapEvaluationLoading(coordText) {
   if (mapEvalProfileText) mapEvalProfileText.textContent = "Yoğunluk profili hazırlanıyor.";
   if (mapEvalInterpretation) mapEvalInterpretation.textContent = "Yorum hazırlanıyor.";
   renderMapEvalTags([]);
-  if (mapEvalSaveBtn) mapEvalSaveBtn.textContent = "📝 Kayda başla";
+  if (mapEvalSaveBtn) mapEvalSaveBtn.textContent = "▣ Kayda başla";
 }
 
 function buildMapEvaluationFallback(coordText, reason = "offline") {
@@ -16918,9 +17468,9 @@ function updateMapEvaluationCard(data, coordText, meta = {}) {
   if (mapEvalInterpretation) mapEvalInterpretation.textContent = safeData.interpretation || safeData.summary || "Yorum bulunamadı.";
   renderMapEvalTags(safeData.tags || deriveMapEvalTags(safeData, sourceType));
   if (mapEvalSaveBtn) {
-    if (sourceType === "saved") mapEvalSaveBtn.textContent = "✏️ Kaydı düzenle";
-    else if (sourceType === "edit") mapEvalSaveBtn.textContent = "✏️ Formu güncelle";
-    else mapEvalSaveBtn.textContent = "📝 Kayda başla";
+    if (sourceType === "saved") mapEvalSaveBtn.textContent = "✎ Kaydı düzenle";
+    else if (sourceType === "edit") mapEvalSaveBtn.textContent = "✎ Formu güncelle";
+    else mapEvalSaveBtn.textContent = "▣ Kayda başla";
   }
 }
 
