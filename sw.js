@@ -1,4 +1,4 @@
-const CACHE_NAME = 'arazide-noktalarim-v1';
+const CACHE_NAME = 'arazide-noktalarim-v2';
 const APP_SHELL = ['./', './index.html', './style.css', './app.js', './data.js', './manifest.json'];
 
 self.addEventListener('install', (event) => {

@@ -88,7 +88,12 @@ h1 { font-size: clamp(1.05rem, 1.6vw, 1.4rem); }
 .action-btn.danger { background: linear-gradient(130deg, rgba(255, 77, 93, .24), rgba(255, 77, 93, .06)); border-color: rgba(255, 96, 114, .35); }
 
 .map-card { position: relative; overflow: hidden; padding: 8px; }
-#analysisMap, #mapTabMap { height: clamp(260px, 35vh, 360px); border-radius: 14px; overflow: hidden; }
+#map, #analysisMap, #mapTabMap {
+  height: clamp(280px, 40vh, 380px);
+  min-height: 280px;
+  border-radius: 14px;
+  overflow: hidden;
+}
 #mapTabMap { margin-top: 8px; }
 
 .map-mini-btn { position: absolute; z-index: 800; left: 16px; top: 16px; border: 1px solid var(--border); background: rgba(8, 13, 26, .82); color: #fff; border-radius: 10px; width: 36px; height: 36px; }
