@@ -15,6 +15,11 @@
   };
 
   const byId = (id) => document.getElementById(id);
+  const must = (id) => {
+    const el = byId(id);
+    if (!el) throw new Error(`Eksik DOM elemanı: #${id}`);
+    return el;
+  };
 
   function init() {
     loadState();
@@ -103,8 +108,19 @@
   }
 
   function initMaps() {
-    state.analysisMap = L.map('analysisMap', { zoomControl: true }).setView([39.0, 35.0], 6);
-    state.mapTabMap = L.map('mapTabMap', { zoomControl: true }).setView([39.0, 35.0], 6);
+    if (!window.L) {
+      toast('Leaflet yüklenemedi');
+      return;
+    }
+    const analysisMapEl = byId('map') || byId('analysisMap');
+    const mapTabEl = byId('mapTabMap');
+    if (!analysisMapEl || !mapTabEl) {
+      toast('Harita alanı bulunamadı');
+      return;
+    }
+
+    state.analysisMap = L.map(analysisMapEl, { zoomControl: true }).setView([39.0, 35.0], 6);
+    state.mapTabMap = L.map(mapTabEl, { zoomControl: true }).setView([39.0, 35.0], 6);
     const tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
     [state.analysisMap, state.mapTabMap].forEach((m) => {
       L.tileLayer(tileUrl, { attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(m);
@@ -179,8 +195,8 @@
     byId('tagRow').innerHTML = p.tags.map((t) => `<span>${t}</span>`).join('') + '<span>Devamını gör</span>';
     byId('summaryModalText').textContent = `${p.summary} Analiz notu: ${p.nextStep}.`;
     byId('detailList').innerHTML = Object.entries(p.detailAnalysis).map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('');
-    state.analysisMap.flyTo([p.lat, p.lng], 10, { duration: .6 });
-    state.mapTabMap.flyTo([p.lat, p.lng], 9, { duration: .6 });
+    state.analysisMap?.flyTo([p.lat, p.lng], 10, { duration: .6 });
+    state.mapTabMap?.flyTo([p.lat, p.lng], 9, { duration: .6 });
   }
 
   function selectPoint(id, fly = false) {
@@ -189,8 +205,8 @@
     if (fly) {
       const p = state.points.find((x) => x.id === id);
       if (p) {
-        state.analysisMap.flyTo([p.lat, p.lng], 11);
-        state.mapTabMap.flyTo([p.lat, p.lng], 10);
+        state.analysisMap?.flyTo([p.lat, p.lng], 11);
+        state.mapTabMap?.flyTo([p.lat, p.lng], 10);
       }
     }
     renderAll();
@@ -230,14 +246,14 @@
       if (e.target.id === 'clearAllBtn') clearAll();
     });
 
-    byId('analysisSearch').addEventListener('input', (e) => { state.activeSearch = e.target.value; byId('recordsSearch').value = e.target.value; renderAll(); });
-    byId('recordsSearch').addEventListener('input', (e) => { state.activeSearch = e.target.value; byId('analysisSearch').value = e.target.value; renderAll(); });
-    byId('analysisFilter').addEventListener('change', (e) => { state.activeFilter = e.target.value; byId('recordsFilter').value = e.target.value; renderAll(); });
-    byId('recordsFilter').addEventListener('change', (e) => { state.activeFilter = e.target.value; byId('analysisFilter').value = e.target.value; renderAll(); });
+    must('analysisSearch').addEventListener('input', (e) => { state.activeSearch = e.target.value; must('recordsSearch').value = e.target.value; renderAll(); });
+    must('recordsSearch').addEventListener('input', (e) => { state.activeSearch = e.target.value; must('analysisSearch').value = e.target.value; renderAll(); });
+    must('analysisFilter').addEventListener('change', (e) => { state.activeFilter = e.target.value; must('recordsFilter').value = e.target.value; renderAll(); });
+    must('recordsFilter').addEventListener('change', (e) => { state.activeFilter = e.target.value; must('analysisFilter').value = e.target.value; renderAll(); });
 
-    byId('recordForm').addEventListener('submit', onRecordSubmit);
-    byId('geoFillBtn').addEventListener('click', fillGeolocation);
-    byId('importInput').addEventListener('change', importData);
+    must('recordForm').addEventListener('submit', onRecordSubmit);
+    must('geoFillBtn').addEventListener('click', fillGeolocation);
+    must('importInput').addEventListener('change', importData);
   }
 
   function simulateAd() {
@@ -391,5 +407,9 @@
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => null);
   }
 
-  init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
