@@ -7746,17 +7746,20 @@
 
         <!-- 🏞 Altın tozu rehberi paneli -->
         <div id="goldPanel">
-            <div class="gallery-header">
-                <div class="gallery-title">
-                    <span class="icon">🏞️</span>
+            <!-- PREMIUM REFACTOR: Hero başlık + canlı analiz kimliği -->
+            <div class="gallery-header gold-hero-header">
+                <div class="gallery-title gold-hero-title">
+                    <span class="gold-title-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 17.2 9.1 7.9a2 2 0 0 1 3.2-.1l2.1 2.9 2-3a2 2 0 0 1 3.3 0l4.3 6.3a2 2 0 0 1-1.7 3.1H4.7A2 2 0 0 1 3 17.2Z" fill="currentColor" opacity=".22"/><path d="M4.7 19h17.6a4 4 0 0 0 3.3-6.2l-4.3-6.3a4 4 0 0 0-6.6 0l-.3.5-.5-.8a4 4 0 0 0-6.5.2L1.3 16.1A4 4 0 0 0 4.7 19Zm0-2a2 2 0 0 1-1.7-3.1l6.1-9.3a2 2 0 0 1 3.2-.1l2.1 2.9 2-3a2 2 0 0 1 3.3 0l4.3 6.3a2 2 0 0 1-1.7 3.1Z" fill="currentColor"/></svg>
+                    </span>
                     <span>Altın tozu rehberi</span>
+                    <span class="gold-hero-badge">Canlı analiz</span>
                 </div>
                 <button id="goldCloseBtn">Kapat</button>
             </div>
 
-            <div class="gallery-sub">
-                Haritada <strong>mavi akarsu çizgisine dokun</strong> ve kısa potansiyel özetini gör.
-                Bu bölüm hızlı saha kontrolü içindir; kesin ölçüm vermez.
+            <div class="gallery-sub gold-hero-sub">
+                Mavi su hattına dokun, konumsal sinyalleri tek kartta gör. Sonuçlar hızlı saha kararları için hazırlanır; kesin ölçüm yerine yön gösterir.
             </div>
 
             <div id="goldEarlyAccessNotice" class="gold-early-access-notice" role="status" aria-live="polite" aria-atomic="true" hidden>
@@ -7766,31 +7769,161 @@
                 <div class="gold-early-access-text">Akar sular birkaç saniyede yüklenebilir. Mobilde dokunma alanı genişletildi; mavi çizginin üstüne veya çok yakınına dokunman yeterli.</div>
             </div>
 
-            <div class="guide-howto compact-guide">
-                <div class="guide-howto-title">🧭 Kısa kullanım</div>
-                <ol class="guide-howto-list compact-guide-list">
-                    <li>Haritada dereye yaklaş. <strong>Zoom 12+</strong>, küçük kollar için <strong>14+</strong> daha iyi çalışır.</li>
-                    <li><strong>Mavi dere/nehir çizgisine veya çok yakınına dokun.</strong> Mobil için dokunma alanı büyütüldü; sistem eğim ve açık veriye göre kısa analiz çıkarır.</li>
-                    <li>Beğendiğin yeri <strong>Yeni nokta ekle</strong> ile kaydet.</li>
+            <!-- PREMIUM REFACTOR: Mini adım kartları -->
+            <div class="guide-howto compact-guide gold-step-grid">
+                <div class="guide-howto-title">Hızlı kullanım akışı</div>
+                <ol class="guide-howto-list compact-guide-list gold-step-list">
+                    <li><span class="step-no">01</span><span>Haritada dereye yaklaş. <strong>Zoom 12+</strong>, küçük kollar için <strong>14+</strong>.</span></li>
+                    <li><span class="step-no">02</span><span><strong>Mavi çizgiye veya çok yakınına dokun.</strong> Sistem eğim + açık veriyle özet üretir.</span></li>
+                    <li><span class="step-no">03</span><span>Potansiyel uygunsa <strong>Yeni nokta ekle</strong> ile kaydet.</span></li>
                 </ol>
             </div>
 
-            <div class="gem-card compact-gold-map-card">
-                <div class="gem-desc">
-                    Sonuç kartında puan, güven ve kısa saha adımı birlikte gösterilir.
-                    Uygun gördüğün noktayı doğrudan <strong>Yeni nokta ekle</strong> ile kaydedebilirsin.
+            <!-- PREMIUM REFACTOR: Analiz kontrol yüzeyi -->
+            <div class="gem-card compact-gold-map-card gold-command-surface">
+                <div class="gem-desc gold-command-intro">
+                    Puan, güven ve saha adımı birlikte sunulur. Sonuç kartı güncellendikçe analitik panel canlı olarak yenilenir.
                 </div>
 
-                <div class="gold-toolbar">
-                    <button id="goldReloadWaterBtn" class="btn-small main" type="button">🌊 Akar suları yenile</button>
-                    <button id="goldBgToggleBtn" class="btn-small" type="button">🛰 Arka plan: Açık</button>
-                    <button id="goldMicroToggleBtn" class="btn-small" type="button">🧵 Mikro dereler: Açık</button>
-                    <span id="goldStatus" class="gold-toolbar-status">Hazır</span>
+                <div class="gold-toolbar" role="group" aria-label="Altın tozu rehberi kontrolleri">
+                    <button id="goldReloadWaterBtn" class="btn-small main" type="button">Akar suları yenile</button>
+                    <button id="goldBgToggleBtn" class="btn-small" type="button">Arka plan: Açık</button>
+                    <button id="goldMicroToggleBtn" class="btn-small" type="button">Mikro dereler: Açık</button>
+                    <span id="goldStatus" class="gold-toolbar-status" data-tone="ready">Hazır</span>
                 </div>
 
                 <div id="goldResult" role="status" aria-live="polite" aria-atomic="false"></div>
             </div>
         </div>
+
+        <style>
+          /* PREMIUM REFACTOR: Altın tozu rehberi için izole mobil-first görsel yükseltme */
+          #goldPanel {
+            border-radius: 22px;
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background:
+              radial-gradient(120% 120% at 100% 0%, rgba(59, 130, 246, 0.22), transparent 42%),
+              radial-gradient(110% 120% at 0% 0%, rgba(250, 204, 21, 0.18), transparent 44%),
+              linear-gradient(180deg, rgba(2, 10, 26, 0.96), rgba(2, 6, 23, 0.96));
+            box-shadow: 0 22px 44px rgba(2, 6, 23, 0.36), inset 0 1px 0 rgba(255,255,255,0.06);
+          }
+          #goldPanel .gold-hero-header { margin-bottom: 12px; align-items: center; }
+          #goldPanel .gold-hero-title { gap: 10px; font-size: clamp(17px, 3.8vw, 22px); font-weight: 800; letter-spacing: -0.02em; }
+          #goldPanel .gold-title-icon { width: 24px; height: 24px; display: inline-flex; color: #facc15; filter: drop-shadow(0 0 10px rgba(250,204,21,.28)); }
+          #goldPanel .gold-title-icon svg { width: 100%; height: 100%; }
+          #goldPanel .gold-hero-badge {
+            margin-left: 2px; padding: 4px 10px; border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, .38); color: #bae6fd; font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+            background: rgba(8, 47, 73, .46);
+          }
+          #goldPanel .gold-hero-sub {
+            margin-bottom: 12px; font-size: 12px; line-height: 1.58; color: #d9e7f5;
+            border: 1px solid rgba(56, 189, 248, 0.18); border-radius: 14px; padding: 10px 12px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, .62), rgba(2, 6, 23, .42));
+          }
+          #goldPanel .gold-step-grid {
+            margin: 0 0 12px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: rgba(2, 6, 23, 0.52);
+          }
+          #goldPanel .gold-step-list { margin: 0; padding: 0; display: grid; gap: 8px; list-style: none; }
+          #goldPanel .gold-step-list li {
+            display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 10px;
+            padding: 10px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.16);
+            background: linear-gradient(180deg, rgba(15, 23, 42, .68), rgba(2, 6, 23, .5));
+          }
+          #goldPanel .gold-step-list .step-no {
+            min-width: 34px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 10px; border: 1px solid rgba(250, 204, 21, 0.34); color: #fde68a; font-size: 10px; font-weight: 800; letter-spacing: .06em;
+            background: rgba(113, 63, 18, 0.28);
+          }
+          #goldPanel .gold-command-surface {
+            padding: 13px; border-radius: 18px; border-color: rgba(148,163,184,0.24);
+            background: linear-gradient(180deg, rgba(15,23,42,0.82), rgba(2,6,23,0.86));
+            box-shadow: 0 16px 30px rgba(2,6,23,0.28), inset 0 1px 0 rgba(255,255,255,.04);
+          }
+          #goldPanel .gold-command-intro { margin-bottom: 12px; color: #dce9f8; line-height: 1.55; }
+          #goldPanel .gold-toolbar { gap: 9px; }
+          #goldReloadWaterBtn, #goldBgToggleBtn, #goldMicroToggleBtn {
+            position: relative; min-height: 46px; border-radius: 14px; font-weight: 700; letter-spacing: .01em;
+            padding: 11px 12px 11px 38px;
+          }
+          #goldReloadWaterBtn::before, #goldBgToggleBtn::before, #goldMicroToggleBtn::before {
+            content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px; border-radius: 50%; opacity: .95;
+          }
+          #goldReloadWaterBtn {
+            background: linear-gradient(150deg, rgba(234, 179, 8, 0.24), rgba(20, 83, 45, 0.92) 48%, rgba(9, 48, 27, 0.96));
+            border-color: rgba(250, 204, 21, 0.36); color: #f8fafc;
+            box-shadow: 0 12px 24px rgba(20, 83, 45, 0.32), inset 0 1px 0 rgba(255,255,255,.12);
+          }
+          #goldReloadWaterBtn::before { background: radial-gradient(circle at 30% 30%, #7dd3fc 25%, #0ea5e9 70%); box-shadow: 0 0 0 2px rgba(56,189,248,.18); }
+          #goldBgToggleBtn, #goldMicroToggleBtn {
+            border-color: rgba(56, 189, 248, .26);
+            background: linear-gradient(180deg, rgba(15,23,42,.8), rgba(15,23,42,.64));
+            color: #dbeafe;
+          }
+          #goldBgToggleBtn::before { background: radial-gradient(circle at 35% 32%, #93c5fd 30%, #2563eb 74%); }
+          #goldMicroToggleBtn::before { background: radial-gradient(circle at 35% 30%, #fef3c7 28%, #f59e0b 74%); }
+          #goldBgToggleBtn:hover, #goldMicroToggleBtn:hover,
+          #goldBgToggleBtn:focus-visible, #goldMicroToggleBtn:focus-visible {
+            border-color: rgba(56, 189, 248, .46); background: rgba(15, 23, 42, .95);
+          }
+          #goldPanel .gold-toolbar-status {
+            justify-content: flex-start; gap: 8px; font-weight: 700; font-size: 11.5px;
+            background: rgba(2, 6, 23, 0.62); border-color: rgba(148, 163, 184, 0.24);
+          }
+          #goldPanel .gold-toolbar-status::before {
+            content: ''; width: 8px; height: 8px; border-radius: 50%; background: #86efac;
+            box-shadow: 0 0 0 0 rgba(134,239,172,.52); animation: goldPulse 1.9s ease-out infinite;
+          }
+          #goldPanel .gold-toolbar-status[data-tone="loading"]::before { background: #38bdf8; box-shadow: 0 0 0 0 rgba(56,189,248,.56); }
+          #goldPanel .gold-toolbar-status[data-tone="limited"]::before { background: #fbbf24; box-shadow: 0 0 0 0 rgba(251,191,36,.55); }
+          #goldPanel .gold-toolbar-status[data-tone="error"]::before { background: #fb7185; box-shadow: 0 0 0 0 rgba(251,113,133,.6); }
+          #goldResult { min-height: 220px; }
+          #goldResult .gold-result-shell {
+            margin-top: 12px; border-radius: 18px; padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background:
+              radial-gradient(80% 100% at 100% 0, rgba(59,130,246,.13), transparent 45%),
+              linear-gradient(180deg, rgba(15,23,42,.88), rgba(2,6,23,.86));
+            box-shadow: 0 18px 30px rgba(2,6,23,.28), inset 0 1px 0 rgba(255,255,255,.04);
+            animation: goldReveal .28s ease-out;
+          }
+          #goldResult .gold-result-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: #bae6fd; font-weight: 800; }
+          #goldResult .gold-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22d3ee; box-shadow: 0 0 0 0 rgba(34,211,238,.5); animation: goldPulse 2s ease-out infinite; }
+          #goldResult .gold-result-main { font-size: clamp(19px, 5vw, 26px); letter-spacing: -0.02em; }
+          #goldResult .gold-result-range { color: #dbeafe; margin-top: 4px; }
+          #goldResult .gold-stat-card, #goldResult .gold-summary-card, #goldResult .gold-result-block, #goldResult .gold-field-check, #goldResult .gold-result-details {
+            border-color: rgba(148,163,184,.24);
+            background: rgba(2,6,23,.54);
+          }
+          #goldResult .gold-result-chip { background: rgba(15,23,42,.74); border-color: rgba(56,189,248,.24); }
+          #goldResult .gold-chip-icon { color: #7dd3fc; font-size: 11px; }
+          #goldResult .gold-stat-card-score.tone-high .gold-stat-value { color: #fde68a; text-shadow: 0 0 14px rgba(250,204,21,.16); }
+          #goldResult .gold-confidence-badge.high { color: #bbf7d0; border-color: rgba(74, 222, 128, 0.34); background: rgba(22, 101, 52, 0.18); }
+          #goldResult .gold-confidence-badge.mid { color: #bfdbfe; border-color: rgba(96, 165, 250, 0.34); background: rgba(30, 58, 138, 0.16); }
+          #goldResult .gold-confidence-badge.low { color: #fcd34d; border-color: rgba(245, 158, 11, 0.32); background: rgba(120, 53, 15, 0.18); }
+          #goldPanel .gold-toolbar button:focus-visible, #goldResult details summary:focus-visible, #goldPanel #goldCloseBtn:focus-visible {
+            outline: 2px solid rgba(56,189,248,.72); outline-offset: 2px;
+          }
+          @keyframes goldPulse {
+            0% { box-shadow: 0 0 0 0 currentColor; }
+            70% { box-shadow: 0 0 0 8px transparent; }
+            100% { box-shadow: 0 0 0 0 transparent; }
+          }
+          @keyframes goldReveal {
+            from { opacity: 0; transform: translate3d(0, 6px, 0); }
+            to { opacity: 1; transform: translate3d(0, 0, 0); }
+          }
+          @media (max-width: 430px) {
+            #goldPanel { border-radius: 18px; padding: 12px; }
+            #goldPanel .gold-hero-title { font-size: 17px; }
+            #goldReloadWaterBtn, #goldBgToggleBtn, #goldMicroToggleBtn { min-height: 44px; font-size: 12px; }
+            #goldResult .gold-result-main { font-size: clamp(18px, 6vw, 22px); }
+          }
+        </style>
 
 
         <div id="analysisPremiumModal" class="analysis-premium-modal" aria-hidden="true">
@@ -11618,7 +11751,16 @@ function initMap() {
     // ===========================
 
     function setGoldStatus(msg) {
-      if (goldStatusEl) goldStatusEl.textContent = msg || "";
+      if (!goldStatusEl) return;
+      const text = msg || "";
+      goldStatusEl.textContent = text;
+      const lower = text.toLowerCase();
+      let tone = "ready";
+      if (lower.includes("yüklen") || lower.includes("hazırl") || lower.includes("loading")) tone = "loading";
+      else if (lower.includes("hata") || lower.includes("retry") || lower.includes("alınamad")) tone = "error";
+      else if (lower.includes("sınırl") || lower.includes("offline") || lower.includes("internet yok")) tone = "limited";
+      else if (lower.includes("hazır") || lower.includes("ready") || lower.includes("başar")) tone = "ready";
+      goldStatusEl.dataset.tone = tone;
     }
 
     function goldUiText(key) {
@@ -11782,9 +11924,9 @@ function initMap() {
     function renderGoldLoadingState(payload = {}) {
       if (!goldResultEl) return;
       const chips = [];
-      if (payload.wName) chips.push(`<span class="gold-result-chip">🏞 <strong>${escapeHtml(goldUiText('selected'))}:</strong> ${escapeHtml(payload.wName)}</span>`);
-      if (payload.wType) chips.push(`<span class="gold-result-chip">🧭 <strong>${escapeHtml(goldUiText('type'))}:</strong> ${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</span>`);
-      if (payload.location) chips.push(`<span class="gold-result-chip">📍 <strong>${escapeHtml(goldUiText('location'))}:</strong> ${escapeHtml(payload.location)}</span>`);
+      if (payload.wName) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon" aria-hidden="true">◉</span><strong>${escapeHtml(goldUiText('selected'))}:</strong> ${escapeHtml(payload.wName)}</span>`);
+      if (payload.wType) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon" aria-hidden="true">◌</span><strong>${escapeHtml(goldUiText('type'))}:</strong> ${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</span>`);
+      if (payload.location) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon" aria-hidden="true">⌖</span><strong>${escapeHtml(goldUiText('location'))}:</strong> ${escapeHtml(payload.location)}</span>`);
       const loadingText = payload.loadingText || goldUiText(navigator.onLine ? 'loadingText' : 'loadingTextOffline');
 
       updateGoldResultMarkup(`
@@ -12098,7 +12240,7 @@ function initMap() {
     <div class="gold-result-shell tone-${tone}">
       <div class="gold-result-top">
         <div>
-          <div class="gold-result-eyebrow">Altın Tozu Analizi</div>
+          <div class="gold-result-eyebrow"><span class="gold-live-dot" aria-hidden="true"></span>Altın Tozu Analizi</div>
           <div class="gold-result-main">${escapeHtml(statusLabel)}</div>
           <div class="gold-result-range">${escapeHtml(payload.wName)}</div>
         </div>
