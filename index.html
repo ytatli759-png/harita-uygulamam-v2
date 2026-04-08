@@ -9324,6 +9324,8 @@
       location_failed_default: "لم يمنح المتصفح الإذن."
     });
 
+    let activeLangCode = "en";
+
     function getDefaultLang() {
       const saved = localStorage.getItem(LANG_STORAGE_KEY);
       if (saved && I18N_STRINGS[saved]) return saved;
@@ -9332,14 +9334,21 @@
       return I18N_STRINGS[base] ? base : 'en';
     }
 
+    function getActiveLang() {
+      if (activeLangCode && I18N_STRINGS[activeLangCode]) return activeLangCode;
+      activeLangCode = getDefaultLang();
+      return activeLangCode;
+    }
+
     function t(key) {
-      const lang = localStorage.getItem(LANG_STORAGE_KEY) || getDefaultLang();
+      const lang = getActiveLang();
       return (I18N_STRINGS[lang] && I18N_STRINGS[lang][key]) || I18N_STRINGS.en[key] || key;
     }
 
     function applyLanguage(lang) {
       if (!I18N_STRINGS[lang]) lang = 'en';
       localStorage.setItem(LANG_STORAGE_KEY, lang);
+      activeLangCode = lang;
       document.documentElement.lang = lang;
       document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
 
@@ -9945,6 +9954,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let allSpotsCache = [];
     let spotWriteTimer = null;
     let renderRafToken = 0;
+    let lastListRenderSignature = "";
 
     let goldWaterLayer = null;
     let goldWaterWaysById = new Map(); // osmWayId -> L.Polyline
@@ -9970,6 +9980,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let goldPrevSelectedWayId = null;
     let goldDeferredBatchTimer = null;
     let goldRefreshRunToken = 0;
+    let goldRefreshInFlightKey = "";
     let goldLastNeedBlueHintAt = 0;
     const goldTileFailureCooldownUntil = new Map();
     const GOLD_TILE_RETRY_COOLDOWN_MS = 12000;
@@ -10375,7 +10386,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     };
 
     function ux(key, vars = {}) {
-      const lang = (localStorage.getItem(LANG_STORAGE_KEY) || getDefaultLang() || "en").split('-')[0];
+      const lang = (getActiveLang() || "en").split('-')[0];
       const table = UX_COPY[lang] || UX_COPY.en;
       let out = table[key] || UX_COPY.en[key] || key;
       Object.entries(vars).forEach(([k, v]) => {
@@ -11640,22 +11651,38 @@ function initMap() {
       })();
       setMapFocusMode(savedFocus);
 
-      // Altın Modu: harita hareket edince akar su katmanını güncelle
+      // Performans: moveend + zoomend sırasında tek bir planlı işlemle duplicate zincirleri önle.
+      let mapInteractionRaf = 0;
+      let pendingMapInteraction = { force: false, fastStart: false, zoomVisual: false };
+      const scheduleMapInteractionWork = (opts = {}) => {
+        pendingMapInteraction.force = pendingMapInteraction.force || !!opts.force;
+        pendingMapInteraction.fastStart = pendingMapInteraction.fastStart || !!opts.fastStart;
+        pendingMapInteraction.zoomVisual = pendingMapInteraction.zoomVisual || !!opts.zoomVisual;
+        if (mapInteractionRaf) return;
+        mapInteractionRaf = requestAnimationFrame(() => {
+          mapInteractionRaf = 0;
+          saveMapView();
+          updateMapHud();
+          if (!goldMode) {
+            pendingMapInteraction = { force: false, fastStart: false, zoomVisual: false };
+            return;
+          }
+          if (pendingMapInteraction.zoomVisual) refreshGoldWaterVisualsForZoom();
+          scheduleGoldRefresh(pendingMapInteraction.force, {
+            fastStart: pendingMapInteraction.fastStart,
+            urgent: pendingMapInteraction.force || pendingMapInteraction.zoomVisual
+          });
+          pendingMapInteraction = { force: false, fastStart: false, zoomVisual: false };
+        });
+      };
+
       map.on("moveend", () => {
-        saveMapView();
-        updateMapHud();
-        if (goldMode) scheduleGoldRefresh(false);
+        scheduleMapInteractionWork({ force: false });
       });
 
       map.on("zoomend", () => {
-        saveMapView();
-        updateMapHud();
-        // Zoom değişince su katmanını mutlaka yeniden çağır:
-        // Kullanıcı sadece yakınlaştırdıysa bile mavi akar sular beklemeden gelsin.
-        if (goldMode) {
-          refreshGoldWaterVisualsForZoom();
-          scheduleGoldRefresh(true, { fastStart: true });
-        }
+        // Zoom sonrası hızlı çizim ve tek bir refresh.
+        scheduleMapInteractionWork({ force: true, fastStart: true, zoomVisual: true });
       });
 
       map.on("click", async (e) => {
@@ -11732,11 +11759,12 @@ function initMap() {
         }
       });
 
-      map.on("mousemove", (e) => {
+      const handleMapMouseMove = throttle((e) => {
         const lat = e.latlng.lat;
         const lon = e.latlng.lng;
         setCoordBar(lat, lon);
-      });
+      }, 66);
+      map.on("mousemove", handleMapMouseMove);
 
       map.on("mouseout", () => {
         clearCoordBar();
@@ -11764,7 +11792,7 @@ function initMap() {
     }
 
     function goldUiText(key) {
-      const lang = (localStorage.getItem(LANG_STORAGE_KEY) || getDefaultLang() || "en").split('-')[0];
+      const lang = (getActiveLang() || "en").split('-')[0];
       const copy = {
         tr: {
           emptyTitle: "Kısa sonuç burada görünecek",
@@ -12311,6 +12339,34 @@ function initMap() {
       return new Promise((r) => setTimeout(r, ms));
     }
 
+    function throttle(fn, wait = 80) {
+      let last = 0;
+      let trailingTimer = null;
+      let trailingArgs = null;
+      return function throttled(...args) {
+        const now = Date.now();
+        const remaining = wait - (now - last);
+        trailingArgs = args;
+        if (remaining <= 0) {
+          if (trailingTimer) {
+            clearTimeout(trailingTimer);
+            trailingTimer = null;
+          }
+          last = now;
+          fn.apply(this, trailingArgs);
+          trailingArgs = null;
+          return;
+        }
+        if (trailingTimer) return;
+        trailingTimer = setTimeout(() => {
+          trailingTimer = null;
+          last = Date.now();
+          fn.apply(this, trailingArgs || []);
+          trailingArgs = null;
+        }, remaining);
+      };
+    }
+
     async function waitWithAbort(ms, signal = null) {
       const delay = Math.max(0, ms | 0);
       if (!delay) return;
@@ -12540,12 +12596,6 @@ function initMap() {
         } catch {}
       });
 
-      if (!changed && selectedId) {
-        const poly = goldWaterWaysById.get(Number(selectedId)) || goldWaterWaysById.get(selectedId);
-        if (poly && typeof poly.bringToFront === "function") {
-          try { poly.bringToFront(); } catch {}
-        }
-      }
       goldPrevSelectedWayId = selectedId || null;
     }
 
@@ -12721,6 +12771,7 @@ function goldResetWater() {
       goldTilesInFlight.clear();
       goldTileFailureCooldownUntil.clear();
       goldLastViewportKey = "";
+      goldRefreshInFlightKey = "";
       goldTileCycleId++;
       goldRefreshRunToken++;
       if (goldMode && mapInitialized) ensureGoldWaterRenderer(true);
@@ -12877,6 +12928,7 @@ function goldResetWater() {
         clearTimeout(goldDeferredBatchTimer);
         goldDeferredBatchTimer = null;
         goldRefreshRunToken++;
+        goldRefreshInFlightKey = "";
 
         // Ağ isteklerini iptal et
         abortGoldNetwork();
@@ -13139,11 +13191,14 @@ out tags geom qt;`;
 
       const tZ = getWaterTileZoom();
       const viewportKey = buildGoldViewportKey(tZ);
+      const requestedKey = `${viewportKey}|${force ? 1 : 0}|${buildGoldWaterRegex(zoomNow)}`;
+      if (!force && requestedKey === goldRefreshInFlightKey) return;
       if (!force && viewportKey && viewportKey === goldLastViewportKey) return;
       if (viewportKey && goldLastViewportKey && viewportKey !== goldLastViewportKey) {
         abortGoldNetwork();
         goldFetchQueue = [];
       }
+      goldRefreshInFlightKey = requestedKey;
       goldLastViewportKey = viewportKey;
 
       const tiles = getVisibleTiles(tZ);
@@ -13232,6 +13287,9 @@ out tags geom qt;`;
           }
           pruneGoldWaterOutsideViewport();
         }, fastStart ? 120 : 30);
+      }
+      if (!goldFetchQueue.length && goldFetching === 0) {
+        goldRefreshInFlightKey = "";
       }
     }
 
@@ -13442,7 +13500,9 @@ out tags geom qt;`;
         // ✅ Önce cache'e bak (geri dönülen bölgelerde anında yükleme)
         const cached = goldLoadCachedTile(key, wRegex, { allowStale: true });
         if (cached && Array.isArray(cached.elements) && cached.elements.length) {
+          if (cycleId && cycleId !== goldTileCycleId) return;
           await renderGoldWaterItems(cached.elements, zoomNow);
+          if (cycleId && cycleId !== goldTileCycleId) return;
           scheduleGoldRepaint();
           goldTilesLoaded.add(loadKey);
           // Cache-first + verify-after: her tile en az bir kez ağdan doğrulanır.
@@ -13491,7 +13551,9 @@ out tags geom qt;`;
         }
 
         // Çizimi parça parça yap (UI donmasın)
+        if (cycleId && cycleId !== goldTileCycleId) return;
         await renderGoldWaterItems(cacheItems, zoomNow);
+        if (cycleId && cycleId !== goldTileCycleId) return;
 
         // Cache'e yaz (boş tile'ları da saklıyoruz; gereksiz tekrar istek olmaz)
         goldSaveCachedTile(key, wRegex, cacheItems);
@@ -13504,7 +13566,9 @@ out tags geom qt;`;
         if (cycleId && cycleId !== goldTileCycleId) return;
         const staleCached = goldLoadCachedTile(key, wRegex, { allowStale: true });
         if (staleCached && Array.isArray(staleCached.elements) && staleCached.elements.length) {
+          if (cycleId && cycleId !== goldTileCycleId) return;
           await renderGoldWaterItems(staleCached.elements, map ? map.getZoom() : 13);
+          if (cycleId && cycleId !== goldTileCycleId) return;
           scheduleGoldRepaint();
           goldTilesLoaded.add(loadKey);
           setGoldStatus(goldUiText('cachedReady'));
@@ -13526,6 +13590,7 @@ out tags geom qt;`;
         if (goldFetching === 0 && goldFetchQueue.length === 0 && goldMode) {
           pruneGoldWaterOutsideViewport();
           setGoldStatus(t('ready'));
+          goldRefreshInFlightKey = "";
         }
       }
     }
@@ -14196,8 +14261,12 @@ out tags geom qt;`;
           return (b.createdAt || 0) - (a.createdAt || 0);
         });
 
-      listEl.innerHTML = "";
-      const listFrag = document.createDocumentFragment();
+      const renderSignature = allSpots.map((spot) => {
+        const id = String(spot.id || "");
+        const updated = Number(spot.updatedAt || spot.createdAt || 0);
+        const selected = selectedSpotId && String(selectedSpotId) === id ? "1" : "0";
+        return `${id}:${updated}:${selected}`;
+      }).join("|") + `|q:${q}`;
       if (selectedSpotId && !allSpots.some((s) => String(s.id) === String(selectedSpotId))) {
         selectedSpotId = null;
       }
@@ -14211,6 +14280,12 @@ out tags geom qt;`;
 
       // ✅ Arama varken auto-fit kapalı
       updateMapMarkers(allSpots, { autoFit: !q });
+
+      if (renderSignature === lastListRenderSignature) return;
+      lastListRenderSignature = renderSignature;
+
+      listEl.innerHTML = "";
+      const listFrag = document.createDocumentFragment();
 
       if (!allSpots.length) {
         const li = document.createElement("li");
@@ -18005,7 +18080,11 @@ function updateHistoryPreview(rawText) {
 
     setSearchPanelState(Boolean(searchInput?.value?.trim()));
 
-    searchInput?.addEventListener("input", scheduleRender);
+    let searchRenderDebounce = null;
+    searchInput?.addEventListener("input", () => {
+      clearTimeout(searchRenderDebounce);
+      searchRenderDebounce = setTimeout(() => scheduleRender(), 90);
+    }, { passive: true });
     updateSelectedAnalysisPlanUi();
     updateAnalysisUsageUi();
     safeBindClick(goldGuideBtn, "goldGuideBtn", () => {
@@ -18142,13 +18221,21 @@ function updateHistoryPreview(rawText) {
 
     function startApp() {
       if (appContainer) appContainer.style.display = "block";
-      bootMap();
+      // Kritik yol: etkileşimli UI'ı hemen aç, ağır işleri frame/idle'a yay.
+      requestAnimationFrame(() => bootMap());
       safeAction("updateMapToolTexts", updateMapToolTexts)();
       safeAction("updateMapToolStates", updateMapToolStates)();
-      initBackend().finally(() => {
-        safeAction("render", render)();
-        scheduleRemoteSync(300);
-      });
+      safeAction("render", render)();
+      const runDeferredStartup = () => {
+        initBackend().finally(() => {
+          scheduleRemoteSync(300);
+        });
+      };
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(runDeferredStartup, { timeout: 1400 });
+      } else {
+        setTimeout(runDeferredStartup, 220);
+      }
       requestAnimationFrame(applyInitialCardReveal);
       closeSplash(false);
     }
