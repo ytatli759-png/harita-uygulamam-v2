@@ -7730,7 +7730,12 @@
                 </button>
                 <div class="secondary-hero-row">
                     <button type="button" id="goldGuideBtn">
-                        <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">✦</span></span>
+                        <span class="hero-btn-icon" aria-hidden="true">
+                          <svg class="icon-svg icon-size-section" viewBox="0 0 24 24" focusable="false">
+                            <path d="M12 3.6 14.2 8l4.9.7-3.6 3.5.8 4.9-4.3-2.3-4.3 2.3.8-4.9L4.9 8l4.9-.7Z" fill="currentColor" opacity=".18"></path>
+                            <path d="M12 4.8 14 8.7l4.3.6-3.1 3.1.7 4.3-3.9-2.1-3.9 2.1.7-4.3-3.1-3.1 4.3-.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                          </svg>
+                        </span>
                         <span class="hero-btn-copy">
                   <span class="hero-btn-title">Altın tozu rehberi</span>
                   <span class="hero-btn-subtitle">Dere analizi aç</span>
@@ -7746,12 +7751,44 @@
 
         <!-- 🏞 Altın tozu rehberi paneli -->
         <div id="goldPanel">
+            <!-- ICON SYSTEM: Tek aile, tek stroke dili için merkezi sprite -->
+            <svg class="gold-icon-sprite" aria-hidden="true" focusable="false">
+              <symbol id="gi-analysis" viewBox="0 0 24 24">
+                <path d="M4 18h16M6 15l3-4 3 2 5-6 1 1"></path>
+                <circle cx="9" cy="11" r="1.4"></circle>
+                <circle cx="12" cy="13" r="1.4"></circle>
+                <circle cx="17" cy="7" r="1.4"></circle>
+              </symbol>
+              <symbol id="gi-zoom" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="5.5"></circle><path d="m16 16 4 4M11 8v6M8 11h6"></path>
+              </symbol>
+              <symbol id="gi-tap" viewBox="0 0 24 24">
+                <path d="M12 5.5v3M8.7 6.8l2 2M15.3 6.8l-2 2M7.8 11h3"></path>
+                <path d="M11 18V11a1 1 0 1 1 2 0v4l1.1-1.1a1.2 1.2 0 0 1 1.8 0c.5.5.5 1.2 0 1.7L13.8 18"></path>
+              </symbol>
+              <symbol id="gi-save" viewBox="0 0 24 24">
+                <path d="M7 4h10l2 2v14H5V6l2-2Z"></path><path d="M8 4v5h8V4M9 20v-6h6v6"></path>
+              </symbol>
+              <symbol id="gi-stream" viewBox="0 0 24 24">
+                <path d="M3 9c3 0 3-2.8 6-2.8S12 9 15 9s3-2.8 6-2.8"></path><path d="M3 14c3 0 3-2.8 6-2.8S12 14 15 14s3-2.8 6-2.8"></path>
+              </symbol>
+              <symbol id="gi-refresh" viewBox="0 0 24 24">
+                <path d="M20 7v5h-5"></path><path d="M4 17v-5h5"></path><path d="M6.7 8.6A7 7 0 0 1 18 10M17.3 15.4A7 7 0 0 1 6 14"></path>
+              </symbol>
+              <symbol id="gi-layers" viewBox="0 0 24 24"><path d="m12 4 8 4-8 4-8-4 8-4Zm8 8-8 4-8-4m16 4-8 4-8-4"></path></symbol>
+              <symbol id="gi-branch" viewBox="0 0 24 24"><path d="M6 5v14m0-8h7m0 0 5-4m-5 4 5 6"></path><circle cx="6" cy="5" r="1.5"></circle><circle cx="6" cy="19" r="1.5"></circle><circle cx="13" cy="11" r="1.5"></circle></symbol>
+              <symbol id="gi-status" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l2.5 2.5"></path></symbol>
+              <symbol id="gi-score" viewBox="0 0 24 24"><path d="M4 18h16M7 18v-4m5 4V9m5 9v-6"></path></symbol>
+              <symbol id="gi-shield" viewBox="0 0 24 24"><path d="M12 3 5.5 5.8V12c0 4.2 2.5 7 6.5 9 4-2 6.5-4.8 6.5-9V5.8L12 3Z"></path><path d="m9.5 11.8 1.7 1.7 3.3-3.3"></path></symbol>
+              <symbol id="gi-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 10.5V16M12 8h.01"></path></symbol>
+              <symbol id="gi-warning" viewBox="0 0 24 24"><path d="m12 4 8 14H4l8-14Z"></path><path d="M12 9.5v4M12 16h.01"></path></symbol>
+              <symbol id="gi-location" viewBox="0 0 24 24"><path d="M12 20s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z"></path><circle cx="12" cy="10" r="2"></circle></symbol>
+              <symbol id="gi-close" viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"></path></symbol>
+            </svg>
             <!-- PREMIUM REFACTOR: Hero başlık + canlı analiz kimliği -->
             <div class="gallery-header gold-hero-header">
                 <div class="gallery-title gold-hero-title">
-                    <span class="gold-title-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 17.2 9.1 7.9a2 2 0 0 1 3.2-.1l2.1 2.9 2-3a2 2 0 0 1 3.3 0l4.3 6.3a2 2 0 0 1-1.7 3.1H4.7A2 2 0 0 1 3 17.2Z" fill="currentColor" opacity=".22"/><path d="M4.7 19h17.6a4 4 0 0 0 3.3-6.2l-4.3-6.3a4 4 0 0 0-6.6 0l-.3.5-.5-.8a4 4 0 0 0-6.5.2L1.3 16.1A4 4 0 0 0 4.7 19Zm0-2a2 2 0 0 1-1.7-3.1l6.1-9.3a2 2 0 0 1 3.2-.1l2.1 2.9 2-3a2 2 0 0 1 3.3 0l4.3 6.3a2 2 0 0 1-1.7 3.1Z" fill="currentColor"/></svg>
-                    </span>
+                    <span class="gold-title-icon"><svg class="icon-svg icon-size-hero"><use href="#gi-analysis"></use></svg></span>
                     <span>Altın tozu rehberi</span>
                     <span class="gold-hero-badge">Canlı analiz</span>
                 </div>
@@ -7763,7 +7800,7 @@
             </div>
 
             <div id="goldEarlyAccessNotice" class="gold-early-access-notice" role="status" aria-live="polite" aria-atomic="true" hidden>
-                <button type="button" id="goldEarlyAccessCloseBtn" class="gold-early-access-close" aria-label="Bilgi kartını kapat">✕</button>
+                <button type="button" id="goldEarlyAccessCloseBtn" class="gold-early-access-close" aria-label="Bilgi kartını kapat"><svg class="icon-svg icon-size-chip" aria-hidden="true"><use href="#gi-close"></use></svg></button>
                 <div class="gold-early-access-kicker">Erken erişim</div>
                 <div class="gold-early-access-title">Akar sular hazırlanıyor</div>
                 <div class="gold-early-access-text">Akar sular birkaç saniyede yüklenebilir. Mobilde dokunma alanı genişletildi; mavi çizginin üstüne veya çok yakınına dokunman yeterli.</div>
@@ -7773,9 +7810,9 @@
             <div class="guide-howto compact-guide gold-step-grid">
                 <div class="guide-howto-title">Hızlı kullanım akışı</div>
                 <ol class="guide-howto-list compact-guide-list gold-step-list">
-                    <li><span class="step-no">01</span><span>Haritada dereye yaklaş. <strong>Zoom 12+</strong>, küçük kollar için <strong>14+</strong>.</span></li>
-                    <li><span class="step-no">02</span><span><strong>Mavi çizgiye veya çok yakınına dokun.</strong> Sistem eğim + açık veriyle özet üretir.</span></li>
-                    <li><span class="step-no">03</span><span>Potansiyel uygunsa <strong>Yeni nokta ekle</strong> ile kaydet.</span></li>
+                    <li><span class="step-no"><svg class="icon-svg icon-size-chip" aria-hidden="true"><use href="#gi-zoom"></use></svg></span><span>Haritada dereye yaklaş. <strong>Zoom 12+</strong>, küçük kollar için <strong>14+</strong>.</span></li>
+                    <li><span class="step-no"><svg class="icon-svg icon-size-chip" aria-hidden="true"><use href="#gi-tap"></use></svg></span><span><strong>Mavi çizgiye veya çok yakınına dokun.</strong> Sistem eğim + açık veriyle özet üretir.</span></li>
+                    <li><span class="step-no"><svg class="icon-svg icon-size-chip" aria-hidden="true"><use href="#gi-save"></use></svg></span><span>Potansiyel uygunsa <strong>Yeni nokta ekle</strong> ile kaydet.</span></li>
                 </ol>
             </div>
 
@@ -7798,6 +7835,14 @@
 
         <style>
           /* PREMIUM REFACTOR: Altın tozu rehberi için izole mobil-first görsel yükseltme */
+          #goldPanel .gold-icon-sprite { position: absolute; width: 0; height: 0; pointer-events: none; }
+          #goldPanel .icon-svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+          #goldPanel .icon-size-hero { width: 24px; height: 24px; }
+          #goldPanel .icon-size-section { width: 18px; height: 18px; }
+          #goldPanel .icon-size-button { width: 16px; height: 16px; }
+          #goldPanel .icon-size-chip { width: 14px; height: 14px; }
+          #goldPanel .icon-size-micro { width: 12px; height: 12px; }
+          #goldPanel .icon-size-metric { width: 15px; height: 15px; }
           #goldPanel {
             border-radius: 22px;
             padding: 14px;
@@ -7810,8 +7855,7 @@
           }
           #goldPanel .gold-hero-header { margin-bottom: 12px; align-items: center; }
           #goldPanel .gold-hero-title { gap: 10px; font-size: clamp(17px, 3.8vw, 22px); font-weight: 800; letter-spacing: -0.02em; }
-          #goldPanel .gold-title-icon { width: 24px; height: 24px; display: inline-flex; color: #facc15; filter: drop-shadow(0 0 10px rgba(250,204,21,.28)); }
-          #goldPanel .gold-title-icon svg { width: 100%; height: 100%; }
+          #goldPanel .gold-title-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: #facc15; border-radius: 10px; border: 1px solid rgba(250,204,21,.35); background: linear-gradient(180deg, rgba(120,53,15,.35), rgba(15,23,42,.2)); filter: drop-shadow(0 0 10px rgba(250,204,21,.22)); }
           #goldPanel .gold-hero-badge {
             margin-left: 2px; padding: 4px 10px; border-radius: 999px;
             border: 1px solid rgba(56, 189, 248, .38); color: #bae6fd; font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
@@ -7847,40 +7891,70 @@
           #goldPanel .gold-toolbar { gap: 9px; }
           #goldReloadWaterBtn, #goldBgToggleBtn, #goldMicroToggleBtn {
             position: relative; min-height: 46px; border-radius: 14px; font-weight: 700; letter-spacing: .01em;
-            padding: 11px 12px 11px 38px;
+            padding: 11px 12px 11px 48px;
           }
           #goldReloadWaterBtn::before, #goldBgToggleBtn::before, #goldMicroToggleBtn::before {
             content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-            width: 18px; height: 18px; border-radius: 50%; opacity: .95;
+            width: 28px; height: 28px; border-radius: 10px; opacity: .95;
+            border: 1px solid rgba(148,163,184,.28); background-color: rgba(15,23,42,.72); background-repeat: no-repeat; background-position: center; background-size: 14px 14px;
           }
           #goldReloadWaterBtn {
             background: linear-gradient(150deg, rgba(234, 179, 8, 0.24), rgba(20, 83, 45, 0.92) 48%, rgba(9, 48, 27, 0.96));
             border-color: rgba(250, 204, 21, 0.36); color: #f8fafc;
             box-shadow: 0 12px 24px rgba(20, 83, 45, 0.32), inset 0 1px 0 rgba(255,255,255,.12);
           }
-          #goldReloadWaterBtn::before { background: radial-gradient(circle at 30% 30%, #7dd3fc 25%, #0ea5e9 70%); box-shadow: 0 0 0 2px rgba(56,189,248,.18); }
+          #goldReloadWaterBtn::before {
+            background-image:
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9c3 0 3-2.8 6-2.8S12 9 15 9s3-2.8 6-2.8M3 14c3 0 3-2.8 6-2.8S12 14 15 14s3-2.8 6-2.8'/%3E%3Cpath d='M20 6v4h-4'/%3E%3C/svg%3E"),
+              radial-gradient(circle at 30% 30%, rgba(125,211,252,.28) 20%, rgba(14,165,233,.12) 70%);
+            box-shadow: 0 0 0 2px rgba(56,189,248,.12);
+          }
           #goldBgToggleBtn, #goldMicroToggleBtn {
             border-color: rgba(56, 189, 248, .26);
             background: linear-gradient(180deg, rgba(15,23,42,.8), rgba(15,23,42,.64));
             color: #dbeafe;
           }
-          #goldBgToggleBtn::before { background: radial-gradient(circle at 35% 32%, #93c5fd 30%, #2563eb 74%); }
-          #goldMicroToggleBtn::before { background: radial-gradient(circle at 35% 30%, #fef3c7 28%, #f59e0b 74%); }
+          #goldBgToggleBtn::before {
+            background-image:
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2393c5fd' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 4 8 4-8 4-8-4 8-4Zm8 8-8 4-8-4m16 4-8 4-8-4'/%3E%3C/svg%3E"),
+              radial-gradient(circle at 35% 32%, rgba(147,197,253,.2) 30%, rgba(37,99,235,.1) 74%);
+          }
+          #goldMicroToggleBtn::before {
+            background-image:
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fde68a' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 5v14m0-8h7m0 0 5-4m-5 4 5 6'/%3E%3Ccircle cx='6' cy='5' r='1.4'/%3E%3Ccircle cx='6' cy='19' r='1.4'/%3E%3Ccircle cx='13' cy='11' r='1.4'/%3E%3C/svg%3E"),
+              radial-gradient(circle at 35% 30%, rgba(254,243,199,.18) 28%, rgba(245,158,11,.08) 74%);
+          }
           #goldBgToggleBtn:hover, #goldMicroToggleBtn:hover,
           #goldBgToggleBtn:focus-visible, #goldMicroToggleBtn:focus-visible {
             border-color: rgba(56, 189, 248, .46); background: rgba(15, 23, 42, .95);
           }
+          #goldReloadWaterBtn.is-loading::before { animation: goldSpin 1s linear infinite; }
           #goldPanel .gold-toolbar-status {
             justify-content: flex-start; gap: 8px; font-weight: 700; font-size: 11.5px;
             background: rgba(2, 6, 23, 0.62); border-color: rgba(148, 163, 184, 0.24);
           }
           #goldPanel .gold-toolbar-status::before {
-            content: ''; width: 8px; height: 8px; border-radius: 50%; background: #86efac;
-            box-shadow: 0 0 0 0 rgba(134,239,172,.52); animation: goldPulse 1.9s ease-out infinite;
+            content: ''; width: 18px; height: 18px; border-radius: 7px; border: 1px solid rgba(134,239,172,.42);
+            background-color: rgba(22,101,52,.24);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386efac' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 8v4l2.5 2.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-size: 12px 12px; background-position: center;
+            box-shadow: 0 0 0 0 rgba(134,239,172,.42); animation: goldPulse 1.9s ease-out infinite;
           }
-          #goldPanel .gold-toolbar-status[data-tone="loading"]::before { background: #38bdf8; box-shadow: 0 0 0 0 rgba(56,189,248,.56); }
-          #goldPanel .gold-toolbar-status[data-tone="limited"]::before { background: #fbbf24; box-shadow: 0 0 0 0 rgba(251,191,36,.55); }
-          #goldPanel .gold-toolbar-status[data-tone="error"]::before { background: #fb7185; box-shadow: 0 0 0 0 rgba(251,113,133,.6); }
+          #goldPanel .gold-toolbar-status[data-tone="loading"]::before {
+            border-color: rgba(56,189,248,.42); background-color: rgba(3,105,161,.24);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 7v5h-5M4 17v-5h5M6.7 8.6A7 7 0 0 1 18 10M17.3 15.4A7 7 0 0 1 6 14'/%3E%3C/svg%3E");
+            box-shadow: 0 0 0 0 rgba(56,189,248,.56);
+          }
+          #goldPanel .gold-toolbar-status[data-tone="limited"]::before {
+            border-color: rgba(251,191,36,.42); background-color: rgba(120,53,15,.28);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 4 8 14H4l8-14Z'/%3E%3Cpath d='M12 9.5v4M12 16h.01'/%3E%3C/svg%3E");
+            box-shadow: 0 0 0 0 rgba(251,191,36,.55);
+          }
+          #goldPanel .gold-toolbar-status[data-tone="error"]::before {
+            border-color: rgba(251,113,133,.44); background-color: rgba(136,19,55,.24);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fb7185' stroke-width='1.9' stroke-linecap='round'%3E%3Cpath d='m7 7 10 10M17 7 7 17'/%3E%3C/svg%3E");
+            box-shadow: 0 0 0 0 rgba(251,113,133,.6);
+          }
           #goldResult { min-height: 220px; }
           #goldResult .gold-result-shell {
             margin-top: 12px; border-radius: 18px; padding: 14px;
@@ -7895,12 +7969,25 @@
           #goldResult .gold-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22d3ee; box-shadow: 0 0 0 0 rgba(34,211,238,.5); animation: goldPulse 2s ease-out infinite; }
           #goldResult .gold-result-main { font-size: clamp(19px, 5vw, 26px); letter-spacing: -0.02em; }
           #goldResult .gold-result-range { color: #dbeafe; margin-top: 4px; }
+          #goldResult .gold-stat-label,
+          #goldResult .gold-summary-kicker,
+          #goldResult .gold-result-block-title,
+          #goldResult .gold-chip-icon { display: inline-flex; align-items: center; gap: 6px; }
           #goldResult .gold-stat-card, #goldResult .gold-summary-card, #goldResult .gold-result-block, #goldResult .gold-field-check, #goldResult .gold-result-details {
             border-color: rgba(148,163,184,.24);
             background: rgba(2,6,23,.54);
           }
           #goldResult .gold-result-chip { background: rgba(15,23,42,.74); border-color: rgba(56,189,248,.24); }
-          #goldResult .gold-chip-icon { color: #7dd3fc; font-size: 11px; }
+          #goldResult .gold-chip-icon { color: #7dd3fc; }
+          #goldCloseBtn {
+            display: inline-flex; align-items: center; gap: 6px;
+            border-radius: 12px; border: 1px solid rgba(148,163,184,.35); background: rgba(15,23,42,.62);
+          }
+          #goldCloseBtn::before {
+            content: ""; width: 14px; height: 14px; border-radius: 6px;
+            background: center/12px 12px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e2e8f0' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m7 7 10 10M17 7 7 17'/%3E%3C/svg%3E");
+            opacity: .9;
+          }
           #goldResult .gold-stat-card-score.tone-high .gold-stat-value { color: #fde68a; text-shadow: 0 0 14px rgba(250,204,21,.16); }
           #goldResult .gold-confidence-badge.high { color: #bbf7d0; border-color: rgba(74, 222, 128, 0.34); background: rgba(22, 101, 52, 0.18); }
           #goldResult .gold-confidence-badge.mid { color: #bfdbfe; border-color: rgba(96, 165, 250, 0.34); background: rgba(30, 58, 138, 0.16); }
@@ -7916,6 +8003,10 @@
           @keyframes goldReveal {
             from { opacity: 0; transform: translate3d(0, 6px, 0); }
             to { opacity: 1; transform: translate3d(0, 0, 0); }
+          }
+          @keyframes goldSpin {
+            from { transform: translateY(-50%) rotate(0deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
           }
           @media (max-width: 430px) {
             #goldPanel { border-radius: 18px; padding: 12px; }
@@ -8436,10 +8527,10 @@
         locateMe: "📍 Locate me",
         cursor: "Cursor: –",
         seePhotos: "📷 View photos",
-        microOn: "🧵 Micro streams: On",
-        microOff: "🧵 Micro streams: Off",
-        bgOn: "🛰 Background: On",
-        bgOff: "🛰 Background: Off",
+        microOn: "Micro streams: On",
+        microOff: "Micro streams: Off",
+        bgOn: "Background: On",
+        bgOff: "Background: Off",
         historyPh: "Write a short note or create one from the selected location.",
         noResults: "No records match your search.",
         noRecords: "No records yet. Start with 'Add new point'.",
@@ -8517,10 +8608,10 @@
         clearMarks: "🧹 Clear markers",
         locateMe: "📍 Locate me",
         cursor: "Cursor",
-        microOn: "🧵 Micro streams: On",
-        microOff: "🧵 Micro streams: Off",
-        bgOn: "🛰 Background: On",
-        bgOff: "🛰 Background: Off",
+        microOn: "Micro streams: On",
+        microOff: "Micro streams: Off",
+        bgOn: "Background: On",
+        bgOff: "Background: Off",
         seePhotos: "📷 See photos",
         nameLabel: "Title *",
         typeLabel: "Type",
@@ -8549,10 +8640,10 @@
         chanceLow: "Low",
         chanceMid: "Medium",
         chanceHigh: "High",
-        microOn: "🧵 Micro streams: On",
-        microOff: "🧵 Micro streams: Off",
-        bgOn: "🛰 Background: On",
-        bgOff: "🛰 Background: Off",
+        microOn: "Micro streams: On",
+        microOff: "Micro streams: Off",
+        bgOn: "Background: On",
+        bgOff: "Background: Off",
         seePhotos: "📷 See photos",
         // Gold-mode click output
         goldSelWater: 'Selected waterway: {name}',
@@ -8635,10 +8726,10 @@
         locateMe: "📍 Buradayım",
         cursor: "İmleç: –",
         seePhotos: "📷 Fotoğrafları gör",
-        microOn: "🧵 Mikro dereler: Açık",
-        microOff: "🧵 Mikro dereler: Kapalı",
-        bgOn: "🛰 Arka plan: Açık",
-        bgOff: "🛰 Arka plan: Kapalı",
+        microOn: "Mikro dereler: Açık",
+        microOff: "Mikro dereler: Kapalı",
+        bgOn: "Arka plan: Açık",
+        bgOff: "Arka plan: Kapalı",
         historyPh: "Kısa bir not yazabilir ya da konuma göre tarih özeti oluşturabilirsin.",
         noResults: "Aramana uygun kayıt bulunamadı.",
         noRecords: "Henüz kayıt yok. 'Yeni nokta ekle' ile başlayabilirsin.",
@@ -8713,10 +8804,10 @@
         clearMarks: "🧹 İşaretleri temizle",
         locateMe: "📍 Buradayım",
         cursor: "İmleç",
-        microOn: "🧵 Mikro dereler: Açık",
-        microOff: "🧵 Mikro dereler: Kapalı",
-        bgOn: "🛰 Arka plan: Açık",
-        bgOff: "🛰 Arka plan: Kapalı",
+        microOn: "Mikro dereler: Açık",
+        microOff: "Mikro dereler: Kapalı",
+        bgOn: "Arka plan: Açık",
+        bgOff: "Arka plan: Kapalı",
         seePhotos: "📷 Fotoğrafları gör",
         nameLabel: "Başlık *",
         typeLabel: "Tür",
@@ -8745,10 +8836,10 @@
         chanceLow: "Düşük",
         chanceMid: "Orta",
         chanceHigh: "Yüksek",
-        microOn: "🧵 Mikro dereler: Açık",
-        microOff: "🧵 Mikro dereler: Kapalı",
-        bgOn: "🛰 Arka plan: Açık",
-        bgOff: "🛰 Arka plan: Kapalı",
+        microOn: "Mikro dereler: Açık",
+        microOff: "Mikro dereler: Kapalı",
+        bgOn: "Arka plan: Açık",
+        bgOff: "Arka plan: Kapalı",
         seePhotos: "📷 Fotoğrafları gör",
         goldSelWater: 'Seçilen su yolu: {name}',
         goldType: ': {type}{seasonal}',
@@ -11789,6 +11880,7 @@ function initMap() {
       else if (lower.includes("sınırl") || lower.includes("offline") || lower.includes("internet yok")) tone = "limited";
       else if (lower.includes("hazır") || lower.includes("ready") || lower.includes("başar")) tone = "ready";
       goldStatusEl.dataset.tone = tone;
+      if (goldReloadWaterBtn) goldReloadWaterBtn.classList.toggle("is-loading", tone === "loading");
     }
 
     function goldUiText(key) {
@@ -11899,6 +11991,12 @@ function initMap() {
       return dict[key] || copy.en[key] || key;
     }
 
+    function goldIconUse(name, className = "icon-size-chip") {
+      const safeName = String(name || "").replace(/[^a-z0-9-]/gi, "");
+      const safeClass = escapeHtml(className);
+      return `<svg class="icon-svg ${safeClass}" aria-hidden="true" focusable="false"><use href="#gi-${safeName}"></use></svg>`;
+    }
+
 
     function updateGoldResultMarkup(html) {
       if (!goldResultEl) return;
@@ -11952,16 +12050,16 @@ function initMap() {
     function renderGoldLoadingState(payload = {}) {
       if (!goldResultEl) return;
       const chips = [];
-      if (payload.wName) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon" aria-hidden="true">◉</span><strong>${escapeHtml(goldUiText('selected'))}:</strong> ${escapeHtml(payload.wName)}</span>`);
-      if (payload.wType) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon" aria-hidden="true">◌</span><strong>${escapeHtml(goldUiText('type'))}:</strong> ${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</span>`);
-      if (payload.location) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon" aria-hidden="true">⌖</span><strong>${escapeHtml(goldUiText('location'))}:</strong> ${escapeHtml(payload.location)}</span>`);
+      if (payload.wName) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon">${goldIconUse("stream")}</span><strong>${escapeHtml(goldUiText('selected'))}:</strong> ${escapeHtml(payload.wName)}</span>`);
+      if (payload.wType) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon">${goldIconUse("analysis")}</span><strong>${escapeHtml(goldUiText('type'))}:</strong> ${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</span>`);
+      if (payload.location) chips.push(`<span class="gold-result-chip"><span class="gold-chip-icon">${goldIconUse("location")}</span><strong>${escapeHtml(goldUiText('location'))}:</strong> ${escapeHtml(payload.location)}</span>`);
       const loadingText = payload.loadingText || goldUiText(navigator.onLine ? 'loadingText' : 'loadingTextOffline');
 
       updateGoldResultMarkup(`
         <div class="gold-result-shell tone-mid">
           <div class="gold-result-top">
             <div>
-              <div class="gold-result-eyebrow">${escapeHtml(goldUiText('quickTitle'))}</div>
+              <div class="gold-result-eyebrow">${goldIconUse("analysis", "icon-size-chip")}<span>${escapeHtml(goldUiText('quickTitle'))}</span></div>
               <div class="gold-result-main">${escapeHtml(goldUiText('loadingTitle'))}</div>
               <div class="gold-result-loading">${escapeHtml(loadingText)}</div>
             </div>
@@ -12268,7 +12366,7 @@ function initMap() {
     <div class="gold-result-shell tone-${tone}">
       <div class="gold-result-top">
         <div>
-          <div class="gold-result-eyebrow"><span class="gold-live-dot" aria-hidden="true"></span>Altın Tozu Analizi</div>
+          <div class="gold-result-eyebrow"><span class="gold-live-dot" aria-hidden="true"></span>${goldIconUse("analysis", "icon-size-chip")}<span>Altın Tozu Analizi</span></div>
           <div class="gold-result-main">${escapeHtml(statusLabel)}</div>
           <div class="gold-result-range">${escapeHtml(payload.wName)}</div>
         </div>
@@ -12278,13 +12376,13 @@ function initMap() {
 
       <div class="gold-stats-row">
         <div class="gold-stat-card gold-stat-card-score tone-${tone}">
-          <div class="gold-stat-label">Puan</div>
+          <div class="gold-stat-label">${goldIconUse("score", "icon-size-metric")}<span>Puan</span></div>
           <div class="gold-stat-value">${escapeHtml(String(score))}<span>/100</span></div>
           <div class="gold-stat-note">${escapeHtml(payload.label.range)}</div>
         </div>
 
         <div class="gold-stat-card">
-          <div class="gold-stat-label">Güven</div>
+          <div class="gold-stat-label">${goldIconUse("shield", "icon-size-metric")}<span>Güven</span></div>
           <div class="gold-stat-value">${escapeHtml(String(confidenceScore))}<span>/100</span></div>
           <div class="gold-confidence-badge ${confidenceBand}">${escapeHtml(confidenceLabel)}</div>
           <div class="gold-stat-note">${escapeHtml(dataStatus)}</div>
@@ -12293,7 +12391,7 @@ function initMap() {
 
       <div class="gold-summary-grid gold-summary-grid-status-only">
         <div class="gold-summary-card">
-          <div class="gold-summary-kicker">Durum</div>
+          <div class="gold-summary-kicker">${goldIconUse("status", "icon-size-micro")}<span>Durum</span></div>
           <div class="gold-summary-value">${escapeHtml(statusLabel)}</div>
           <div class="gold-summary-text">${escapeHtml(payload.wType)}${payload.intermittent ? ` ${escapeHtml(t('goldSeasonal'))}` : ''}</div>
           <div class="gold-summary-text">Konum: ${escapeHtml(locText)}</div>
@@ -12305,19 +12403,19 @@ function initMap() {
       </div>
 
       <div class="gold-result-block">
-        <div class="gold-result-block-title">Kısa yorum</div>
+        <div class="gold-result-block-title">${goldIconUse("info", "icon-size-micro")}<span>Kısa yorum</span></div>
         <div class="gold-result-note">${escapeHtml(shortComment)}</div>
       </div>
 
       <div class="gold-result-block">
-        <div class="gold-result-block-title">Neden bu skor?</div>
+        <div class="gold-result-block-title">${goldIconUse("analysis", "icon-size-micro")}<span>Neden bu skor?</span></div>
         <ul class="gold-result-list">
           ${visibleQuickReasons.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
         </ul>
       </div>
 
       <div class="gold-field-check">
-        <div class="gold-result-block-title">Sonraki adım</div>
+        <div class="gold-result-block-title">${goldIconUse("tap", "icon-size-micro")}<span>Sonraki adım</span></div>
         <ul class="gold-result-list">
           ${nextSteps.slice(0,2).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
         </ul>
