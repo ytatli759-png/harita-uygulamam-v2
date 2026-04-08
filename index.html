@@ -237,6 +237,86 @@
           --shadow-soft: 0 12px 24px rgba(2,6,23,0.28);
           --glow-accent: 0 0 0 1px rgba(79,156,255,0.22), 0 12px 28px rgba(79,156,255,0.12);
           --glow-gold: 0 0 0 1px rgba(215,173,77,0.22), 0 12px 28px rgba(215,173,77,0.10);
+          --context-backdrop-image: url("./uploaded-premium-backdrop.webp");
+        }
+
+        /* Premium visual backdrop system (decorative texture layer) */
+        .premium-backdrop-card {
+          --texture-opacity: 0.14;
+          --texture-blur: 1.6px;
+          --texture-scale: 1.08;
+          --texture-position: center;
+          --overlay-darkness: 0.76;
+          --overlay-mid: 0.52;
+          --overlay-end: 0.88;
+          --overlay-accent: rgba(39, 90, 168, 0.16);
+          --overlay-gold: rgba(165, 121, 35, 0.14);
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+          border: 1px solid rgba(148,163,184,0.24);
+          box-shadow: 0 20px 38px rgba(2,6,23,0.34), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .premium-backdrop-card::before,
+        .premium-backdrop-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .premium-backdrop-card::before {
+          background-image: var(--context-backdrop-image);
+          background-size: cover;
+          background-position: var(--texture-position);
+          transform: scale(var(--texture-scale));
+          filter: saturate(0.72) contrast(0.88) brightness(0.62) blur(var(--texture-blur));
+          opacity: var(--texture-opacity);
+        }
+
+        .premium-backdrop-card::after {
+          background:
+            linear-gradient(165deg,
+              rgba(3,8,17,var(--overlay-darkness)) 0%,
+              rgba(4,11,23,var(--overlay-mid)) 38%,
+              rgba(2,6,23,var(--overlay-end)) 100%),
+            radial-gradient(120% 96% at 84% 12%, var(--overlay-accent), transparent 56%),
+            radial-gradient(96% 76% at 0% 100%, var(--overlay-gold), transparent 58%);
+        }
+
+        .premium-backdrop-card > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .premium-backdrop--summary {
+          --texture-opacity: 0.18;
+          --texture-position: 50% 26%;
+          --overlay-mid: 0.48;
+          --overlay-accent: rgba(59,130,246,0.18);
+        }
+
+        .premium-backdrop--analysis {
+          --texture-opacity: 0.12;
+          --texture-position: 62% 34%;
+          --overlay-darkness: 0.80;
+          --overlay-end: 0.90;
+          --overlay-accent: rgba(56,189,248,0.12);
+        }
+
+        .premium-backdrop--signal {
+          --texture-opacity: 0.10;
+          --texture-position: 44% 52%;
+          --overlay-darkness: 0.84;
+          --overlay-gold: rgba(180,132,40,0.12);
+        }
+
+        .premium-content-shield {
+          background: linear-gradient(180deg, rgba(2,6,23,0.46), rgba(2,6,23,0.66));
+          border: 1px solid rgba(148,163,184,0.20);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
         }
 
         button {
@@ -3479,6 +3559,86 @@
         min-height: 84px;
       }
     }
+
+    /* Premium backdrop usage targets */
+    .map-eval-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .history-summary-box,
+    .history-note-box,
+    .history-gem-box,
+    .history-stat-card {
+      backdrop-filter: blur(1.5px);
+    }
+
+    .history-summary-box,
+    .history-note-box,
+    .history-gem-box {
+      background: linear-gradient(180deg, rgba(2,6,23,0.46), rgba(2,6,23,0.70));
+      border-color: rgba(148,163,184,0.24);
+    }
+
+    .history-summary-box,
+    .history-note-box {
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 20px rgba(2,6,23,0.16);
+    }
+
+    .history-gem-box {
+      border-color: rgba(16,185,129,0.28);
+      background: linear-gradient(180deg, rgba(6,78,59,0.18), rgba(2,6,23,0.70));
+    }
+
+    .gold-result-shell {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .gold-result-shell::before,
+    .gold-result-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .gold-result-shell::before {
+      background-image: var(--context-backdrop-image);
+      background-size: cover;
+      background-position: 56% 36%;
+      transform: scale(1.07);
+      filter: saturate(0.66) contrast(0.88) brightness(0.58) blur(1.4px);
+      opacity: 0.16;
+    }
+
+    .gold-result-shell::after {
+      background:
+        linear-gradient(170deg, rgba(2,6,23,0.82), rgba(2,6,23,0.64) 40%, rgba(2,6,23,0.92) 100%),
+        radial-gradient(90% 70% at 100% 0%, rgba(234,179,8,0.10), transparent 62%),
+        radial-gradient(80% 65% at 0% 100%, rgba(59,130,246,0.14), transparent 60%);
+    }
+
+    .gold-result-shell > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+      .premium-backdrop-card {
+        --texture-opacity: 0.10;
+        --texture-blur: 2px;
+        --overlay-darkness: 0.84;
+      }
+
+      .gold-result-shell::before {
+        opacity: 0.11;
+        background-position: 64% 34%;
+      }
+    }
+
     @media (max-width: 520px) {
       .history-preview-grid {
         grid-template-columns: 1fr;
@@ -7829,7 +7989,7 @@
                     <span id="goldStatus" class="gold-toolbar-status" data-tone="ready">Hazır</span>
                 </div>
 
-                <div id="goldResult" role="status" aria-live="polite" aria-atomic="false"></div>
+                <div id="goldResult" class="premium-backdrop-zone" role="status" aria-live="polite" aria-atomic="false"></div>
             </div>
         </div>
 
@@ -8284,7 +8444,7 @@
                     </div>
                     <div class="field-help">Kısa bir not yazabilir ya da otomatik oluştur ile kısa bağlam ekleyebilirsin.</div>
 
-                    <div id="historyPreview" class="history-preview" aria-live="polite">
+                    <div id="historyPreview" class="history-preview premium-backdrop-card premium-backdrop--summary" aria-live="polite">
                         <div class="history-preview-head">
                             <div>
                                 <div class="history-preview-kicker">Saha değerlendirmesi</div>
@@ -8370,7 +8530,7 @@
                 </div>
                 <div class="map-eval-field-help">Haritaya tıkladığında detaylı bölgesel ön değerlendirme burada görünür.</div>
 
-                <div class="history-preview map-eval-preview show">
+                <div class="history-preview map-eval-preview show premium-backdrop-card premium-backdrop--analysis">
                     <div class="history-preview-head">
                         <div>
                             <div class="history-preview-kicker">Saha değerlendirmesi</div>
