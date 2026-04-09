@@ -130,29 +130,69 @@
           animation: splashIn .36s cubic-bezier(.22, .8, .28, 1) .06s forwards;
         }
         .splash-icon {
-          width: 54px;
-          height: 54px;
-          border-radius: 18px;
+          width: 64px;
+          height: 64px;
+          border-radius: 20px;
           margin: 0 auto 12px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          font-size: 24px;
-          background: linear-gradient(135deg, rgba(56,189,248,0.28), rgba(34,197,94,0.24));
-          border: 1px solid rgba(148,163,184,0.4);
-          box-shadow: 0 12px 24px rgba(2,6,23,0.34);
+          background: linear-gradient(155deg, rgba(79,156,255,0.24), rgba(8,15,30,0.88));
+          border: 1px solid rgba(148,163,184,0.46);
+          box-shadow: 0 14px 28px rgba(2,6,23,0.42), inset 0 1px 0 rgba(255,255,255,0.16);
+        }
+        .splash-icon-main {
+          width: 34px;
+          height: 34px;
+          color: #ebf3ff;
+          filter: drop-shadow(0 0 8px rgba(79,156,255,0.34));
         }
         .splash-title {
-          font-size: 24px;
+          font-size: 22px;
           font-weight: 900;
           letter-spacing: -0.03em;
           color: var(--text-primary);
-          margin-bottom: 5px;
+          margin-bottom: 6px;
         }
         .splash-subtitle {
           font-size: 13px;
           line-height: 1.5;
           color: var(--text-secondary);
+        }
+        .splash-meta {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 12px;
+        }
+        .splash-meta-item {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          min-height: 30px;
+          border-radius: 10px;
+          border: 1px solid rgba(148,163,184,0.3);
+          background: rgba(7,12,23,0.68);
+          color: var(--text-secondary);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: .01em;
+        }
+        .splash-meta-item svg {
+          width: 13px;
+          height: 13px;
+          color: #dce9ff;
+        }
+        .ui-icon-svg {
+          width: 1em;
+          height: 1em;
+          stroke: currentColor;
+          fill: none;
+          stroke-width: 1.9;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          vector-effect: non-scaling-stroke;
         }
         @keyframes splashIn {
           to { opacity: 1; transform: translateY(0) scale(1); }
@@ -188,6 +228,17 @@
           color: var(--text-on-accent);
           margin-bottom: 4px;
         }
+        .title-badge-icon {
+          width: 14px;
+          height: 14px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .title-badge-icon .ui-icon-svg {
+          width: 14px;
+          height: 14px;
+        }
 
         h1 {
           font-size: 20px;
@@ -198,6 +249,12 @@
         }
 
         h1 span.icon { font-size: 18px; }
+        h1 span.icon .ui-icon-svg {
+          width: 18px;
+          height: 18px;
+          color: #d9e9ff;
+          opacity: .94;
+        }
 
         .subtitle {
           font-size: 12px;
@@ -8442,16 +8499,102 @@
       font-size: 10.5px !important;
     }
   }
+
+  #app .compact-shortcuts-row .compact-shortcut-btn .hero-btn-icon,
+  #app .header-top-right-grid #settingsBtn .hero-btn-icon {
+    transition: transform .18s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+    color: #e6efff;
+    border: 1px solid rgba(148,163,184,.34);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+  }
+
+  #app .compact-shortcuts-row .compact-shortcut-btn:hover .hero-btn-icon,
+  #app .header-top-right-grid #settingsBtn:hover .hero-btn-icon {
+    transform: translateY(-1px);
+    color: #f4f8ff;
+    border-color: rgba(125,211,252,.52);
+    box-shadow: 0 8px 16px rgba(2,6,23,.36), 0 0 0 1px rgba(79,156,255,.22);
+  }
+
+  #app .compact-shortcuts-row .compact-shortcut-btn:active .hero-btn-icon,
+  #app .header-top-right-grid #settingsBtn:active .hero-btn-icon {
+    transform: translateY(0) scale(.97);
+    color: #d2e4ff;
+    border-color: rgba(79,156,255,.38);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  }
+
+  #app .compact-shortcuts-row .compact-shortcut-btn:focus-visible .hero-btn-icon,
+  #app .header-top-right-grid #settingsBtn:focus-visible .hero-btn-icon {
+    outline: 2px solid rgba(125,211,252,.6);
+    outline-offset: 1px;
+    color: #ffffff;
+    border-color: rgba(125,211,252,.62);
+    box-shadow: 0 0 0 3px rgba(8,47,73,.42);
+  }
+
+  #app .compact-shortcuts-row .compact-shortcut-btn:disabled .hero-btn-icon,
+  #app .header-top-right-grid #settingsBtn:disabled .hero-btn-icon {
+    opacity: .45;
+    color: rgba(203,213,225,.72);
+    border-color: rgba(100,116,139,.3);
+    box-shadow: none;
+  }
 </style>
 
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute;visibility:hidden;pointer-events:none" aria-hidden="true" focusable="false">
+    <symbol id="gi-app-mark" viewBox="0 0 24 24">
+        <path d="M12 2.8c-3.6 0-6.4 2.7-6.4 6.2 0 4.3 4.9 8.7 6.4 10.7 1.6-2 6.4-6.4 6.4-10.7 0-3.5-2.8-6.2-6.4-6.2Z"></path>
+        <circle cx="12" cy="9" r="2.2"></circle>
+        <path d="M12 5.6v6.8M8.6 9h6.8"></path>
+    </symbol>
+    <symbol id="gi-secure-access" viewBox="0 0 24 24">
+        <path d="M12 3.5 5.8 6v5.7c0 4.1 2.4 7.8 6.2 9.3 3.8-1.5 6.2-5.2 6.2-9.3V6L12 3.5Z"></path>
+        <path d="M9.8 11.4V10a2.2 2.2 0 1 1 4.4 0v1.4"></path>
+        <rect x="8.6" y="11.2" width="6.8" height="5.2" rx="1.4"></rect>
+    </symbol>
+    <symbol id="gi-enter-route" viewBox="0 0 24 24">
+        <path d="M4 6.5h8.2a3.8 3.8 0 1 1 0 7.6H9.6"></path>
+        <path d="m13.8 10.2 4.2 3.8-4.2 3.8"></path>
+        <path d="M4 17.5h5.6"></path>
+    </symbol>
+    <symbol id="gi-guide-compass" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.4"></circle>
+        <path d="m9.1 14.9 2-5.7 5.7-2-2 5.7-5.7 2Z"></path>
+        <circle cx="12" cy="12" r="1.1"></circle>
+    </symbol>
+    <symbol id="gi-data-stack" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="6.5" rx="6.8" ry="2.6"></ellipse>
+        <path d="M5.2 6.5v6.7c0 1.4 3 2.6 6.8 2.6s6.8-1.2 6.8-2.6V6.5"></path>
+        <path d="M5.2 11.1c0 1.4 3 2.6 6.8 2.6s6.8-1.2 6.8-2.6"></path>
+        <path d="M5.2 15.7c0 1.4 3 2.6 6.8 2.6s6.8-1.2 6.8-2.6"></path>
+    </symbol>
+    <symbol id="gi-crosshair-scan" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4.2"></circle>
+        <path d="M12 2.8v3.3M12 17.9v3.3M2.8 12h3.3M17.9 12h3.3"></path>
+    </symbol>
+    <symbol id="gi-route-layer" viewBox="0 0 24 24">
+        <path d="m4.5 8.2 7.5-4 7.5 4-7.5 4-7.5-4Z"></path>
+        <path d="m4.5 12.5 7.5 4 7.5-4"></path>
+        <path d="m8.6 13.3 2.7-2.7 2.2 2.2 2.8-2.8"></path>
+    </symbol>
+</svg>
+
 <div id="splashScreen" class="splash-screen" aria-hidden="true">
     <div class="splash-card">
-        <div class="splash-icon">🧭</div>
-        <div class="splash-title">Alan Defteri</div>
-        <div class="splash-subtitle">Harita, saha notu ve işaret yönetimi</div>
+        <div class="splash-icon">
+            <svg class="ui-icon-svg splash-icon-main" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#gi-app-mark"></use></svg>
+        </div>
+        <div class="splash-title">Arazide Noktalarım</div>
+        <div class="splash-subtitle">Gelişmiş Harita • Saha keşfi, güvenli erişim ve yerel veri yönetimi</div>
+        <div class="splash-meta" aria-hidden="true">
+            <div class="splash-meta-item"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-secure-access"></use></svg>Güvenli</div>
+            <div class="splash-meta-item"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-route-layer"></use></svg>Harita</div>
+            <div class="splash-meta-item"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-data-stack"></use></svg>Yerel veri</div>
+        </div>
     </div>
 </div>
 
@@ -8551,13 +8694,13 @@
             <div class="header-topbar">
                 <div class="header-brand">
                     <div class="title-badge">
-                        <span>🧭</span>
-                        <span>Alan Defteri</span>
+                        <span class="title-badge-icon" aria-hidden="true"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-app-mark"></use></svg></span>
+                        <span>Arazide Noktalarım</span>
                     </div>
                 </div>
 
             </div>
-            <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
+            <h1><span class="icon"><span class="icon-core" aria-hidden="true"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-crosshair-scan"></use></svg></span></span>Nokta ve saha notları</h1>
         </div>
 
         <div class="header-actions layout-refresh-actions compact-top-right-actions">
@@ -8565,11 +8708,11 @@
                 <div id="count" class="count-badge count-badge-main"><span class="status-chip-text">0 nokta</span></div>
                 <button type="button" id="settingsBtn" class="header-settings-btn compact-chip-btn" aria-label="Ayarlar ve veri">
                     <span class="hero-btn-icon" aria-hidden="true">
-                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-settings"></use></svg>
+                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-data-stack"></use></svg>
                     </span>
                     <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Ayarlar</span>
-                        <span class="hero-btn-subtitle">Veri ve içe/dışa aktar</span>
+                        <span class="hero-btn-title">Veri merkezi</span>
+                        <span class="hero-btn-subtitle">Yerel kayıt ve aktarım</span>
                     </span>
                 </button>
                 <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Analiz hakkı ve reklam durumu"><span class="status-chip-text">10 hak kaldı</span></button>
@@ -8577,20 +8720,20 @@
             <div class="primary-actions primary-actions-stack compact-shortcuts-row">
                 <button type="button" id="addBtn" class="compact-shortcut-btn">
                     <span class="hero-btn-icon" aria-hidden="true">
-                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-plus-circle"></use></svg>
+                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-enter-route"></use></svg>
                     </span>
                     <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Yeni nokta</span>
-                        <span class="hero-btn-subtitle">Ekle</span>
+                        <span class="hero-btn-title">Başla</span>
+                        <span class="hero-btn-subtitle">Nokta oluşturarak devam et</span>
                     </span>
                 </button>
                 <button type="button" id="goldGuideBtn" class="compact-shortcut-btn">
                     <span class="hero-btn-icon" aria-hidden="true">
-                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-gold-guide"></use></svg>
+                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-guide-compass"></use></svg>
                     </span>
                     <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Altın tozu</span>
-                        <span class="hero-btn-subtitle">Rehber</span>
+                        <span class="hero-btn-title">Saha rehberi</span>
+                        <span class="hero-btn-subtitle">Keşif akışını aç</span>
                     </span>
                 </button>
             </div>
