@@ -20075,5 +20075,241 @@ function updateHistoryPreview(rawText) {
   })();
 </script>
 
+<style id="premium-polish-v4">
+  /* Premium sistem dokunuşları: taşma/jank azaltma + tutarlı görsel dil */
+  html, body { overflow-x: hidden; }
+  #app { width: 100%; }
+  .app-shell { isolation: isolate; }
+
+  .header-top-right-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+  }
+  .count-badge-main,
+  .header-settings-btn,
+  .analysis-quick-chip {
+    min-height: 52px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(140, 164, 196, 0.3) !important;
+    background: linear-gradient(180deg, rgba(7, 16, 32, 0.94), rgba(5, 11, 24, 0.96)) !important;
+    box-shadow: 0 10px 22px rgba(2, 6, 23, 0.28), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+
+  .compact-shortcuts-row .compact-shortcut-btn {
+    min-height: 74px !important;
+    border-radius: 18px !important;
+    transition: transform .18s var(--ease-premium), box-shadow .2s var(--ease-premium), filter .2s ease;
+  }
+  .compact-shortcuts-row .compact-shortcut-btn .hero-btn-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .compact-shortcuts-row .compact-shortcut-btn:hover,
+  .compact-shortcuts-row .compact-shortcut-btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(2, 6, 23, 0.3);
+  }
+  .compact-shortcuts-row .compact-shortcut-btn.is-pressed { transform: translateY(1px) scale(.992); }
+
+  .map-wrapper {
+    border: 1px solid rgba(120, 145, 180, .26);
+    border-radius: 20px;
+    padding: 10px;
+    background: linear-gradient(180deg, rgba(6, 14, 30, .9), rgba(4, 9, 20, .95));
+    box-shadow: 0 16px 34px rgba(2, 6, 23, .3), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .map-stage { border-radius: 16px; overflow: clip; }
+  #map { transform: translateZ(0); backface-visibility: hidden; }
+  .leaflet-container { background: #0a1426 !important; }
+  .leaflet-control-zoom a,
+  .leaflet-bar a {
+    background: rgba(8, 15, 30, .88) !important;
+    color: #d9e5fa !important;
+    border-color: rgba(122, 150, 192, .35) !important;
+  }
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background: rgba(7, 15, 31, .96) !important;
+    color: #e6eefb !important;
+    border: 1px solid rgba(122, 150, 192, .28);
+    box-shadow: 0 14px 30px rgba(2, 6, 23, .44);
+  }
+
+  .history-preview-grid { align-items: stretch; }
+  .history-stat-card {
+    min-height: 98px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .hydro-score-box {
+    margin-top: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(125, 211, 252, .28);
+    background: linear-gradient(180deg, rgba(8, 26, 44, .62), rgba(2, 8, 22, .7));
+    padding: 10px 12px;
+  }
+  .hydro-score-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .hydro-score-title { font-size: 12px; color: #b9d9ff; font-weight: 700; letter-spacing: .02em; }
+  .hydro-score-value { font-size: 18px; font-weight: 800; color: #f8fafc; }
+  .hydro-score-track { height: 8px; border-radius: 999px; background: rgba(30, 58, 95, .64); overflow: hidden; }
+  .hydro-score-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #60a5fa 0%, #22d3ee 55%, #fbbf24 100%);
+    transition: width .34s var(--ease-smooth-out);
+  }
+  .hydro-tip-list { margin: 10px 0 0; padding-left: 16px; color: #d8e7fb; font-size: 12px; line-height: 1.45; }
+
+  .mobile-quickbar button { transition: transform .16s ease, filter .16s ease; }
+  .mobile-quickbar button.is-pressed { transform: scale(.96); filter: brightness(1.05); }
+
+  @media (max-width: 620px) {
+    .primary-actions { gap: 10px !important; }
+    .compact-shortcuts-row .compact-shortcut-btn { min-height: 68px !important; }
+    .map-tools, .map-tools.secondary { grid-template-columns: 1fr 1fr !important; }
+  }
+</style>
+
+<script id="stream-analysis-enhancer-v1">
+  (function () {
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function byId(id) { return document.getElementById(id); }
+    function numFromScore(text) {
+      var m = String(text || '').match(/(\d{1,3})\s*\/\s*100/);
+      return m ? Number(m[1]) : 0;
+    }
+    function numFromPercent(text) {
+      var m = String(text || '').match(/(\d{1,3})\s*%/);
+      return m ? Number(m[1]) : 0;
+    }
+    function confidenceBoost(text) {
+      var t = String(text || '').toLowerCase();
+      if (t.includes('yüksek')) return 14;
+      if (t.includes('orta')) return 8;
+      if (t.includes('düşük')) return 3;
+      return 5;
+    }
+    function keywordBoost(text) {
+      var t = String(text || '').toLowerCase();
+      var map = [
+        ['dere', 8], ['kıvrım', 9], ['vadi', 7], ['daralma', 7], ['alüvyon', 9], ['siyah kum', 8],
+        ['manyetit', 9], ['kuvars', 7], ['akış', 6], ['birikme', 8], ['yavaşlama', 7], ['iri taş', 6]
+      ];
+      return map.reduce(function (acc, item) { return acc + (t.includes(item[0]) ? item[1] : 0); }, 0);
+    }
+
+    function buildHydroModel(opts) {
+      var score = clamp(Number(opts.score || 0), 0, 100);
+      var stone = clamp(Number(opts.stone || 0), 0, 100);
+      var confidence = confidenceBoost(opts.confidence || '');
+      var kBoost = keywordBoost((opts.summary || '') + ' ' + (opts.tags || ''));
+      var combined = clamp(Math.round(score * 0.42 + stone * 0.28 + confidence + kBoost * 0.3), 0, 100);
+
+      var tips = [];
+      if (combined >= 75) tips.push('Kıvrım dış kenarı ve akış yavaşlama ceplerini öncelik sırana al.');
+      else if (combined >= 55) tips.push('Dere yatağı daralan bölge + iri taş birikimi eşleşmesini kontrol et.');
+      else tips.push('Ana dere yerine yan kol birleşimleri ve düşük enerjili cepleri tara.');
+      tips.push('Siyah kum/manyetit izi varsa 20–40 m aşağı kesiti yeniden kontrol et.');
+      tips.push('Kuvars + yuvarlak iri taş eşleşmesi varsa kısa doğrulama numunesi al.');
+
+      return { score: combined, tips: tips };
+    }
+
+    function ensureHydroBox(container, idPrefix) {
+      if (!container) return null;
+      var existing = container.querySelector('.hydro-score-box');
+      if (existing) return existing;
+      var box = document.createElement('section');
+      box.className = 'hydro-score-box';
+      box.innerHTML =
+        '<div class="hydro-score-top">' +
+          '<div class="hydro-score-title">Akar su potansiyeli</div>' +
+          '<div class="hydro-score-value" id="' + idPrefix + 'HydroValue">%0</div>' +
+        '</div>' +
+        '<div class="hydro-score-track"><div class="hydro-score-fill" id="' + idPrefix + 'HydroFill"></div></div>' +
+        '<ul class="hydro-tip-list" id="' + idPrefix + 'HydroTips"></ul>';
+      container.appendChild(box);
+      return box;
+    }
+
+    function renderHydro(prefix, model) {
+      var val = byId(prefix + 'HydroValue');
+      var fill = byId(prefix + 'HydroFill');
+      var tips = byId(prefix + 'HydroTips');
+      if (val) val.textContent = '%' + model.score;
+      if (fill) fill.style.width = model.score + '%';
+      if (tips) tips.innerHTML = model.tips.map(function (t) { return '<li>' + t + '</li>'; }).join('');
+    }
+
+    function updateHydroPanels() {
+      var mapPanel = document.querySelector('#mapEvalCard .map-eval-preview');
+      var formPanel = byId('historyPreview');
+      ensureHydroBox(mapPanel, 'mapEval');
+      ensureHydroBox(formPanel, 'history');
+
+      var mapModel = buildHydroModel({
+        score: numFromScore(byId('mapEvalScore') && byId('mapEvalScore').textContent),
+        stone: numFromPercent(byId('mapEvalDefineValue') && byId('mapEvalDefineValue').textContent),
+        confidence: byId('mapEvalConfidence') && byId('mapEvalConfidence').textContent,
+        summary: byId('mapEvalSummary') && byId('mapEvalSummary').textContent,
+        tags: byId('mapEvalTagList') && byId('mapEvalTagList').textContent
+      });
+      renderHydro('mapEval', mapModel);
+
+      var historyModel = buildHydroModel({
+        score: numFromScore(byId('historyScoreValue') && byId('historyScoreValue').textContent),
+        stone: numFromPercent(byId('historyDefineValue') && byId('historyDefineValue').textContent),
+        confidence: byId('historyConfidenceValue') && byId('historyConfidenceValue').textContent,
+        summary: byId('historySummaryText') && byId('historySummaryText').textContent,
+        tags: byId('historyTagList') && byId('historyTagList').textContent
+      });
+      renderHydro('history', historyModel);
+    }
+
+    function bindPressFeedback() {
+      var selector = '.btn-small, .compact-chip-btn, .compact-shortcut-btn, .mobile-quickbar button';
+      document.addEventListener('pointerdown', function (ev) {
+        var btn = ev.target && ev.target.closest(selector);
+        if (btn) btn.classList.add('is-pressed');
+      }, { passive: true });
+      ['pointerup', 'pointercancel', 'mouseleave'].forEach(function (evt) {
+        document.addEventListener(evt, function () {
+          document.querySelectorAll(selector + '.is-pressed').forEach(function (b) { b.classList.remove('is-pressed'); });
+        }, { passive: true });
+      });
+    }
+
+    function init() {
+      bindPressFeedback();
+      updateHydroPanels();
+      var observer = new MutationObserver(updateHydroPanels);
+      [
+        'mapEvalScore', 'mapEvalDefineValue', 'mapEvalConfidence', 'mapEvalSummary', 'mapEvalTagList',
+        'historyScoreValue', 'historyDefineValue', 'historyConfidenceValue', 'historySummaryText', 'historyTagList'
+      ].forEach(function (id) {
+        var el = byId(id);
+        if (el) observer.observe(el, { childList: true, characterData: true, subtree: true });
+      });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+    else init();
+  })();
+</script>
+
 </body>
 </html>
