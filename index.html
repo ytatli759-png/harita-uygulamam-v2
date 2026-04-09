@@ -8981,26 +8981,22 @@
                         <span>Arazide Noktalarım</span>
                     </div>
                 </div>
-
-            </div>
-            <h1><span class="icon"><span class="icon-core" aria-hidden="true"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-crosshair-scan"></use></svg></span></span>Nokta ve saha notları</h1>
-        </div>
-
-        <div class="header-actions layout-refresh-actions compact-top-right-actions">
-            <div class="header-top-right-grid">
-                                <button type="button" id="settingsBtn" class="header-settings-btn compact-chip-btn" aria-label="Ayarlar ve veri">
+                <button type="button" id="settingsBtn" class="header-settings-btn compact-chip-btn" aria-label="Ayarlar ve veri" title="Ayarlar ve veri">
                     <span class="hero-btn-icon" aria-hidden="true">
                         <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-data-stack"></use></svg>
                     </span>
-                    <span class="hero-btn-copy">
+                    <span class="hero-btn-copy" aria-hidden="true">
                         <span class="hero-btn-title">Ayarlar</span>
                         <span class="hero-btn-subtitle">Veri, reklam ve premium</span>
                     </span>
                 </button>
-                <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Reklam izle ve +1 hak al"><span class="status-chip-text">🎬 Reklam izle</span></button>
             </div>
-            <!-- Ana sayfadaki tekrar eden hızlı kısayollar kaldırıldı.
-                 "Yeni" ve "Analiz" erişimi alt menüden devam eder. -->
+            <div class="header-actions layout-refresh-actions compact-top-right-actions">
+                <div class="header-top-right-grid">
+                    <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Reklam izle ve +1 hak al" title="Reklam izle ve +1 hak al"><span class="status-chip-text">🎬 Reklam izle</span></button>
+                </div>
+            </div>
+            <h1><span class="icon"><span class="icon-core" aria-hidden="true"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-crosshair-scan"></use></svg></span></span>Nokta ve saha notları</h1>
         </div>
 
         <!-- 🏞 Altın tozu rehberi paneli -->
@@ -20591,129 +20587,6 @@ function updateHistoryPreview(rawText) {
 </script>
 
 
-<style id="settings-btn-visibility-fix">
-  #app .main-status-stack {
-    align-self: stretch;
-    justify-content: flex-start !important;
-  }
-
-  #app #settingsBtn.header-settings-btn {
-    position: relative !important;
-    top: auto !important;
-    right: auto !important;
-    left: auto !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 46px !important;
-    padding: 0 14px !important;
-    margin: 0 !important;
-    border-radius: 16px !important;
-    justify-content: flex-start !important;
-    gap: 10px !important;
-    display: inline-flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    z-index: 20 !important;
-    border: 1px solid rgba(96, 165, 250, 0.34) !important;
-    background: linear-gradient(180deg, rgba(18, 31, 56, 0.96), rgba(5, 10, 23, 0.98)) !important;
-    color: #eaf4ff !important;
-    box-shadow: 0 14px 28px rgba(2,6,23,0.24), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-  }
-
-  #app #settingsBtn.header-settings-btn:hover,
-  #app #settingsBtn.header-settings-btn:focus-visible {
-    transform: translateY(-1px);
-    border-color: rgba(125, 211, 252, 0.58) !important;
-    box-shadow: 0 18px 32px rgba(2,6,23,0.30), 0 0 0 1px rgba(96,165,250,0.10) !important;
-  }
-
-  #app #settingsBtn.header-settings-btn .icon {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 12px !important;
-    background: linear-gradient(135deg, rgba(59,130,246,0.26), rgba(14,165,233,0.20)) !important;
-    color: #dbeafe !important;
-  }
-
-  #app #settingsBtn.header-settings-btn .settings-btn-text {
-    display: inline !important;
-    white-space: nowrap;
-  }
-
-  #app .header-topbar {
-    min-height: 0 !important;
-  }
-
-  @media (max-width: 720px) {
-    #app .secondary-hero-row {
-      grid-template-columns: minmax(0, 1fr) 132px !important;
-      align-items: stretch !important;
-    }
-
-    #app .main-status-stack {
-      min-width: 132px !important;
-      flex-direction: column !important;
-      flex-wrap: nowrap !important;
-      justify-content: flex-start !important;
-    }
-
-    #app #settingsBtn.header-settings-btn {
-      padding: 0 !important;
-      justify-content: center !important;
-    }
-
-    #app #settingsBtn.header-settings-btn .settings-btn-text {
-      display: none !important;
-    }
-
-    #app .count-badge.count-badge-main,
-    #app .analysis-quick-chip {
-      width: 100% !important;
-    }
-  }
-
-  @media (max-width: 560px) {
-    #app .secondary-hero-row {
-      grid-template-columns: 1fr !important;
-    }
-
-    #app .main-status-stack {
-      min-width: 0 !important;
-      flex-direction: row !important;
-      flex-wrap: wrap !important;
-    }
-
-    #app #settingsBtn.header-settings-btn,
-    #app .count-badge.count-badge-main,
-    #app .analysis-quick-chip {
-      flex: 1 1 calc(50% - 6px) !important;
-      width: auto !important;
-    }
-
-    #app #settingsBtn.header-settings-btn {
-      justify-content: center !important;
-    }
-  }
-</style>
-
-<script id="settings-btn-dom-fix">
-  (function () {
-    var btn = document.getElementById('settingsBtn');
-    var stack = document.querySelector('#app .main-status-stack');
-    if (!btn || !stack) return;
-
-    if (btn.parentElement !== stack) {
-      stack.insertBefore(btn, stack.firstChild);
-    }
-
-    btn.classList.add('header-settings-btn');
-    btn.style.display = 'inline-flex';
-    btn.style.opacity = '1';
-    btn.style.visibility = 'visible';
-    btn.style.pointerEvents = 'auto';
-  })();
-</script>
 
 
 <script id="stability-hardening-script-v2">
@@ -21574,12 +21447,12 @@ function updateHistoryPreview(rawText) {
 <style id="mobile-premium-layout-v3">
   html, body, #app, .app-shell { max-width: 100%; overflow-x: clip !important; }
   #app .app-shell { padding-inline: clamp(10px, 3.8vw, 18px) !important; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
-  #app .header-actions.layout-refresh-actions.compact-top-right-actions { display: grid !important; grid-template-columns: minmax(0, 1fr) clamp(104px, 31vw, 132px); grid-template-areas: "main aside"; align-items: stretch; gap: clamp(8px, 2.5vw, 12px) !important; margin: 10px 0 12px !important; min-width: 0; }
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions { display: flex !important; flex-direction: column !important; align-items: stretch; gap: 0 !important; margin: 0 !important; min-width: 0; }
   #app .primary-actions.primary-actions-stack.compact-shortcuts-row { grid-area: main; display: grid !important; grid-template-columns: 1fr; gap: clamp(8px, 2.2vw, 10px) !important; min-width: 0; margin: 0 !important; }
-  #app .header-top-right-grid { grid-area: aside; display: grid !important; grid-template-columns: 1fr; gap: clamp(8px, 2.2vw, 10px); min-width: 0; align-content: start; }
-  #app .compact-shortcuts-row #addBtn, #app .compact-shortcuts-row #goldGuideBtn, #app .header-top-right-grid #settingsBtn.header-settings-btn, #app #analysisQuickAccessBtn { width: 100% !important; min-width: 0 !important; max-width: 100% !important; overflow: hidden; }
+  #app .header-top-right-grid { display: grid !important; grid-template-columns: 1fr; gap: 10px; min-width: 0; align-content: start; }
+  #app .compact-shortcuts-row #addBtn, #app .compact-shortcuts-row #goldGuideBtn, #app #analysisQuickAccessBtn { width: 100% !important; min-width: 0 !important; max-width: 100% !important; overflow: hidden; }
   #app .compact-shortcuts-row #addBtn, #app .compact-shortcuts-row #goldGuideBtn { min-height: clamp(76px, 20vw, 92px) !important; padding: clamp(11px, 2.8vw, 15px) !important; border-radius: 20px !important; }
-  #app .header-top-right-grid #settingsBtn.header-settings-btn, #app #analysisQuickAccessBtn { min-height: clamp(56px, 15vw, 68px) !important; border-radius: 16px !important; padding: 10px !important; }
+  #app #analysisQuickAccessBtn { min-height: clamp(52px, 14vw, 62px) !important; border-radius: 16px !important; padding: 10px 14px !important; }
   #app .hero-btn-copy, #app .status-chip-text { min-width: 0; }
   #app .hero-btn-title, #app .hero-btn-subtitle, #app .status-chip-main, #app .status-chip-sub { overflow-wrap: anywhere; word-break: break-word; }
   #app .map-wrapper { border-radius: 22px; padding: clamp(10px, 2.8vw, 14px); border: 1px solid rgba(140, 164, 196, 0.24); background: linear-gradient(180deg, rgba(8, 14, 26, 0.88), rgba(2, 6, 20, 0.82)); box-shadow: 0 18px 34px rgba(2, 6, 23, 0.34); min-width: 0; }
@@ -21593,8 +21466,7 @@ function updateHistoryPreview(rawText) {
   #app .map-tools, #app .map-tools.secondary { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px !important; min-width: 0; }
   #app .map-tools .btn-small, #app .map-tools.secondary .btn-small { min-height: 48px !important; padding: 12px 10px !important; border-radius: 14px !important; white-space: normal; text-align: left; line-height: 1.25; }
   @media (max-width: 360px) { #app .map-tools, #app .map-tools.secondary { grid-template-columns: 1fr !important; } }
-  @media (max-width: 339px) { #app .header-actions.layout-refresh-actions.compact-top-right-actions { grid-template-columns: minmax(0, 1fr) 102px; gap: 7px !important; } }
-  @media (min-width: 600px) { #app .header-actions.layout-refresh-actions.compact-top-right-actions { grid-template-columns: minmax(0, 1fr) clamp(132px, 24vw, 170px); } }
+
   body.layer-sheet-open { overflow: hidden; }
   body.layer-sheet-open::after { content: ""; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.58); backdrop-filter: blur(2px); z-index: 1050; }
   @media (max-width: 768px) {
@@ -21637,159 +21509,148 @@ function updateHistoryPreview(rawText) {
 </script>
 
 
-<style id="header-utility-actions-relayout-v1">
+
+<style id="header-utility-clean-layout-v2">
   #app .app-header {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    grid-template-areas:
-      "top util"
-      "title title" !important;
-    align-items: center !important;
-    column-gap: 10px !important;
-    row-gap: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
   }
 
   #app .app-header .header-topbar {
-    grid-area: top !important;
+    position: static !important;
+    inset: auto !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    min-width: 0 !important;
-    margin-bottom: 0 !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    min-height: 46px !important;
+    margin: 0 !important;
   }
 
-  #app .app-header > h1 {
-    grid-area: title !important;
+  #app .header-brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  #app #settingsBtn.header-settings-btn {
+    width: 46px !important;
+    min-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
     margin: 0 !important;
-    max-width: 100% !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(96, 165, 250, 0.42) !important;
+    background: linear-gradient(180deg, rgba(16, 33, 62, 0.9), rgba(7, 14, 30, 0.95)) !important;
+    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.34), inset 0 1px 0 rgba(255,255,255,0.09) !important;
+    color: #e8f2ff !important;
+  }
+
+  #app #settingsBtn.header-settings-btn:hover,
+  #app #settingsBtn.header-settings-btn:focus-visible {
+    border-color: rgba(125, 211, 252, 0.66) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(2, 6, 23, 0.42), 0 0 0 1px rgba(59,130,246,0.24) !important;
+  }
+
+  #app #settingsBtn.header-settings-btn:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-copy,
+  #app #settingsBtn.header-settings-btn .settings-btn-text,
+  #app #settingsBtn.header-settings-btn .hero-btn-title,
+  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
+    display: none !important;
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-icon {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #app #settingsBtn.header-settings-btn .icon {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
   }
 
   #app .header-actions.layout-refresh-actions.compact-top-right-actions {
-    display: none !important;
+    margin: 0 !important;
   }
 
-  #app .header-utility-actions {
-    grid-area: util;
+  #app .header-top-right-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  #app #analysisQuickAccessBtn.analysis-quick-chip {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 54px !important;
+    justify-content: flex-start !important;
+    padding: 11px 14px !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+    background: linear-gradient(180deg, rgba(58, 37, 10, 0.9), rgba(24, 15, 5, 0.94)) !important;
+    box-shadow: 0 12px 26px rgba(15, 9, 2, 0.32), inset 0 1px 0 rgba(255, 233, 177, 0.18) !important;
+  }
+
+  #app #analysisQuickAccessBtn.analysis-quick-chip:hover,
+  #app #analysisQuickAccessBtn.analysis-quick-chip:focus-visible {
+    border-color: rgba(251, 191, 36, 0.62) !important;
+    transform: translateY(-1px);
+  }
+
+  #app #analysisQuickAccessBtn.analysis-quick-chip:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
+  }
+
+  #app #analysisQuickAccessBtn .status-chip-text {
     display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 8px;
+    width: 100%;
     min-width: 0;
   }
 
-  #app .header-utility-actions #settingsBtn.header-settings-btn,
-  #app .header-utility-actions .analysis-quick-chip {
-    margin: 0 !important;
-    min-height: 40px !important;
-    height: 40px !important;
-    border-radius: 14px !important;
-    box-shadow: 0 10px 24px rgba(2,6,23,.22), inset 0 1px 0 rgba(255,255,255,.05) !important;
-  }
-
-  #app .header-utility-actions #settingsBtn.header-settings-btn {
-    width: 40px !important;
-    min-width: 40px !important;
-    padding: 0 !important;
-    justify-content: center !important;
-    gap: 0 !important;
-    border: 1px solid rgba(96,165,250,.34) !important;
-    background: linear-gradient(180deg, rgba(18,31,56,.96), rgba(5,10,23,.98)) !important;
-  }
-
-  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-copy,
-  #app .header-utility-actions #settingsBtn.header-settings-btn .settings-btn-text,
-  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-title,
-  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-subtitle {
+  #app #analysisQuickAccessBtn .status-chip-sub {
     display: none !important;
   }
 
-  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-icon {
-    width: 20px !important;
-    height: 20px !important;
-    min-width: 20px !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    color: #eaf4ff !important;
-  }
-
-  #app .header-utility-actions .analysis-quick-chip {
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: 148px;
-    padding: 0 12px 0 10px !important;
-    justify-content: flex-start !important;
-    gap: 8px !important;
-    border: 1px solid rgba(245,158,11,.26) !important;
-    background: linear-gradient(180deg, rgba(42,26,8,.94), rgba(18,10,5,.98)) !important;
-  }
-
-  #app .header-utility-actions .analysis-quick-chip::before {
-    width: 22px !important;
-    height: 22px !important;
-    flex: 0 0 22px !important;
-    border-radius: 8px !important;
-  }
-
-  #app .header-utility-actions .status-chip-text {
-    min-width: 0;
-    font-size: 11.5px !important;
-    line-height: 1.05 !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  @media (max-width: 560px) {
+  @media (min-width: 820px) {
     #app .app-header {
-      grid-template-columns: minmax(0, 1fr) auto !important;
-      column-gap: 8px !important;
+      align-items: stretch;
     }
 
-    #app .header-utility-actions {
-      gap: 6px;
-    }
-
-    #app .header-utility-actions .analysis-quick-chip {
-      max-width: 118px;
-      padding-right: 10px !important;
-    }
-
-    #app .header-utility-actions .status-chip-text {
-      font-size: 10.5px !important;
+    #app .app-header .header-topbar,
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      margin-left: auto;
+      width: min(420px, 100%);
     }
   }
 </style>
-
-<script id="header-utility-actions-relayout-script-v1">
-  (function () {
-    var appHeader = document.querySelector('#app .app-header');
-    var topbar = document.querySelector('#app .app-header .header-topbar');
-    var settingsBtn = document.getElementById('settingsBtn');
-    var adBtn = document.getElementById('analysisQuickAccessBtn');
-    if (!appHeader || !topbar || !settingsBtn || !adBtn) return;
-
-    var utilities = document.querySelector('#app .header-utility-actions');
-    if (!utilities) {
-      utilities = document.createElement('div');
-      utilities.className = 'header-utility-actions';
-      topbar.insertAdjacentElement('afterend', utilities);
-    }
-
-    if (settingsBtn.parentElement !== utilities) {
-      utilities.appendChild(settingsBtn);
-    }
-    if (adBtn.parentElement !== utilities) {
-      utilities.appendChild(adBtn);
-    }
-
-    settingsBtn.classList.add('header-settings-btn');
-    settingsBtn.setAttribute('title', 'Ayarlar ve veri');
-    settingsBtn.setAttribute('aria-label', 'Ayarlar ve veri');
-    adBtn.setAttribute('title', 'Reklam izle ve +1 hak al');
-  })();
-</script>
 
 </body>
 </html>
