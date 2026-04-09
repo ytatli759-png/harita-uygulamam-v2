@@ -1496,6 +1496,26 @@
           box-shadow: 0 20px 34px rgba(2,6,23,0.38), inset 0 1px 0 rgba(255,255,255,0.04);
         }
 
+        .item {
+          content-visibility: auto;
+          contain: layout style paint;
+          contain-intrinsic-size: 220px;
+        }
+
+        .leaflet-container,
+        .leaflet-pane,
+        .leaflet-tile,
+        .leaflet-marker-icon,
+        .leaflet-marker-shadow {
+          backface-visibility: hidden;
+          transform: translateZ(0);
+        }
+
+        .leaflet-container {
+          background: #0b1220;
+          will-change: transform;
+        }
+
         .item.is-selected {
           border-color: rgba(74,222,128,0.70);
           box-shadow: 0 0 0 1px rgba(74,222,128,0.28), 0 22px 38px rgba(2,6,23,0.42);
@@ -8979,26 +8999,8 @@
                 </button>
                 <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Reklam izle ve +1 hak al"><span class="status-chip-text">🎬 Reklam izle</span></button>
             </div>
-            <div class="primary-actions primary-actions-stack compact-shortcuts-row">
-                <button type="button" id="addBtn" class="compact-shortcut-btn">
-                    <span class="hero-btn-icon" aria-hidden="true">
-                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-enter-route"></use></svg>
-                    </span>
-                    <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Yeni nokta ekle</span>
-                        <span class="hero-btn-subtitle">Konum seç, kısa not ekle ve kaydet</span>
-                    </span>
-                </button>
-                <button type="button" id="goldGuideBtn" class="compact-shortcut-btn">
-                    <span class="hero-btn-icon" aria-hidden="true">
-                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-guide-compass"></use></svg>
-                    </span>
-                    <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Altın tozu rehberi</span>
-                        <span class="hero-btn-subtitle">Canlı su hattı analizi ile ilerle</span>
-                    </span>
-                </button>
-            </div>
+            <!-- Ana sayfadaki tekrar eden hızlı kısayollar kaldırıldı.
+                 "Yeni" ve "Analiz" erişimi alt menüden devam eder. -->
         </div>
 
         <!-- 🏞 Altın tozu rehberi paneli -->
@@ -11413,11 +11415,22 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!mapInitialized || !map) return;
       try {
         const center = map.getCenter();
-        localStorage.setItem(MAP_VIEW_STORAGE_KEY, JSON.stringify({
+        const payload = {
           lat: Number(center.lat.toFixed(6)),
           lng: Number(center.lng.toFixed(6)),
           zoom: Number(map.getZoom().toFixed(2))
-        }));
+        };
+        const serialized = JSON.stringify(payload);
+        if (serialized === lastSavedMapViewKey) return;
+        lastSavedMapViewKey = serialized;
+        clearTimeout(mapViewWriteTimer);
+        mapViewWriteTimer = setTimeout(() => {
+          queueIdleTask(() => {
+            try {
+              localStorage.setItem(MAP_VIEW_STORAGE_KEY, serialized);
+            } catch {}
+          }, 260);
+        }, 110);
       } catch {}
     }
 
@@ -11434,6 +11447,15 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         return { center: [lat, lng], zoom };
       } catch {
         return defaultCenter;
+      }
+    }
+
+    function queueIdleTask(fn, timeout = 220) {
+      if (typeof fn !== "function") return;
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(() => fn(), { timeout });
+      } else {
+        setTimeout(fn, Math.min(timeout, 180));
       }
     }
 
@@ -11578,9 +11600,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     let selectedSpotId = null;
     let spotMarkersById = new Map();
+    let markerStateById = new Map();
     let allSpotsCache = null;
     let spotWriteTimer = null;
     let renderRafToken = 0;
+    let mapViewWriteTimer = 0;
+    let lastSavedMapViewKey = "";
     let lastListRenderSignature = "";
 
     let goldWaterLayer = null;
@@ -13161,6 +13186,7 @@ function initMap() {
       );
       const defaultView = { center: [39, 35], zoom: 6 };
       const savedView = readSavedMapView(defaultView);
+      const compactViewport = isPhoneViewport();
 
       map = L.map("map", {
         maxBounds: turkeyBounds,
@@ -13168,7 +13194,13 @@ function initMap() {
         preferCanvas: true,
         zoomSnap: 0.25,
         zoomDelta: 0.25,
-        wheelPxPerZoomLevel: 90,
+        wheelPxPerZoomLevel: compactViewport ? 110 : 90,
+        wheelDebounceTime: 40,
+        inertia: true,
+        inertiaDeceleration: compactViewport ? 2400 : 3200,
+        zoomAnimation: !compactViewport,
+        fadeAnimation: !compactViewport,
+        markerZoomAnimation: !compactViewport,
         tap: false
       }).setView(savedView.center, savedView.zoom);
 
@@ -13177,18 +13209,27 @@ function initMap() {
       // su katmanını güvenilir SVG renderer ile kuruyoruz.
       ensureGoldWaterRenderer(true);
 
+      const baseTileOptions = {
+        keepBuffer: compactViewport ? 2 : 4,
+        updateWhenIdle: compactViewport,
+        updateWhenZooming: !compactViewport
+      };
+
       const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        ...baseTileOptions,
         maxZoom: 19,
         attribution: '© OpenStreetMap katkıcıları'
       });
 
       const voyagerLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        ...baseTileOptions,
         maxZoom: 20,
         subdomains: 'abcd',
         attribution: '© OpenStreetMap katkıcıları © CARTO'
       });
 
       const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        ...baseTileOptions,
         maxZoom: 17,
         attribution: '© OpenStreetMap katkıcıları, SRTM | © OpenTopoMap (CC-BY-SA)'
       });
@@ -13196,12 +13237,14 @@ function initMap() {
       const satelliteLayer = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {
+          ...baseTileOptions,
           maxZoom: 19,
           attribution: 'Tiles © Esri'
         }
       );
 
       const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        ...baseTileOptions,
         maxZoom: 20,
         subdomains: 'abcd',
         attribution: '© OpenStreetMap katkıcıları © CARTO'
@@ -13290,6 +13333,7 @@ function initMap() {
         try { return localStorage.getItem(MAP_FOCUS_STORAGE_KEY) === "1"; } catch { return false; }
       })();
       setMapFocusMode(savedFocus);
+      scheduleRender();
 
       // Performans: moveend + zoomend sırasında tek bir planlı işlemle duplicate zincirleri önle.
       let mapInteractionRaf = 0;
@@ -15814,28 +15858,40 @@ out tags geom qt;`;
         const markerId = String(spot.id);
         activeIds.add(markerId);
         const label = spot.name || t('pointDefault');
-
-        const safeLabel = escapeHtml(label);
         const popupTags = normalizeSpotTags(spot.tags).slice(0, 4);
+        const safeLabel = escapeHtml(label);
         const popupTagsHtml = popupTags.length
           ? `<div class="marker-popup-tags">${popupTags.map((tag) => `<span class="marker-popup-tag">${escapeHtml(tag)}</span>`).join("")}</div>`
           : "";
         const popupHtml = `<strong>${safeLabel}</strong>${popupTagsHtml}`;
+        const markerSignature = [
+          lat.toFixed(6),
+          lon.toFixed(6),
+          label,
+          popupTags.join("|"),
+          getSpotMarkerTone(spot),
+          String(selectedSpotId || "") === markerId ? "1" : "0"
+        ].join("__");
 
         let marker = spotMarkersById.get(markerId);
+        const previousSignature = markerStateById.get(markerId);
+
         if (!marker) {
           marker = L.marker([lat, lon], { icon: markerIconForSpot(spot) }).bindPopup(popupHtml);
           marker.on("click", () => showSavedSpotOnMapEval(spot));
           spotMarkersById.set(markerId, marker);
           markersLayer.addLayer(marker);
-        } else {
+          markerStateById.set(markerId, markerSignature);
+        } else if (previousSignature !== markerSignature) {
           const markerLatLng = marker.getLatLng();
           if (Math.abs(markerLatLng.lat - lat) > 0.000001 || Math.abs(markerLatLng.lng - lon) > 0.000001) {
             marker.setLatLng([lat, lon]);
           }
           marker.setPopupContent(popupHtml);
           marker.setIcon(markerIconForSpot(spot));
+          markerStateById.set(markerId, markerSignature);
         }
+
         bounds.push([lat, lon]);
       });
 
@@ -15844,6 +15900,7 @@ out tags geom qt;`;
         const marker = spotMarkersById.get(markerId);
         if (marker) markersLayer.removeLayer(marker);
         spotMarkersById.delete(markerId);
+        markerStateById.delete(markerId);
       });
 
       updateMapHud({ spotCount: spotMarkersById.size });
@@ -15874,7 +15931,7 @@ out tags geom qt;`;
       if (!ll || !mapInitialized) return;
       const [lat, lon] = ll;
       selectedSpotId = String(spot.id);
-      render();
+      scheduleRender();
       map.flyTo([lat, lon], Math.max(map.getZoom(), 14), { duration: 0.45 });
       const marker = spotMarkersById.get(String(spot.id));
       if (!marker) return;
@@ -19112,7 +19169,7 @@ function resetMapEvaluationCard() {
 
   if (wasSavedSelection) {
     selectedSpotId = null;
-    render();
+    scheduleRender();
   }
 
   mapEvalCard.classList.remove("show");
@@ -19225,7 +19282,7 @@ function showSavedSpotOnMapEval(spot) {
   const evalData = buildSavedSpotMapEvalData(spot);
 
   selectedSpotId = String(spot.id);
-  render();
+  scheduleRender();
 
   setActiveMapEvalSelection("saved", {
     spotId: spot.id,
@@ -19273,7 +19330,7 @@ async function runMapQuickEvaluation(coordText) {
   setActiveMapEvalSelection("quick", { locationText: coordText });
   if (selectedSpotId) {
     selectedSpotId = null;
-    render();
+    scheduleRender();
   }
 
   lastMapQuickSelection = { coordText, noteText: "", data: null };
@@ -21576,6 +21633,161 @@ function updateHistoryPreview(rawText) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true });
     else boot();
     window.addEventListener("resize", syncLayerSheetState, { passive: true });
+  })();
+</script>
+
+
+<style id="header-utility-actions-relayout-v1">
+  #app .app-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "top util"
+      "title title" !important;
+    align-items: center !important;
+    column-gap: 10px !important;
+    row-gap: 8px !important;
+  }
+
+  #app .app-header .header-topbar {
+    grid-area: top !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  #app .app-header > h1 {
+    grid-area: title !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+    display: none !important;
+  }
+
+  #app .header-utility-actions {
+    grid-area: util;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  #app .header-utility-actions #settingsBtn.header-settings-btn,
+  #app .header-utility-actions .analysis-quick-chip {
+    margin: 0 !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 24px rgba(2,6,23,.22), inset 0 1px 0 rgba(255,255,255,.05) !important;
+  }
+
+  #app .header-utility-actions #settingsBtn.header-settings-btn {
+    width: 40px !important;
+    min-width: 40px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    border: 1px solid rgba(96,165,250,.34) !important;
+    background: linear-gradient(180deg, rgba(18,31,56,.96), rgba(5,10,23,.98)) !important;
+  }
+
+  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-copy,
+  #app .header-utility-actions #settingsBtn.header-settings-btn .settings-btn-text,
+  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-title,
+  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-subtitle {
+    display: none !important;
+  }
+
+  #app .header-utility-actions #settingsBtn.header-settings-btn .hero-btn-icon {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: #eaf4ff !important;
+  }
+
+  #app .header-utility-actions .analysis-quick-chip {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 148px;
+    padding: 0 12px 0 10px !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    border: 1px solid rgba(245,158,11,.26) !important;
+    background: linear-gradient(180deg, rgba(42,26,8,.94), rgba(18,10,5,.98)) !important;
+  }
+
+  #app .header-utility-actions .analysis-quick-chip::before {
+    width: 22px !important;
+    height: 22px !important;
+    flex: 0 0 22px !important;
+    border-radius: 8px !important;
+  }
+
+  #app .header-utility-actions .status-chip-text {
+    min-width: 0;
+    font-size: 11.5px !important;
+    line-height: 1.05 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 560px) {
+    #app .app-header {
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      column-gap: 8px !important;
+    }
+
+    #app .header-utility-actions {
+      gap: 6px;
+    }
+
+    #app .header-utility-actions .analysis-quick-chip {
+      max-width: 118px;
+      padding-right: 10px !important;
+    }
+
+    #app .header-utility-actions .status-chip-text {
+      font-size: 10.5px !important;
+    }
+  }
+</style>
+
+<script id="header-utility-actions-relayout-script-v1">
+  (function () {
+    var appHeader = document.querySelector('#app .app-header');
+    var topbar = document.querySelector('#app .app-header .header-topbar');
+    var settingsBtn = document.getElementById('settingsBtn');
+    var adBtn = document.getElementById('analysisQuickAccessBtn');
+    if (!appHeader || !topbar || !settingsBtn || !adBtn) return;
+
+    var utilities = document.querySelector('#app .header-utility-actions');
+    if (!utilities) {
+      utilities = document.createElement('div');
+      utilities.className = 'header-utility-actions';
+      topbar.insertAdjacentElement('afterend', utilities);
+    }
+
+    if (settingsBtn.parentElement !== utilities) {
+      utilities.appendChild(settingsBtn);
+    }
+    if (adBtn.parentElement !== utilities) {
+      utilities.appendChild(adBtn);
+    }
+
+    settingsBtn.classList.add('header-settings-btn');
+    settingsBtn.setAttribute('title', 'Ayarlar ve veri');
+    settingsBtn.setAttribute('aria-label', 'Ayarlar ve veri');
+    adBtn.setAttribute('title', 'Reklam izle ve +1 hak al');
   })();
 </script>
 
