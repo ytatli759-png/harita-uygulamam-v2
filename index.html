@@ -8985,8 +8985,8 @@
                         <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-enter-route"></use></svg>
                     </span>
                     <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Başla</span>
-                        <span class="hero-btn-subtitle">Nokta oluşturarak devam et</span>
+                        <span class="hero-btn-title">Yeni nokta ekle</span>
+                        <span class="hero-btn-subtitle">Konum seç, kısa not ekle ve kaydet</span>
                     </span>
                 </button>
                 <button type="button" id="goldGuideBtn" class="compact-shortcut-btn">
@@ -8994,8 +8994,8 @@
                         <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-guide-compass"></use></svg>
                     </span>
                     <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Saha rehberi</span>
-                        <span class="hero-btn-subtitle">Keşif akışını aç</span>
+                        <span class="hero-btn-title">Altın tozu rehberi</span>
+                        <span class="hero-btn-subtitle">Canlı su hattı analizi ile ilerle</span>
                     </span>
                 </button>
             </div>
@@ -9731,6 +9731,273 @@
     <button type="button" data-quickbar-action="guide"><span>✦</span><small>Analiz</small></button>
     <button type="button" data-quickbar-action="records"><span>📍</span><small>Kayıtlar</small></button>
 </div>
+
+<style id="mobile-first-layout-refresh-v2">
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      calc(14px + env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
+
+  #app,
+  #app .app-shell {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  #app .app-shell {
+    border-radius: clamp(16px, 4.2vw, 22px);
+    padding: clamp(10px, 3vw, 14px);
+    background: linear-gradient(180deg, rgba(9, 18, 34, 0.96), rgba(6, 13, 27, 0.96));
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    box-shadow: 0 16px 36px rgba(2, 6, 23, 0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+    display: grid;
+    gap: 10px;
+    margin: 10px 0 14px;
+    min-width: 0;
+  }
+
+  #app .primary-actions.primary-actions-stack.compact-shortcuts-row {
+    order: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  #app .header-top-right-grid {
+    order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  #app #addBtn,
+  #app #goldGuideBtn,
+  #app #settingsBtn.header-settings-btn,
+  #app #analysisQuickAccessBtn {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 56px;
+    border-radius: 18px;
+  }
+
+  #app #addBtn,
+  #app #goldGuideBtn {
+    min-height: clamp(78px, 24vw, 96px);
+    padding: 14px;
+    gap: 12px;
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.32), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  }
+
+  #app #addBtn .hero-btn-copy,
+  #app #goldGuideBtn .hero-btn-copy,
+  #app #settingsBtn .hero-btn-copy {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #app .hero-btn-title {
+    font-size: clamp(15px, 4vw, 18px);
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #app .hero-btn-subtitle {
+    font-size: clamp(11px, 3.2vw, 13px);
+    line-height: 1.35;
+    opacity: 0.92;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #app .hero-btn-icon {
+    width: clamp(38px, 12vw, 46px);
+    height: clamp(38px, 12vw, 46px);
+    border-radius: 14px;
+    flex: 0 0 auto;
+  }
+
+  #app #analysisQuickAccessBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    text-align: center;
+    border-radius: 14px;
+  }
+
+  #app .map-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 0 14px;
+    padding: 0;
+  }
+
+  #app .map-stage {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    border-radius: clamp(16px, 4vw, 20px);
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    box-shadow: 0 14px 30px rgba(2, 6, 23, 0.34);
+  }
+
+  #app #map {
+    width: 100%;
+    min-width: 0;
+    height: clamp(320px, 55vh, 460px);
+    border-radius: inherit;
+  }
+
+  #app .map-hud {
+    inset: 10px 10px auto 10px;
+    width: auto;
+    max-width: calc(100% - 20px);
+    pointer-events: none;
+  }
+
+  #app .map-hud-left {
+    width: fit-content;
+    max-width: 100%;
+    gap: 6px;
+  }
+
+  #app .map-hud-chip {
+    min-height: 28px;
+    max-width: 100%;
+    font-size: 11px;
+    line-height: 1.2;
+    padding: 6px 10px;
+    overflow-wrap: anywhere;
+  }
+
+  #app .map-tools,
+  #app .map-tools.secondary,
+  #app .map-eval-actions,
+  #app .spot-detail-actions,
+  #app .analysis-premium-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  #app .map-tools .btn-small,
+  #app .map-tools.secondary .btn-small,
+  #app .map-eval-actions button,
+  #app .spot-detail-actions .btn-small,
+  #app .analysis-premium-actions button,
+  #app .settings-data-actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #app .leaflet-top,
+  #app .leaflet-bottom {
+    inset-inline: 0;
+  }
+
+  #app .leaflet-top .leaflet-control,
+  #app .leaflet-bottom .leaflet-control {
+    margin: 10px;
+  }
+
+  #app .leaflet-left .leaflet-control {
+    margin-left: 10px;
+  }
+
+  #app .leaflet-right .leaflet-control {
+    margin-right: 10px;
+  }
+
+  #app .leaflet-control-zoom,
+  #app .leaflet-control-layers {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+  }
+
+  #app .leaflet-control-zoom a,
+  #app .leaflet-control-layers-toggle {
+    width: 34px;
+    height: 34px;
+    line-height: 34px;
+  }
+
+  #app .settings-data-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  #app [class*="actions"] > *,
+  #app .primary-actions > *,
+  #app .settings-data-actions > *,
+  #app .map-hud > *,
+  #app .map-hud-left > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  @media (max-width: 360px) {
+    #app .header-top-right-grid,
+    #app .map-tools,
+    #app .map-tools.secondary,
+    #app .map-eval-actions,
+    #app .spot-detail-actions,
+    #app .analysis-premium-actions,
+    #app .settings-data-actions {
+      grid-template-columns: 1fr;
+    }
+
+    #app #map {
+      height: clamp(300px, 52vh, 400px);
+    }
+  }
+
+  @media (min-width: 481px) {
+    #app .app-shell {
+      max-width: 860px;
+      margin-inline: auto;
+      padding: 16px;
+    }
+
+    #app .primary-actions.primary-actions-stack.compact-shortcuts-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
 
 
 <script>
