@@ -7962,7 +7962,6 @@
     min-width: 0;
   }
 
-  #app .header-top-right-grid .count-badge.count-badge-main,
   #app .header-top-right-grid .analysis-quick-chip,
   #app .header-top-right-grid #settingsBtn.header-settings-btn {
     width: 100%;
@@ -8056,7 +8055,6 @@
     border: 1px solid rgba(255,248,220,0.28);
   }
 
-  #app .header-top-right-grid .count-badge.count-badge-main,
   #app .header-top-right-grid .analysis-quick-chip,
   #app .header-top-right-grid #settingsBtn.header-settings-btn {
     justify-content: flex-start;
@@ -8065,7 +8063,6 @@
     padding-right: 10px;
   }
 
-  #app .header-top-right-grid .count-badge.count-badge-main::before,
   #app .header-top-right-grid .analysis-quick-chip::before {
     content: "";
     width: 24px;
@@ -8076,12 +8073,6 @@
     background-repeat: no-repeat;
     background-size: 14px 14px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
-  }
-
-  #app .header-top-right-grid .count-badge.count-badge-main::before {
-    border: 1px solid rgba(125,211,252,0.26);
-    background-color: rgba(14,165,233,0.12);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cfe7ff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z'/%3E%3Ccircle cx='12' cy='10' r='2.2'/%3E%3C/svg%3E");
   }
 
   #app .header-top-right-grid .analysis-quick-chip::before {
@@ -8138,7 +8129,7 @@
     }
 
     #app .header-top-right-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: 1fr;
     }
 
     #app .header-top-right-grid #settingsBtn.header-settings-btn {
@@ -8705,17 +8696,16 @@
 
         <div class="header-actions layout-refresh-actions compact-top-right-actions">
             <div class="header-top-right-grid">
-                <div id="count" class="count-badge count-badge-main"><span class="status-chip-text">0 nokta</span></div>
-                <button type="button" id="settingsBtn" class="header-settings-btn compact-chip-btn" aria-label="Ayarlar ve veri">
+                                <button type="button" id="settingsBtn" class="header-settings-btn compact-chip-btn" aria-label="Ayarlar ve veri">
                     <span class="hero-btn-icon" aria-hidden="true">
                         <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-data-stack"></use></svg>
                     </span>
                     <span class="hero-btn-copy">
-                        <span class="hero-btn-title">Veri merkezi</span>
-                        <span class="hero-btn-subtitle">Yerel kayıt ve aktarım</span>
+                        <span class="hero-btn-title">Ayarlar</span>
+                        <span class="hero-btn-subtitle">Veri, reklam ve premium</span>
                     </span>
                 </button>
-                <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Analiz hakkı ve reklam durumu"><span class="status-chip-text">10 hak kaldı</span></button>
+                <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Reklam izle ve +1 hak al"><span class="status-chip-text">🎬 Reklam izle</span></button>
             </div>
             <div class="primary-actions primary-actions-stack compact-shortcuts-row">
                 <button type="button" id="addBtn" class="compact-shortcut-btn">
@@ -9022,7 +9012,7 @@
                 <div class="analysis-premium-value">
                     <div class="analysis-premium-value-chip">10 ücretsiz analiz sonrası</div>
                     <div class="analysis-premium-value-main">Harita ve altın analizlerini sınırsız kullan</div>
-                    <div id="analysisPremiumModalText" class="analysis-premium-text">Başlangıçta 5 hak verilir. Reklam izleyerek 10/10 seviyesine doldurabilir veya Premium ile sınırsız kullanıma geçebilirsin.</div>
+                    <div id="analysisPremiumModalText" class="analysis-premium-text">Başlangıçta 5 hak verilir. Her tamamlanan reklam izleme sonrası +1 hak kazanabilir veya Premium ile sınırsız kullanıma geçebilirsin.</div>
                 </div>
                 <div class="analysis-premium-benefits">
                     <div class="analysis-premium-benefit">
@@ -11101,7 +11091,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     const ANALYSIS_INITIAL_CREDITS = 5;
     const ANALYSIS_MAX_CREDITS = 10;
-    const ANALYSIS_USAGE_STORAGE_KEY = "gem_define_analysis_usage_v5";
+    const ANALYSIS_USAGE_STORAGE_KEY = "gem_define_analysis_usage_v6";
+    const ANALYSIS_AD_REWARD_AMOUNT = 1;
     const ANALYSIS_PREMIUM_STORAGE_KEY = "gem_define_premium_unlock_v5";
     const ANALYSIS_RESET_BUILD_MARK = "gem_define_reset_build_v20_applied";
     const ANALYSIS_PLAN_CONFIG = {
@@ -11149,6 +11140,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       try { localStorage.removeItem("gem_define_analysis_usage_v3"); } catch {}
       try { localStorage.removeItem("gem_define_premium_unlock_v3"); } catch {}
       try { localStorage.removeItem("gem_define_analysis_usage_v4"); } catch {}
+      try { localStorage.removeItem("gem_define_analysis_usage_v5"); } catch {}
       try { localStorage.removeItem("gem_define_premium_unlock_v4"); } catch {}
       try { localStorage.removeItem(ANALYSIS_USAGE_STORAGE_KEY); } catch {}
       try { localStorage.removeItem(ANALYSIS_PREMIUM_STORAGE_KEY); } catch {}
@@ -11215,23 +11207,27 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return Math.max(0, Math.min(ANALYSIS_MAX_CREDITS, state.balance));
     }
 
-    function refillAnalysisCreditsToMax(source = "ad") {
+    function grantAnalysisCredits(amount = ANALYSIS_AD_REWARD_AMOUNT, source = "ad") {
       if (isPremiumUnlocked()) {
         updateAnalysisUsageUi();
         return;
       }
+      const normalizedAmount = Math.max(1, Math.floor(Number(amount) || ANALYSIS_AD_REWARD_AMOUNT));
       const state = readAnalysisUsageState();
       if (state.balance >= ANALYSIS_MAX_CREDITS) {
         showToast(`Hakların zaten ${ANALYSIS_MAX_CREDITS}/${ANALYSIS_MAX_CREDITS}.`, "info", 1700);
         updateAnalysisUsageUi();
         return;
       }
-      state.balance = ANALYSIS_MAX_CREDITS;
+      const previousBalance = state.balance;
+      state.balance = Math.min(ANALYSIS_MAX_CREDITS, state.balance + normalizedAmount);
       writeAnalysisUsageState(state);
       updateAnalysisUsageUi();
+      const gained = Math.max(0, state.balance - previousBalance);
+      if (gained <= 0) return;
       const message = source === "ad"
-        ? `Reklam ödülü alındı. Hakların ${ANALYSIS_MAX_CREDITS}/${ANALYSIS_MAX_CREDITS} oldu.`
-        : `Hakların ${ANALYSIS_MAX_CREDITS}/${ANALYSIS_MAX_CREDITS} olarak yenilendi.`;
+        ? `Reklam ödülü alındı. +${gained} hak kazandın (${state.balance}/${ANALYSIS_MAX_CREDITS}).`
+        : `Hakların +${gained} arttı (${state.balance}/${ANALYSIS_MAX_CREDITS}).`;
       showToast(message, "success", 2200);
     }
 
@@ -11258,7 +11254,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       }
       const low = remaining <= 2;
       if (analysisUsageTitle) analysisUsageTitle.textContent = remaining > 0 ? "Analiz hakları hazır" : "Hak bitti";
-      if (analysisUsageSub) analysisUsageSub.textContent = `Şu an ${remaining}/${ANALYSIS_MAX_CREDITS} hakkın var. Uygulama ${ANALYSIS_INITIAL_CREDITS} hakla başlar; reklam izleyerek ${ANALYSIS_MAX_CREDITS}/${ANALYSIS_MAX_CREDITS} seviyesine doldurabilirsin. Harita: ${state.map}, altın tozu: ${state.gold}.`;
+      if (analysisUsageSub) analysisUsageSub.textContent = `Şu an ${remaining}/${ANALYSIS_MAX_CREDITS} hakkın var. Uygulama ${ANALYSIS_INITIAL_CREDITS} hakla başlar; her tamamlanan reklam sonrası +${ANALYSIS_AD_REWARD_AMOUNT} hak kazanırsın. Harita: ${state.map}, altın tozu: ${state.gold}.`;
       if (analysisUsagePill) {
         analysisUsagePill.textContent = `${remaining}/${ANALYSIS_MAX_CREDITS} hak`;
         analysisUsagePill.className = `analysis-usage-pill${low ? ' low' : ''}`;
@@ -11266,12 +11262,15 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (analysisAdBtn) analysisAdBtn.textContent = remaining < ANALYSIS_MAX_CREDITS ? "🎬 Reklam izle" : "🎬 Dolu";
       if (analysisPremiumBtn) analysisPremiumBtn.textContent = "Premium";
       if (analysisQuickAccessBtn) {
-        if (remaining > 0) {
-          renderAnalysisQuickChip(`${remaining}/${ANALYSIS_MAX_CREDITS} hak`);
+        if (remaining >= ANALYSIS_MAX_CREDITS) {
+          renderAnalysisQuickChip(`🎬 Hak dolu · ${remaining}/${ANALYSIS_MAX_CREDITS}`);
+          analysisQuickAccessBtn.className = "analysis-quick-chip";
+        } else if (remaining > 0) {
+          renderAnalysisQuickChip(`🎬 Reklam izle · ${remaining}/${ANALYSIS_MAX_CREDITS}`);
           analysisQuickAccessBtn.className = `analysis-quick-chip${low ? ' low' : ''}`;
         } else {
-          renderAnalysisQuickChip("Reklam izle");
-          analysisQuickAccessBtn.className = "analysis-quick-chip cta";
+          renderAnalysisQuickChip(`🎬 Reklam izle · 0/${ANALYSIS_MAX_CREDITS}`);
+          analysisQuickAccessBtn.className = "analysis-quick-chip cta low";
         }
       }
     }
@@ -11309,7 +11308,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (analysisPremiumModalText) {
         analysisPremiumModalText.textContent = reason === "manual"
           ? `Planlardan birini seç, sonra devam et. Şu an seçili plan: ${selectedConfig.label} (${selectedConfig.price}).`
-          : `Uygulama ${ANALYSIS_INITIAL_CREDITS} hakla başlar. Reklam izleyerek hakkını ${ANALYSIS_MAX_CREDITS}/${ANALYSIS_MAX_CREDITS} seviyesine doldurabilir ya da Premium ile sınırsız kullanıma geçebilirsin. Şu an kalan hak: ${Number.isFinite(remaining) ? `${remaining}/${ANALYSIS_MAX_CREDITS}` : 'sınırsız'}.`;
+          : `Uygulama ${ANALYSIS_INITIAL_CREDITS} hakla başlar. Her tamamlanan reklam sonrası +${ANALYSIS_AD_REWARD_AMOUNT} hak kazanabilir ya da Premium ile sınırsız kullanıma geçebilirsin. Şu an kalan hak: ${Number.isFinite(remaining) ? `${remaining}/${ANALYSIS_MAX_CREDITS}` : 'sınırsız'}.`;
       }
       updateSelectedAnalysisPlanUi();
       analysisPremiumModal.classList.add("show");
@@ -11347,7 +11346,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       updateAnalysisUsageUi();
       const remaining = getRemainingAnalysisCount();
       if (remaining === 0) {
-        showToast("Hak bitti. İstersen reklam izleyip 10/10 doldurabilirsin.", "info", 2200);
+        showToast(`Hak bitti. İstersen reklam izleyip +${ANALYSIS_AD_REWARD_AMOUNT} hak kazanabilirsin.`, "info", 2200);
       } else if (remaining <= 2) {
         showToast(`Kalan hak: ${remaining}/${ANALYSIS_MAX_CREDITS}`, "info", 1800);
       }
@@ -19059,22 +19058,9 @@ function updateHistoryPreview(rawText) {
         openAnalysisPremiumModal("manual");
         return;
       }
-      const remaining = getRemainingAnalysisCount();
-      if (remaining <= 0) {
-        if (analysisAdBtn) {
-          analysisAdBtn.click();
-          return;
-        }
+      if (analysisAdBtn) {
+        analysisAdBtn.click();
       }
-      formContainer.style.display = "none";
-      resetMapEvaluationCard();
-      setGoldMode(false);
-      openSurfacePanel(settingsPanel);
-      closeSurfacePanel(goldPanel);
-      renderHistoryVerificationSummary();
-      setTimeout(() => {
-        try { map && map.invalidateSize(true); } catch {}
-      }, 120);
     });
 
     function waitForRewardedAdResult(timeoutMs = 15000) {
@@ -19111,7 +19097,7 @@ function updateHistoryPreview(rawText) {
       const bridgeReady = !!window.__rewardedAdReady;
 
       if (!hasBridge || !bridgeReady) {
-        refillAnalysisCreditsToMax("ad");
+        showToast("Ödüllü reklam şu anda hazır değil. Android uygulama içinden tekrar dene.", "info", 2400);
         return;
       }
 
@@ -19120,7 +19106,7 @@ function updateHistoryPreview(rawText) {
         window.AndroidAds.showRewardedAd();
       } catch (error) {
         console.warn("Rewarded ad başlatılamadı:", error);
-        refillAnalysisCreditsToMax("ad");
+        showToast("Reklam başlatılamadı. Tekrar deneyebilirsin.", "error", 2200);
         return;
       }
 
@@ -19130,11 +19116,11 @@ function updateHistoryPreview(rawText) {
         return;
       }
       if (String(result.status || "").toLowerCase() === "rewarded") {
-        refillAnalysisCreditsToMax("ad");
+        grantAnalysisCredits(ANALYSIS_AD_REWARD_AMOUNT, "ad");
         return;
       }
       if (String(result.status || "").toLowerCase() === "closed") {
-        showToast("Ödül alınmadı. Hakkı doldurmak için reklamı tamamla.", "info", 2200);
+        showToast("Ödül alınmadı. +1 hak almak için reklamı tamamla.", "info", 2200);
         return;
       }
       showToast("Reklam tamamlanamadı. Tekrar deneyebilirsin.", "error", 2200);
@@ -20451,6 +20437,541 @@ function updateHistoryPreview(rawText) {
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
     else init();
+  })();
+</script>
+
+
+<style id="reward-settings-ui-patch-v1">
+  #app .header-top-right-grid .analysis-quick-chip {
+    position: relative;
+    overflow: hidden;
+    min-height: 52px;
+    height: auto;
+    padding: 10px 12px;
+    border-radius: 18px;
+    align-items: center;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+    pointer-events: none;
+    opacity: .72;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip .status-chip-text {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    line-height: 1.08;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip .status-chip-main {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    color: #fff7d6;
+    white-space: nowrap;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip .status-chip-sub {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: rgba(254, 243, 199, 0.92);
+    white-space: nowrap;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.ready {
+    border-color: rgba(245,158,11,0.58);
+    box-shadow: 0 16px 30px rgba(2,6,23,0.26), 0 0 0 1px rgba(245,158,11,0.10);
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.ready:not(:disabled) {
+    animation: rewardedChipPulse 2.6s ease-in-out infinite;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.low.ready {
+    border-color: rgba(248,113,113,0.58);
+    box-shadow: 0 16px 30px rgba(2,6,23,0.28), 0 0 0 1px rgba(248,113,113,0.12);
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.full {
+    border-color: rgba(96,165,250,0.44);
+    color: #dbeafe;
+    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(37,99,235,0.16));
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.full::before {
+    border-color: rgba(96,165,250,0.26);
+    background-color: rgba(96,165,250,0.12);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dbeafe' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='14' rx='3'/%3E%3Cpath d='M8 9h8M8 13h5'/%3E%3C/svg%3E");
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.full .status-chip-main,
+  #app .header-top-right-grid .analysis-quick-chip.full .status-chip-sub {
+    color: #dbeafe;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.disabled,
+  #app .header-top-right-grid .analysis-quick-chip.busy {
+    border-color: rgba(100,116,139,0.46);
+    color: #dbe7f9;
+    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(51,65,85,0.20));
+    box-shadow: 0 12px 24px rgba(2,6,23,0.20), inset 0 1px 0 rgba(255,255,255,0.03);
+    animation: none;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.disabled::before,
+  #app .header-top-right-grid .analysis-quick-chip.busy::before {
+    border-color: rgba(148,163,184,0.26);
+    background-color: rgba(148,163,184,0.12);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dbe7f9' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 8v4l2.5 2.5'/%3E%3C/svg%3E");
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.disabled .status-chip-main,
+  #app .header-top-right-grid .analysis-quick-chip.busy .status-chip-main {
+    color: #e2e8f0;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.disabled .status-chip-sub,
+  #app .header-top-right-grid .analysis-quick-chip.busy .status-chip-sub {
+    color: #94a3b8;
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip:disabled {
+    cursor: not-allowed;
+    filter: saturate(.92);
+  }
+
+  #app #settingsBtn.header-settings-btn {
+    min-height: 52px;
+    height: auto;
+    padding: 10px 12px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #1f3251 0%, #2b466f 58%, #3d6191 100%);
+    border-color: rgba(147,197,253,0.30);
+    box-shadow: 0 16px 30px rgba(2,6,23,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-copy {
+    min-width: 0;
+    gap: 1px;
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-title,
+  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-title {
+    color: #f8fbff;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
+    display: block;
+    color: #d6e6ff;
+    opacity: .88;
+    font-size: 10px;
+  }
+
+  #settingsPanel .analysis-usage-btn:disabled {
+    opacity: .72;
+    cursor: not-allowed;
+    filter: saturate(.9);
+  }
+
+  @keyframes rewardedChipPulse {
+    0%, 100% { box-shadow: 0 16px 30px rgba(2,6,23,0.26), 0 0 0 1px rgba(245,158,11,0.10); }
+    50% { box-shadow: 0 18px 34px rgba(2,6,23,0.30), 0 0 0 1px rgba(245,158,11,0.18), 0 0 0 8px rgba(245,158,11,0.06); }
+  }
+
+  @media (max-width: 720px) {
+    #app #settingsBtn.header-settings-btn .hero-btn-subtitle,
+    #app .header-top-right-grid .analysis-quick-chip .status-chip-sub {
+      display: none;
+    }
+
+    #app .header-top-right-grid .analysis-quick-chip,
+    #app #settingsBtn.header-settings-btn {
+      min-height: 48px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+  }
+</style>
+<script id="reward-settings-ui-patch-script-v1">
+  (function () {
+    var rewardBusyTimer = null;
+
+    function htmlEscape(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getLangCode() {
+      return String(document.documentElement.lang || 'tr').toLowerCase();
+    }
+
+    function getUiCopy() {
+      var lang = getLangCode();
+      if (lang.indexOf('en') === 0) {
+        return {
+          settingsTitle: 'Settings',
+          settingsSub: 'Data, ads and premium',
+          settingsAria: 'Settings and data',
+          adReadyMain: 'Watch ad',
+          adReadySub: 'ready for +1 credit',
+          adReadyLowSub: 'low credits',
+          adReadyUrgentSub: 'no credits left',
+          notReadyMain: 'Ad not ready',
+          notReadySub: 'try again in the Android app',
+          androidOnlySub: 'available in Android app',
+          fullMain: 'Credits full',
+          fullSub: 'ad reward not needed',
+          busyMain: 'Ad opening',
+          busySub: 'waiting for reward result',
+          premiumMain: 'Premium active',
+          premiumSub: 'ads are disabled',
+          busyToast: 'The ad is already opening.',
+          notReadyToast: 'Rewarded ad is not ready yet. Try again in the Android app.'
+        };
+      }
+      if (lang.indexOf('es') === 0) {
+        return {
+          settingsTitle: 'Ajustes',
+          settingsSub: 'Datos, anuncios y premium',
+          settingsAria: 'Ajustes y datos',
+          adReadyMain: 'Ver anuncio',
+          adReadySub: 'listo para +1 crédito',
+          adReadyLowSub: 'créditos bajos',
+          adReadyUrgentSub: 'sin créditos',
+          notReadyMain: 'Anuncio no listo',
+          notReadySub: 'pruébalo en la app Android',
+          androidOnlySub: 'disponible en Android',
+          fullMain: 'Créditos completos',
+          fullSub: 'no hace falta anuncio',
+          busyMain: 'Abriendo anuncio',
+          busySub: 'esperando recompensa',
+          premiumMain: 'Premium activo',
+          premiumSub: 'anuncios desactivados',
+          busyToast: 'El anuncio ya se está abriendo.',
+          notReadyToast: 'El anuncio con recompensa no está listo todavía.'
+        };
+      }
+      if (lang.indexOf('pt') === 0) {
+        return {
+          settingsTitle: 'Ajustes',
+          settingsSub: 'Dados, anúncios e premium',
+          settingsAria: 'Ajustes e dados',
+          adReadyMain: 'Ver anúncio',
+          adReadySub: 'pronto para +1 crédito',
+          adReadyLowSub: 'créditos baixos',
+          adReadyUrgentSub: 'sem créditos',
+          notReadyMain: 'Anúncio indisponível',
+          notReadySub: 'tente no app Android',
+          androidOnlySub: 'disponível no Android',
+          fullMain: 'Créditos cheios',
+          fullSub: 'anúncio não é necessário',
+          busyMain: 'Abrindo anúncio',
+          busySub: 'aguardando recompensa',
+          premiumMain: 'Premium ativo',
+          premiumSub: 'anúncios desativados',
+          busyToast: 'O anúncio já está abrindo.',
+          notReadyToast: 'O anúncio recompensado ainda não está pronto.'
+        };
+      }
+      if (lang.indexOf('ar') === 0) {
+        return {
+          settingsTitle: 'الإعدادات',
+          settingsSub: 'البيانات والإعلانات والبريميوم',
+          settingsAria: 'الإعدادات والبيانات',
+          adReadyMain: 'شاهد الإعلان',
+          adReadySub: 'جاهز لـ +1 رصيد',
+          adReadyLowSub: 'الرصيد منخفض',
+          adReadyUrgentSub: 'لا يوجد رصيد',
+          notReadyMain: 'الإعلان غير جاهز',
+          notReadySub: 'جرّبه من تطبيق أندرويد',
+          androidOnlySub: 'متاح داخل أندرويد',
+          fullMain: 'الرصيد ممتلئ',
+          fullSub: 'لا حاجة لإعلان إضافي',
+          busyMain: 'جارٍ فتح الإعلان',
+          busySub: 'بانتظار نتيجة المكافأة',
+          premiumMain: 'البريميوم مفعل',
+          premiumSub: 'الإعلانات معطلة',
+          busyToast: 'الإعلان قيد الفتح بالفعل.',
+          notReadyToast: 'الإعلان المُكافأ غير جاهز بعد.'
+        };
+      }
+      return {
+        settingsTitle: 'Ayarlar',
+        settingsSub: 'Veri, reklam ve premium',
+        settingsAria: 'Ayarlar ve veri',
+        adReadyMain: 'Reklam izle',
+        adReadySub: '+1 hak kazanmaya hazır',
+        adReadyLowSub: 'hak azaldı',
+        adReadyUrgentSub: 'hak bitti',
+        notReadyMain: 'Reklam hazır değil',
+        notReadySub: 'Android uygulamada tekrar dene',
+        androidOnlySub: 'Android uygulama içinde açık',
+        fullMain: 'Hak dolu',
+        fullSub: 'ek reklama gerek yok',
+        busyMain: 'Reklam açılıyor',
+        busySub: 'ödül sonucu bekleniyor',
+        premiumMain: 'Premium açık',
+        premiumSub: 'reklam kapalı',
+        busyToast: 'Reklam zaten açılıyor.',
+        notReadyToast: 'Ödüllü reklam şu anda hazır değil. Android uygulamadan tekrar dene.'
+      };
+    }
+
+    function getBridgeState() {
+      var hasBridge = !!(window.AndroidAds && typeof window.AndroidAds.showRewardedAd === 'function');
+      var ready = hasBridge && !!window.__rewardedAdReady;
+      return { hasBridge: hasBridge, ready: ready };
+    }
+
+    function getCreditsMax() {
+      var max = Number(window.ANALYSIS_MAX_CREDITS || 10);
+      return Number.isFinite(max) && max > 0 ? max : 10;
+    }
+
+    function getRewardAmount() {
+      var amount = Number(window.ANALYSIS_AD_REWARD_AMOUNT || 1);
+      return Number.isFinite(amount) && amount > 0 ? amount : 1;
+    }
+
+    function getRemainingCredits() {
+      if (typeof window.getRemainingAnalysisCount === 'function') {
+        var value = window.getRemainingAnalysisCount();
+        return Number.isFinite(value) ? value : Infinity;
+      }
+      return 0;
+    }
+
+    function isPremium() {
+      return typeof window.isPremiumUnlocked === 'function' && !!window.isPremiumUnlocked();
+    }
+
+    function setRewardBusy(isBusy) {
+      window.__rewardedAdBusy = !!isBusy;
+      if (rewardBusyTimer) {
+        clearTimeout(rewardBusyTimer);
+        rewardBusyTimer = null;
+      }
+      if (isBusy) {
+        rewardBusyTimer = setTimeout(function () {
+          window.__rewardedAdBusy = false;
+          syncTopActionsUi();
+        }, 18000);
+      }
+    }
+
+    function renderSettingsButton() {
+      var btn = document.getElementById('settingsBtn');
+      if (!btn) return;
+      var copy = getUiCopy();
+      var title = (typeof window.t === 'function' ? window.t('settings') : copy.settingsTitle) || copy.settingsTitle;
+      btn.classList.add('header-settings-btn', 'compact-chip-btn');
+      btn.setAttribute('aria-label', copy.settingsAria);
+      btn.title = copy.settingsAria;
+      btn.innerHTML = '' +
+        '<span class="hero-btn-icon" aria-hidden="true">' +
+          '<svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-data-stack"></use></svg>' +
+        '</span>' +
+        '<span class="hero-btn-copy">' +
+          '<span class="hero-btn-title">' + htmlEscape(title) + '</span>' +
+          '<span class="hero-btn-subtitle">' + htmlEscape(copy.settingsSub) + '</span>' +
+        '</span>';
+    }
+
+    function renderQuickButton(main, sub, ariaLabel) {
+      var btn = document.getElementById('analysisQuickAccessBtn');
+      if (!btn) return;
+      btn.innerHTML = '' +
+        '<span class="status-chip-text">' +
+          '<span class="status-chip-main">' + htmlEscape(main) + '</span>' +
+          '<span class="status-chip-sub">' + htmlEscape(sub) + '</span>' +
+        '</span>';
+      btn.setAttribute('aria-label', ariaLabel || (main + ' · ' + sub));
+      btn.title = main + ' · ' + sub;
+    }
+
+    function syncTopActionsUi() {
+      renderSettingsButton();
+
+      var quickBtn = document.getElementById('analysisQuickAccessBtn');
+      var adBtn = document.getElementById('analysisAdBtn');
+      if (!quickBtn) return;
+
+      var copy = getUiCopy();
+      var bridge = getBridgeState();
+      var premium = isPremium();
+      var remaining = getRemainingCredits();
+      var max = getCreditsMax();
+      var reward = getRewardAmount();
+      var low = Number.isFinite(remaining) && remaining <= 2;
+      var main = '';
+      var sub = '';
+      var className = 'analysis-quick-chip';
+      var disableQuick = false;
+
+      if (premium) {
+        main = copy.premiumMain;
+        sub = copy.premiumSub;
+        className += ' premium';
+        disableQuick = true;
+      } else if (window.__rewardedAdBusy) {
+        main = copy.busyMain;
+        sub = copy.busySub;
+        className += ' busy';
+        disableQuick = true;
+      } else if (Number.isFinite(remaining) && remaining >= max) {
+        main = copy.fullMain;
+        sub = remaining + '/' + max + ' · ' + copy.fullSub;
+        className += ' full';
+      } else if (!bridge.ready) {
+        main = copy.notReadyMain;
+        sub = bridge.hasBridge ? copy.notReadySub : copy.androidOnlySub;
+        className += ' disabled';
+      } else if (!Number.isFinite(remaining) || remaining <= 0) {
+        main = copy.adReadyMain;
+        sub = '+' + reward + ' · 0/' + max + ' · ' + copy.adReadyUrgentSub;
+        className += ' ready cta low';
+      } else if (low) {
+        main = copy.adReadyMain;
+        sub = '+' + reward + ' · ' + remaining + '/' + max + ' · ' + copy.adReadyLowSub;
+        className += ' ready low';
+      } else {
+        main = copy.adReadyMain;
+        sub = '+' + reward + ' · ' + remaining + '/' + max + ' · ' + copy.adReadySub;
+        className += ' ready';
+      }
+
+      quickBtn.className = className;
+      quickBtn.disabled = disableQuick;
+      if (disableQuick) quickBtn.setAttribute('aria-disabled', 'true');
+      else quickBtn.removeAttribute('aria-disabled');
+      renderQuickButton(main, sub, main + ' ' + sub);
+
+      if (adBtn) {
+        var disableAdBtn = premium || !!window.__rewardedAdBusy || !bridge.ready || (Number.isFinite(remaining) && remaining >= max);
+        adBtn.disabled = disableAdBtn;
+        adBtn.title = disableAdBtn
+          ? (premium ? copy.premiumSub : (!bridge.ready ? copy.notReadySub : copy.fullSub))
+          : copy.adReadySub;
+      }
+    }
+
+    function wrapFunction(name, afterFn) {
+      var original = window[name];
+      if (typeof original !== 'function' || original.__rewardSettingsWrapped) return;
+      var wrapped = function () {
+        var result = original.apply(this, arguments);
+        try { afterFn(); } catch (error) { console.warn(name + ' patch sync failed:', error); }
+        return result;
+      };
+      wrapped.__rewardSettingsWrapped = true;
+      window[name] = wrapped;
+    }
+
+    function wrapBridgeHooks() {
+      var updateAvailability = window.__updateRewardedAdAvailability;
+      if (typeof updateAvailability === 'function' && !updateAvailability.__rewardSettingsWrapped) {
+        var wrappedAvailability = function () {
+          var result = updateAvailability.apply(this, arguments);
+          try { syncTopActionsUi(); } catch (_) {}
+          return result;
+        };
+        wrappedAvailability.__rewardSettingsWrapped = true;
+        window.__updateRewardedAdAvailability = wrappedAvailability;
+      }
+
+      var handleResult = window.__handleRewardedAdResult;
+      if (typeof handleResult === 'function' && !handleResult.__rewardSettingsWrapped) {
+        var wrappedResult = function () {
+          var result = handleResult.apply(this, arguments);
+          setRewardBusy(false);
+          try { syncTopActionsUi(); } catch (_) {}
+          return result;
+        };
+        wrappedResult.__rewardSettingsWrapped = true;
+        window.__handleRewardedAdResult = wrappedResult;
+      }
+    }
+
+    function bindBusyProtection() {
+      var adBtn = document.getElementById('analysisAdBtn');
+      if (adBtn && !adBtn.dataset.rewardPatchBound) {
+        adBtn.dataset.rewardPatchBound = '1';
+        adBtn.addEventListener('click', function (event) {
+          var copy = getUiCopy();
+          if (window.__rewardedAdBusy) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (typeof window.showToast === 'function') window.showToast(copy.busyToast, 'info', 1600);
+            return;
+          }
+          var bridge = getBridgeState();
+          var remaining = getRemainingCredits();
+          var max = getCreditsMax();
+          if (!isPremium() && bridge.ready && (!Number.isFinite(remaining) || remaining < max)) {
+            setRewardBusy(true);
+            syncTopActionsUi();
+          }
+        }, true);
+      }
+
+      var quickBtn = document.getElementById('analysisQuickAccessBtn');
+      if (quickBtn && !quickBtn.dataset.rewardPatchBound) {
+        quickBtn.dataset.rewardPatchBound = '1';
+        quickBtn.addEventListener('click', function (event) {
+          var copy = getUiCopy();
+          if (window.__rewardedAdBusy) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (typeof window.showToast === 'function') window.showToast(copy.busyToast, 'info', 1600);
+            return;
+          }
+          var bridge = getBridgeState();
+          if (!bridge.ready && !isPremium() && typeof window.showToast === 'function') {
+            window.showToast(copy.notReadyToast, 'info', 2100);
+          }
+        }, true);
+      }
+    }
+
+    function bootPatch() {
+      wrapFunction('applyLanguage', syncTopActionsUi);
+      wrapFunction('updateAnalysisUsageUi', syncTopActionsUi);
+      wrapBridgeHooks();
+      bindBusyProtection();
+      syncTopActionsUi();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootPatch, { once: true });
+    } else {
+      bootPatch();
+    }
+
+    setTimeout(bootPatch, 0);
+    setTimeout(syncTopActionsUi, 320);
   })();
 </script>
 
