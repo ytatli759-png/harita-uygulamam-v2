@@ -67,6 +67,10 @@
           font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
+        html, body {
+          background-color: #060b16;
+        }
+
         body {
           min-height: calc(var(--vvh, 1vh) * 100);
           padding: 16px;
@@ -165,6 +169,7 @@
             0 18px 40px rgba(0,0,0,0.8),
             0 0 0 1px rgba(15,23,42,0.9);
           backdrop-filter: blur(16px);
+          overflow: hidden;
         }
 
         .app-header {
@@ -1396,6 +1401,8 @@
           display: flex;
           flex-direction: column;
           gap: 12px;
+          min-height: 0;
+          align-content: flex-start;
         }
 
         .item {
@@ -2352,6 +2359,28 @@
           border-radius: 8px;
           border: 1px dashed #1f2937;
           background: rgba(2,6,23,0.85);
+        }
+
+        #coordBar.is-empty {
+          display: none;
+        }
+
+
+        /* Son kayıt silindiğinde veya tile gecikmesinde beyaz boşluk görünmesin */
+        .leaflet-container,
+        .leaflet-pane,
+        .leaflet-map-pane,
+        .leaflet-tile-pane,
+        .leaflet-overlay-pane,
+        .leaflet-layer,
+        #map {
+          background-color: #060b16 !important;
+        }
+
+        .leaflet-container {
+          background-image:
+            radial-gradient(circle at top, rgba(14,165,233,0.10), transparent 44%),
+            linear-gradient(180deg, rgba(15,23,42,0.94), rgba(2,6,23,0.98)) !important;
         }
 
         /* Marker ikonları */
@@ -6763,19 +6792,55 @@
 
     
 
-        /* layout polish: remove amateur-looking top texts and use quick ad CTA when limit ends */
+        /* top header compact fix: hide unused title area and dock settings button */
         .header-brand,
         .app-header h1 {
           display: none !important;
         }
 
+        .app-shell {
+          padding-top: 12px !important;
+        }
+
         .app-header {
-          margin-bottom: 8px;
+          position: relative;
+          margin: 0 !important;
+          min-height: 0 !important;
+          padding: 0 !important;
         }
 
         .header-topbar {
+          position: absolute;
+          top: 0;
+          right: 0;
+          left: auto;
+          width: auto;
           justify-content: flex-end !important;
-          margin-bottom: 0 !important;
+          align-items: center !important;
+          gap: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          z-index: 6;
+        }
+
+        .header-actions {
+          margin-top: 0 !important;
+          padding-top: 0 !important;
+        }
+
+        .primary-actions,
+        .layout-refresh-actions {
+          margin-top: 0 !important;
+        }
+
+        .primary-actions-stack {
+          padding-top: 4px;
+        }
+
+        @media (min-width: 721px) {
+          .primary-actions-stack {
+            padding-top: 2px;
+          }
         }
 
         #settingsBtn.header-settings-btn {
@@ -7580,7 +7645,14 @@
 
 <style id="layout-refresh-overrides">
   #app .header-actions.layout-refresh-actions {
-    margin: 12px 0 10px;
+    margin: 12px 0 12px;
+  }
+
+  #app .header-status-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
   }
 
   #app .primary-actions.primary-actions-stack {
@@ -7591,44 +7663,34 @@
   }
 
   #app .primary-actions.primary-actions-stack #addBtn,
-  #app .primary-actions.primary-actions-stack #goldGuideBtn {
+  #app .primary-actions.primary-actions-stack #goldGuideBtn,
+  #app .primary-actions.primary-actions-stack #settingsBtn.header-settings-btn {
     flex: 1 1 auto;
     width: 100%;
-    min-height: 72px;
-    padding: 12px 16px;
-    border-radius: 22px;
-    gap: 12px;
-  }
-
-  #app .secondary-hero-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: stretch;
+    min-height: 82px;
+    padding: 14px 18px;
+    border-radius: 24px;
+    gap: 14px;
+    text-align: left;
+    justify-content: flex-start;
+    display: inline-flex;
+    align-items: center;
   }
 
   #app .hero-btn-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    font-size: 21px;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    font-size: 24px;
   }
 
   #app .hero-btn-title {
-    font-size: 16px;
+    font-size: 17px;
   }
 
   #app .hero-btn-subtitle {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.35;
-  }
-
-  #app .main-status-stack {
-    min-width: 148px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    justify-content: center;
   }
 
   #app .count-badge.count-badge-main,
@@ -7681,6 +7743,35 @@
     background: linear-gradient(135deg, rgba(6,78,59,0.94), rgba(22,163,74,0.24));
   }
 
+  #app #settingsBtn.header-settings-btn {
+    border: 1px solid rgba(99,102,241,0.30);
+    background: linear-gradient(135deg, #223657 0%, #2e476f 52%, #4b6c96 100%);
+    color: #eef4ff;
+    box-shadow: 0 16px 32px rgba(2,6,23,0.26);
+  }
+
+  #app #settingsBtn.header-settings-btn:hover,
+  #app #settingsBtn.header-settings-btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 38px rgba(2,6,23,0.34);
+    filter: saturate(1.05);
+    border-color: rgba(170, 196, 255, 0.34);
+    outline: none;
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-icon {
+    background: rgba(255,255,255,0.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 8px 18px rgba(2,6,23,0.14);
+  }
+
+  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
+    opacity: .92;
+  }
+
+  #app #settingsBtn.header-settings-btn .settings-btn-text {
+    display: none;
+  }
+
   #app .records-toolbar.records-toolbar-clean {
     margin: 0 0 12px;
   }
@@ -7726,12 +7817,6 @@
     line-height: 1.5;
   }
 
-  #settingsBtn.header-settings-btn {
-    min-height: 42px;
-    padding: 0 12px;
-    border-radius: 15px;
-  }
-
   @media (min-width: 900px) {
     #app #map {
       height: 450px;
@@ -7739,23 +7824,622 @@
   }
 
   @media (max-width: 720px) {
-    #app .secondary-hero-row {
+    #app .header-status-row {
       grid-template-columns: 1fr;
-    }
-
-    #app .main-status-stack {
-      min-width: 0;
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-
-    #app .count-badge.count-badge-main,
-    #app .analysis-quick-chip {
-      flex: 1 1 150px;
     }
 
     #app #map {
       height: 420px;
+    }
+  }
+</style>
+
+
+<style id="top-right-compact-actions-override">
+  #app .app-header {
+    padding-right: 0;
+    min-height: 0;
+  }
+
+  #app .app-header h1 {
+    max-width: 100%;
+    line-height: 1.18;
+    margin-bottom: 0;
+  }
+
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+    position: static;
+    width: 100%;
+    margin: 12px 0 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 136px;
+    gap: 12px;
+    align-items: start;
+    z-index: 8;
+  }
+
+  #app .compact-shortcuts-row {
+    order: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    align-self: stretch;
+  }
+
+  #app .compact-shortcuts-row #addBtn,
+  #app .compact-shortcuts-row #goldGuideBtn {
+    min-height: 74px;
+    padding: 12px 14px;
+    border-radius: 20px;
+    gap: 10px;
+    box-shadow: 0 14px 28px rgba(2,6,23,0.24);
+  }
+
+  #app .compact-shortcuts-row .hero-btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+    font-size: 20px;
+  }
+
+  #app .compact-shortcuts-row .hero-btn-title {
+    font-size: 14px;
+    line-height: 1.12;
+  }
+
+  #app .compact-shortcuts-row .hero-btn-subtitle {
+    font-size: 11px;
+    line-height: 1.12;
+  }
+
+  #app .header-top-right-grid {
+    order: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  #app .header-top-right-grid > * {
+    min-width: 0;
+  }
+
+  #app .header-top-right-grid .count-badge.count-badge-main,
+  #app .header-top-right-grid .analysis-quick-chip,
+  #app .header-top-right-grid #settingsBtn.header-settings-btn {
+    width: 100%;
+    min-height: 46px;
+    height: 46px;
+    margin: 0;
+    padding: 0 12px;
+    border-radius: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn {
+    min-width: 0;
+    gap: 8px;
+    border-color: rgba(96,165,250,0.34);
+    background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.98));
+    box-shadow: 0 12px 26px rgba(2,6,23,0.22), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-copy {
+    gap: 0;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-title {
+    font-size: 12px;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-subtitle {
+    display: none;
+  }
+
+
+  #app .ui-icon-svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    shape-rendering: geometricPrecision;
+  }
+
+  #app .top-hero-svg {
+    width: 20px;
+    height: 20px;
+    filter: drop-shadow(0 1px 0 rgba(255,255,255,0.12));
+  }
+
+  #app .compact-shortcuts-row .hero-btn-icon,
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-icon {
+    position: relative;
+    overflow: hidden;
+  }
+
+  #app .compact-shortcuts-row .hero-btn-icon::after,
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-icon::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  #app .compact-shortcuts-row #addBtn .hero-btn-icon {
+    color: #eff6ff;
+    background: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(191,219,254,0.16));
+    border: 1px solid rgba(255,255,255,0.30);
+  }
+
+  #app .compact-shortcuts-row #goldGuideBtn .hero-btn-icon {
+    color: #fff8e1;
+    background: linear-gradient(135deg, rgba(255,255,255,0.24), rgba(255,236,179,0.16));
+    border: 1px solid rgba(255,248,220,0.28);
+  }
+
+  #app .header-top-right-grid .count-badge.count-badge-main,
+  #app .header-top-right-grid .analysis-quick-chip,
+  #app .header-top-right-grid #settingsBtn.header-settings-btn {
+    justify-content: flex-start;
+    gap: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  #app .header-top-right-grid .count-badge.count-badge-main::before,
+  #app .header-top-right-grid .analysis-quick-chip::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    border-radius: 9px;
+    flex: 0 0 24px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 14px 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+  }
+
+  #app .header-top-right-grid .count-badge.count-badge-main::before {
+    border: 1px solid rgba(125,211,252,0.26);
+    background-color: rgba(14,165,233,0.12);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cfe7ff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z'/%3E%3Ccircle cx='12' cy='10' r='2.2'/%3E%3C/svg%3E");
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip::before {
+    border: 1px solid rgba(245,158,11,0.24);
+    background-color: rgba(245,158,11,0.12);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fde68a' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5.5 5.8V12c0 4.2 2.5 7 6.5 9 4-2 6.5-4.8 6.5-9V5.8L12 3Z'/%3E%3Cpath d='m9.5 11.8 1.7 1.7 3.3-3.3'/%3E%3C/svg%3E");
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.low::before {
+    border-color: rgba(248,113,113,0.28);
+    background-color: rgba(248,113,113,0.12);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fecaca' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 4 8 14H4l8-14Z'/%3E%3Cpath d='M12 9.5v4M12 16h.01'/%3E%3C/svg%3E");
+  }
+
+  #app .header-top-right-grid .analysis-quick-chip.premium::before {
+    border-color: rgba(34,197,94,0.30);
+    background-color: rgba(34,197,94,0.14);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dcfce7' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5.5 5.8V12c0 4.2 2.5 7 6.5 9 4-2 6.5-4.8 6.5-9V5.8L12 3Z'/%3E%3Cpath d='m9.5 11.8 1.7 1.7 3.3-3.3'/%3E%3C/svg%3E");
+  }
+
+  #app .header-top-right-grid .status-chip-text {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    color: #f1f5ff;
+    background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(191,219,254,0.12));
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  @media (max-width: 760px) {
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: minmax(0, 1fr) 126px;
+      gap: 10px;
+    }
+
+    #app .compact-shortcuts-row #addBtn,
+    #app .compact-shortcuts-row #goldGuideBtn {
+      min-height: 70px;
+      padding: 11px 12px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: 1fr;
+    }
+
+    #app .header-top-right-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn {
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 460px) {
+    #app .compact-shortcuts-row {
+      grid-template-columns: 1fr;
+    }
+
+    #app .header-top-right-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+
+<style id="stability-hardening-patch-v2">
+  html {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at top left, rgba(56,189,248,0.12), transparent 34%),
+      radial-gradient(circle at top right, rgba(34,197,94,0.10), transparent 28%),
+      linear-gradient(180deg, #050b15 0%, #08111d 42%, #0c1727 100%) !important;
+    background-color: #050b15 !important;
+  }
+
+  body {
+    min-height: 100dvh !important;
+    height: auto !important;
+    padding-bottom: clamp(16px, 2vw, 28px) !important;
+    background:
+      radial-gradient(circle at top left, rgba(56,189,248,0.12), transparent 34%),
+      radial-gradient(circle at top right, rgba(34,197,94,0.10), transparent 28%),
+      linear-gradient(180deg, #050b15 0%, #08111d 42%, #0c1727 100%) !important;
+    background-color: #050b15 !important;
+    background-repeat: no-repeat !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: none;
+  }
+
+  #app {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .app-shell {
+    min-height: auto !important;
+    margin-bottom: 0 !important;
+    overflow: hidden;
+    contain: layout paint;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .app-header,
+  .header-actions,
+  .compact-shortcuts-row,
+  .header-top-right-grid,
+  .records-toolbar,
+  .search-shell,
+  .map-stage,
+  #goldPanel,
+  #settingsPanel,
+  #formContainer,
+  .item,
+  #map,
+  .leaflet-container,
+  .leaflet-pane,
+  .leaflet-map-pane,
+  .leaflet-tile-pane,
+  .leaflet-tile,
+  .leaflet-marker-pane,
+  .leaflet-shadow-pane {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .leaflet-container,
+  #map {
+    background: #0b1321 !important;
+    will-change: auto;
+  }
+
+  .leaflet-tile,
+  .leaflet-marker-icon,
+  .leaflet-marker-shadow {
+    image-rendering: auto;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  body::before {
+    opacity: 0.48 !important;
+  }
+
+  .splash-screen {
+    transition: opacity .18s ease, visibility .18s ease !important;
+  }
+
+  .splash-card,
+  .ui-card-reveal,
+  .item.item-enter {
+    animation-duration: .18s !important;
+  }
+
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+    align-items: start;
+  }
+
+  #app .compact-shortcuts-row #addBtn,
+  #app .compact-shortcuts-row #goldGuideBtn,
+  #app .header-top-right-grid > * {
+    will-change: transform;
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      padding-bottom: max(22px, env(safe-area-inset-bottom)) !important;
+    }
+
+    .app-shell {
+      min-height: auto !important;
+      padding-bottom: 22px !important;
+    }
+
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: minmax(0, 1fr) 126px;
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: 1fr !important;
+    }
+
+    #app .header-top-right-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce), (max-width: 900px) {
+    html {
+      scroll-behavior: auto !important;
+    }
+
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.14s !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+
+
+<style id="mobile-ux-fix-v3">
+  html,
+  body {
+    background-color: #050b15 !important;
+    overflow-x: hidden !important;
+  }
+
+  body:not(.modal-open) {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y pinch-zoom !important;
+  }
+
+  #app {
+    width: min(100%, 980px) !important;
+    margin: 0 auto !important;
+  }
+
+  .app-shell {
+    overflow: visible !important;
+    contain: none !important;
+  }
+
+  @media (max-width: 700px) {
+    body {
+      display: block !important;
+      min-height: 100svh !important;
+      height: auto !important;
+      padding: 10px 10px calc(26px + env(safe-area-inset-bottom)) !important;
+    }
+
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: minmax(0, 1fr) 112px !important;
+      gap: 8px !important;
+      align-items: start !important;
+      margin-top: 10px !important;
+    }
+
+    #app .compact-shortcuts-row {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+      align-self: start !important;
+    }
+
+    #app .compact-shortcuts-row #addBtn,
+    #app .compact-shortcuts-row #goldGuideBtn {
+      min-height: 58px !important;
+      height: 58px !important;
+      padding: 8px 10px !important;
+      border-radius: 16px !important;
+      gap: 8px !important;
+      box-shadow: 0 10px 22px rgba(2, 6, 23, 0.20) !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-icon {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 10px !important;
+      font-size: 16px !important;
+      flex: 0 0 32px !important;
+    }
+
+    #app .compact-shortcuts-row .top-hero-svg {
+      width: 17px !important;
+      height: 17px !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-copy {
+      gap: 1px !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-title {
+      font-size: 13px !important;
+      line-height: 1.08 !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-subtitle {
+      font-size: 10px !important;
+      line-height: 1.05 !important;
+      opacity: 0.88 !important;
+    }
+
+    #app .header-top-right-grid {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+      align-self: start !important;
+    }
+
+    #app .header-top-right-grid .count-badge.count-badge-main,
+    #app .header-top-right-grid .analysis-quick-chip,
+    #app .header-top-right-grid #settingsBtn.header-settings-btn {
+      min-height: 40px !important;
+      height: 40px !important;
+      padding: 0 8px !important;
+      border-radius: 14px !important;
+      font-size: 11px !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    #app .header-top-right-grid .count-badge.count-badge-main,
+    #app .header-top-right-grid .analysis-quick-chip {
+      justify-content: flex-start !important;
+      gap: 6px !important;
+    }
+
+    #app .header-top-right-grid .count-badge.count-badge-main::before,
+    #app .header-top-right-grid .analysis-quick-chip::before {
+      width: 20px !important;
+      height: 20px !important;
+      flex: 0 0 20px !important;
+      border-radius: 8px !important;
+      background-size: 12px 12px !important;
+    }
+
+    #app .header-top-right-grid .status-chip-text {
+      min-width: 0 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      font-size: 11px !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn {
+      justify-content: flex-start !important;
+      gap: 6px !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-icon {
+      width: 22px !important;
+      height: 22px !important;
+      border-radius: 8px !important;
+      flex: 0 0 22px !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn .top-hero-svg {
+      width: 13px !important;
+      height: 13px !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-copy {
+      min-width: 0 !important;
+      overflow: hidden !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-title {
+      font-size: 11px !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-subtitle {
+      display: none !important;
+    }
+
+    #app #map {
+      height: min(52vh, 340px) !important;
+    }
+
+    #app .map-wrapper.focus-mode #map {
+      height: min(66vh, 560px) !important;
+      min-height: 360px !important;
+    }
+  }
+
+  @media (max-width: 380px) {
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: minmax(0, 1fr) 104px !important;
+      gap: 7px !important;
+    }
+
+    #app .compact-shortcuts-row #addBtn,
+    #app .compact-shortcuts-row #goldGuideBtn {
+      min-height: 54px !important;
+      height: 54px !important;
+      padding: 7px 9px !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-title {
+      font-size: 12px !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-subtitle,
+    #app .header-top-right-grid .status-chip-text,
+    #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-title {
+      font-size: 10.5px !important;
     }
   }
 </style>
@@ -7871,41 +8555,44 @@
                         <span>Alan Defteri</span>
                     </div>
                 </div>
-                <button type="button" id="settingsBtn" class="header-settings-btn" aria-label="Ayarlar ve veri">
-                    <span class="icon"><span class="icon-core" aria-hidden="true">⚙</span></span>
-                    <span class="settings-btn-text">Ayarlar</span>
-                </button>
+
             </div>
             <h1><span class="icon"><span class="icon-core" aria-hidden="true">◆</span></span>Nokta ve saha notları</h1>
         </div>
 
-        <div class="header-actions layout-refresh-actions">
-            <div class="primary-actions primary-actions-stack">
-                <button type="button" id="addBtn">
-                    <span class="hero-btn-icon"><span class="icon-core" aria-hidden="true">＋</span></span>
+        <div class="header-actions layout-refresh-actions compact-top-right-actions">
+            <div class="header-top-right-grid">
+                <div id="count" class="count-badge count-badge-main"><span class="status-chip-text">0 nokta</span></div>
+                <button type="button" id="settingsBtn" class="header-settings-btn compact-chip-btn" aria-label="Ayarlar ve veri">
+                    <span class="hero-btn-icon" aria-hidden="true">
+                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-settings"></use></svg>
+                    </span>
                     <span class="hero-btn-copy">
-              <span class="hero-btn-title">Yeni nokta ekle</span>
-              <span class="hero-btn-subtitle">Haritada seç, kısa bilgi ekle, kaydet</span>
-            </span>
+                        <span class="hero-btn-title">Ayarlar</span>
+                        <span class="hero-btn-subtitle">Veri ve içe/dışa aktar</span>
+                    </span>
                 </button>
-                <div class="secondary-hero-row">
-                    <button type="button" id="goldGuideBtn">
-                        <span class="hero-btn-icon" aria-hidden="true">
-                          <svg class="icon-svg icon-size-section" viewBox="0 0 24 24" focusable="false">
-                            <path d="M12 3.6 14.2 8l4.9.7-3.6 3.5.8 4.9-4.3-2.3-4.3 2.3.8-4.9L4.9 8l4.9-.7Z" fill="currentColor" opacity=".18"></path>
-                            <path d="M12 4.8 14 8.7l4.3.6-3.1 3.1.7 4.3-3.9-2.1-3.9 2.1.7-4.3-3.1-3.1 4.3-.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
-                          </svg>
-                        </span>
-                        <span class="hero-btn-copy">
-                  <span class="hero-btn-title">Altın tozu rehberi</span>
-                  <span class="hero-btn-subtitle">Dere analizi aç</span>
-                </span>
-                    </button>
-                    <div class="main-status-stack">
-                        <div id="count" class="count-badge count-badge-main">0 nokta</div>
-                        <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Analiz hakkı ve reklam durumu">5/10 hak</button>
-                    </div>
-                </div>
+                <button type="button" id="analysisQuickAccessBtn" class="analysis-quick-chip" aria-label="Analiz hakkı ve reklam durumu"><span class="status-chip-text">10 hak kaldı</span></button>
+            </div>
+            <div class="primary-actions primary-actions-stack compact-shortcuts-row">
+                <button type="button" id="addBtn" class="compact-shortcut-btn">
+                    <span class="hero-btn-icon" aria-hidden="true">
+                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-plus-circle"></use></svg>
+                    </span>
+                    <span class="hero-btn-copy">
+                        <span class="hero-btn-title">Yeni nokta</span>
+                        <span class="hero-btn-subtitle">Ekle</span>
+                    </span>
+                </button>
+                <button type="button" id="goldGuideBtn" class="compact-shortcut-btn">
+                    <span class="hero-btn-icon" aria-hidden="true">
+                        <svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-gold-guide"></use></svg>
+                    </span>
+                    <span class="hero-btn-copy">
+                        <span class="hero-btn-title">Altın tozu</span>
+                        <span class="hero-btn-subtitle">Rehber</span>
+                    </span>
+                </button>
             </div>
         </div>
 
@@ -7944,6 +8631,9 @@
               <symbol id="gi-warning" viewBox="0 0 24 24"><path d="m12 4 8 14H4l8-14Z"></path><path d="M12 9.5v4M12 16h.01"></path></symbol>
               <symbol id="gi-location" viewBox="0 0 24 24"><path d="M12 20s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z"></path><circle cx="12" cy="10" r="2"></circle></symbol>
               <symbol id="gi-close" viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"></path></symbol>
+              <symbol id="gi-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"></circle><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.55V20a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1.03H4a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34 1.7 1.7 0 0 0 1.03-1.55V4a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87A1.7 1.7 0 0 0 20 11.97H20a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1.03Z"></path></symbol>
+              <symbol id="gi-plus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M8 12h8"></path></symbol>
+              <symbol id="gi-gold-guide" viewBox="0 0 24 24"><path d="M5 15.5c2.4-2.8 4.5-4.2 6.4-4.2 2.1 0 3.8 1.1 5.7 1.1 1 0 1.9-.3 2.9-1"></path><path d="M4 18c2.2-1.4 4.3-2.1 6.2-2.1 2 0 3.7.8 5.6.8 1.4 0 2.8-.4 4.2-1.2"></path><path d="M8 9.4c.7-2.1 2-3.4 3.8-4 .5 2.2-.1 4.1-1.7 5.5-.8.7-1.7 1.2-2.9 1.5-.1-1.2.1-2.2.8-3Z"></path><path d="M14 10.2c.5-1.4 1.5-2.4 3-2.9.2 1.6-.2 3-1.3 4.1-.6.6-1.4 1-2.4 1.2 0-.9.2-1.7.7-2.4Z"></path></symbol>
             </svg>
             <!-- PREMIUM REFACTOR: Hero başlık + canlı analiz kimliği -->
             <div class="gallery-header gold-hero-header">
@@ -8622,7 +9312,7 @@
                 <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
             </div>
 
-            <div id="coordBar">İmleç: –</div>
+            <div id="coordBar" class="is-empty" aria-hidden="true">İmleç: –</div>
         </div>
 
         <ul id="list"></ul>
@@ -9702,7 +10392,11 @@
       updateMapToolTexts();
       updateMapToolStates();
       updateMapHud();
-      if (coordBar && (!coordBar.textContent || coordBar.textContent.includes('İmleç') || coordBar.textContent.includes('Cursor'))) coordBar.textContent = t('cursor');
+      if (coordBar && (!coordBar.textContent || coordBar.textContent.includes('İmleç') || coordBar.textContent.includes('Cursor'))) {
+        coordBar.textContent = t('cursor');
+        coordBar.classList.add('is-empty');
+        coordBar.setAttribute('aria-hidden', 'true');
+      }
 
       const langSelect = document.getElementById('langSelect');
       if (langSelect && langSelect.value != lang) langSelect.value = lang;
@@ -9806,6 +10500,16 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     const listEl = document.getElementById("list");
     const countEl = document.getElementById("count");
+
+    function renderCountChip(text) {
+      if (!countEl) return;
+      countEl.innerHTML = `<span class="status-chip-text">${escapeHtml(String(text || ""))}</span>`;
+    }
+
+    function renderAnalysisQuickChip(text) {
+      if (!analysisQuickAccessBtn) return;
+      analysisQuickAccessBtn.innerHTML = `<span class="status-chip-text">${escapeHtml(String(text || ""))}</span>`;
+    }
 
     const appContainer = document.getElementById("app");
     const splashScreen = document.getElementById("splashScreen");
@@ -10202,7 +10906,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     let selectedSpotId = null;
     let spotMarkersById = new Map();
-    let allSpotsCache = [];
+    let allSpotsCache = null;
     let spotWriteTimer = null;
     let renderRafToken = 0;
     let lastListRenderSignature = "";
@@ -10404,7 +11108,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         if (analysisAdBtn) analysisAdBtn.textContent = "Reklamsız";
         if (analysisPremiumBtn) analysisPremiumBtn.textContent = "Premium açık";
         if (analysisQuickAccessBtn) {
-          analysisQuickAccessBtn.textContent = "Premium açık";
+          renderAnalysisQuickChip("Premium açık");
           analysisQuickAccessBtn.className = "analysis-quick-chip premium";
         }
         return;
@@ -10420,10 +11124,10 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (analysisPremiumBtn) analysisPremiumBtn.textContent = "Premium";
       if (analysisQuickAccessBtn) {
         if (remaining > 0) {
-          analysisQuickAccessBtn.textContent = `${remaining}/${ANALYSIS_MAX_CREDITS} hak`;
+          renderAnalysisQuickChip(`${remaining}/${ANALYSIS_MAX_CREDITS} hak`);
           analysisQuickAccessBtn.className = `analysis-quick-chip${low ? ' low' : ''}`;
         } else {
-          analysisQuickAccessBtn.textContent = "🎬 Reklam izle";
+          renderAnalysisQuickChip("Reklam izle");
           analysisQuickAccessBtn.className = "analysis-quick-chip cta";
         }
       }
@@ -11358,7 +12062,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     }
 
     function loadSpots({ force = false } = {}) {
-      if (!force && Array.isArray(allSpotsCache) && allSpotsCache.length) return allSpotsCache;
+      if (!force && Array.isArray(allSpotsCache)) return allSpotsCache;
       const parsed = safeReadStorageJson(getLocalStorageKeyForActiveUser(), [], Array.isArray);
       allSpotsCache = parsed
         .map((spot, index) => sanitizeSpotRecord(spot, index))
@@ -11554,12 +12258,16 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function setCoordBar(lat, lon) {
       if (!coordBar) return;
+      coordBar.classList.remove('is-empty');
+      coordBar.removeAttribute('aria-hidden');
       coordBar.textContent = t('cursor').split(':')[0] + ': ' + lat.toFixed(5) + ', ' + lon.toFixed(5);
     }
 
     function clearCoordBar() {
       if (!coordBar) return;
       coordBar.textContent = t('cursor');
+      coordBar.classList.add('is-empty');
+      coordBar.setAttribute('aria-hidden', 'true');
     }
 
     function isLayerControlExpanded() {
@@ -14469,7 +15177,14 @@ out tags geom qt;`;
       } else {
         // ✅ Liste boşaldığında tekrar auto-fit hakkını sıfırla
         didAutoFit = false;
-        map.setView([39, 35], 6);
+        if (currentBaseLayer && !map.hasLayer(currentBaseLayer)) {
+          currentBaseLayer.addTo(map);
+        }
+        map.setView([39, 35], 6, { animate: false });
+        requestAnimationFrame(() => {
+          try { map.invalidateSize(false); } catch {}
+          try { currentBaseLayer && typeof currentBaseLayer.redraw === 'function' && currentBaseLayer.redraw(); } catch {}
+        });
       }
     }
 
@@ -14531,9 +15246,9 @@ out tags geom qt;`;
 
       {
       const n = allSpots.length;
-      if (n===0) countEl.textContent = t('points0');
-      else if (n===1) countEl.textContent = t('points1');
-      else countEl.textContent = t('pointsN').replace('{n}', String(n));
+      if (n===0) renderCountChip(t('points0'));
+      else if (n===1) renderCountChip(t('points1'));
+      else renderCountChip(t('pointsN').replace('{n}', String(n)));
     }
 
       // ✅ Arama varken auto-fit kapalı
@@ -14723,12 +15438,30 @@ out tags geom qt;`;
         cancelText: ux('confirm_cancel')
       });
       if (!ok) return;
-      let spots = loadSpots();
-      spots = spots.filter((s) => s.id !== id);
-      setSpotState(spots);
-      enqueueSyncOperation({ op: "delete", id });
-      if (activeDetailSpotId && String(activeDetailSpotId) === String(id)) closeSpotDetail();
+
+      const targetId = String(id);
+      let spots = loadSpots({ force: true });
+      spots = spots.filter((s) => String(s.id) !== targetId);
+
+      setSpotState(spots, { immediate: true });
+      enqueueSyncOperation({ op: "delete", id: targetId });
+
+      if (selectedSpotId && String(selectedSpotId) === targetId) {
+        selectedSpotId = null;
+      }
+      if (activeDetailSpotId && String(activeDetailSpotId) === targetId) closeSpotDetail();
+      if (activeMapEvalSelection.kind === "saved" && String(activeMapEvalSelection.spotId || "") === targetId) {
+        resetMapEvaluationCard();
+      }
+
       scheduleRender();
+      requestAnimationFrame(() => {
+        try { map && map.invalidateSize(false); } catch {}
+        try { currentBaseLayer && typeof currentBaseLayer.redraw === 'function' && currentBaseLayer.redraw(); } catch {}
+      });
+      setTimeout(() => {
+        try { map && map.invalidateSize(false); } catch {}
+      }, 90);
       showToast(ux('delete_done'), 'success');
     }
 
@@ -19132,9 +19865,215 @@ function updateHistoryPreview(rawText) {
     })();
 </script>
 
+
+<style id="settings-btn-visibility-fix">
+  #app .main-status-stack {
+    align-self: stretch;
+    justify-content: flex-start !important;
+  }
+
+  #app #settingsBtn.header-settings-btn {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    padding: 0 14px !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    display: inline-flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 20 !important;
+    border: 1px solid rgba(96, 165, 250, 0.34) !important;
+    background: linear-gradient(180deg, rgba(18, 31, 56, 0.96), rgba(5, 10, 23, 0.98)) !important;
+    color: #eaf4ff !important;
+    box-shadow: 0 14px 28px rgba(2,6,23,0.24), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+  }
+
+  #app #settingsBtn.header-settings-btn:hover,
+  #app #settingsBtn.header-settings-btn:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(125, 211, 252, 0.58) !important;
+    box-shadow: 0 18px 32px rgba(2,6,23,0.30), 0 0 0 1px rgba(96,165,250,0.10) !important;
+  }
+
+  #app #settingsBtn.header-settings-btn .icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, rgba(59,130,246,0.26), rgba(14,165,233,0.20)) !important;
+    color: #dbeafe !important;
+  }
+
+  #app #settingsBtn.header-settings-btn .settings-btn-text {
+    display: inline !important;
+    white-space: nowrap;
+  }
+
+  #app .header-topbar {
+    min-height: 0 !important;
+  }
+
+  @media (max-width: 720px) {
+    #app .secondary-hero-row {
+      grid-template-columns: minmax(0, 1fr) 132px !important;
+      align-items: stretch !important;
+    }
+
+    #app .main-status-stack {
+      min-width: 132px !important;
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      justify-content: flex-start !important;
+    }
+
+    #app #settingsBtn.header-settings-btn {
+      padding: 0 !important;
+      justify-content: center !important;
+    }
+
+    #app #settingsBtn.header-settings-btn .settings-btn-text {
+      display: none !important;
+    }
+
+    #app .count-badge.count-badge-main,
+    #app .analysis-quick-chip {
+      width: 100% !important;
+    }
+  }
+
+  @media (max-width: 560px) {
+    #app .secondary-hero-row {
+      grid-template-columns: 1fr !important;
+    }
+
+    #app .main-status-stack {
+      min-width: 0 !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+    }
+
+    #app #settingsBtn.header-settings-btn,
+    #app .count-badge.count-badge-main,
+    #app .analysis-quick-chip {
+      flex: 1 1 calc(50% - 6px) !important;
+      width: auto !important;
+    }
+
+    #app #settingsBtn.header-settings-btn {
+      justify-content: center !important;
+    }
+  }
+</style>
+
+<script id="settings-btn-dom-fix">
+  (function () {
+    var btn = document.getElementById('settingsBtn');
+    var stack = document.querySelector('#app .main-status-stack');
+    if (!btn || !stack) return;
+
+    if (btn.parentElement !== stack) {
+      stack.insertBefore(btn, stack.firstChild);
+    }
+
+    btn.classList.add('header-settings-btn');
+    btn.style.display = 'inline-flex';
+    btn.style.opacity = '1';
+    btn.style.visibility = 'visible';
+    btn.style.pointerEvents = 'auto';
+  })();
+</script>
+
+
+<script id="stability-hardening-script-v2">
+  (function () {
+    const root = document.documentElement;
+    const body = document.body;
+    const app = document.getElementById('app');
+    const splash = document.getElementById('splashScreen');
+
+    function stabilizeViewport() {
+      const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+      root.style.setProperty('--vvh', (vh * 0.01) + 'px');
+      body.style.minHeight = '100dvh';
+      if (app) {
+        app.style.opacity = '1';
+        app.style.transform = 'none';
+      }
+    }
+
+    let rafId = 0;
+    function onResizeStable() {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(stabilizeViewport);
+    }
+
+    stabilizeViewport();
+    window.addEventListener('resize', onResizeStable, { passive: true });
+    window.addEventListener('orientationchange', onResizeStable, { passive: true });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onResizeStable, { passive: true });
+    }
+
+    if (splash) {
+      setTimeout(function () {
+        splash.classList.add('is-hidden');
+        if (app) app.classList.add('is-ready');
+      }, 500);
+    }
+  })();
+</script>
+
+
+<script id="mobile-scroll-fix-v3">
+  (function () {
+    function applyMobileViewportFix() {
+      var root = document.documentElement;
+      var body = document.body;
+      var appShell = document.querySelector('.app-shell');
+      if (!body) return;
+
+      root.style.setProperty('--vvh', ((window.innerHeight || root.clientHeight || 0) * 0.01) + 'px');
+      root.style.overflowY = 'auto';
+      body.style.overflowY = body.classList.contains('modal-open') ? 'hidden' : 'auto';
+      body.style.overflowX = 'hidden';
+      body.style.webkitOverflowScrolling = 'touch';
+      body.style.overscrollBehaviorY = body.classList.contains('modal-open') ? 'none' : 'auto';
+      if (!body.classList.contains('modal-open')) {
+        body.style.touchAction = 'pan-y pinch-zoom';
+      }
+      if (appShell) {
+        appShell.style.overflow = 'visible';
+        appShell.style.contain = 'none';
+      }
+    }
+
+    var raf = 0;
+    function scheduleFix() {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(applyMobileViewportFix);
+    }
+
+    applyMobileViewportFix();
+    window.addEventListener('load', scheduleFix, { passive: true });
+    window.addEventListener('resize', scheduleFix, { passive: true });
+    window.addEventListener('orientationchange', scheduleFix, { passive: true });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', scheduleFix, { passive: true });
+    }
+
+    var observer = new MutationObserver(scheduleFix);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  })();
+</script>
+
 </body>
 </html>
-
-<style>
-#app .records-toolbar.records-toolbar-clean{display:none !important;}
-</style>
