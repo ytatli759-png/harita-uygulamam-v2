@@ -8533,6 +8533,278 @@
   }
 </style>
 
+
+<style id="ui-consistency-patch-v4">
+  :root {
+    --ui-radius-card: 22px;
+    --ui-radius-subcard: 17px;
+    --ui-radius-btn: 16px;
+    --ui-space-edge: clamp(10px, 3.2vw, 18px);
+    --ui-space-inner: clamp(10px, 2.6vw, 16px);
+    --ui-shadow-card: 0 14px 30px rgba(2, 6, 23, 0.34);
+    --ui-shadow-soft: 0 10px 22px rgba(2, 6, 23, 0.24);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    padding-left: max(var(--ui-space-edge), env(safe-area-inset-left));
+    padding-right: max(var(--ui-space-edge), env(safe-area-inset-right));
+  }
+
+  #app,
+  .app-shell,
+  .app-header,
+  .header-actions,
+  .primary-actions,
+  .header-top-right-grid,
+  .map-wrapper,
+  .map-stage,
+  #map,
+  .map-tools,
+  .map-presets,
+  .records-toolbar,
+  .search-shell,
+  .item,
+  #goldPanel,
+  #settingsPanel {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .app-shell {
+    border-radius: clamp(20px, 3.6vw, 24px) !important;
+    padding: clamp(12px, 2.8vw, 18px) !important;
+    overflow: hidden !important;
+    box-shadow: 0 16px 34px rgba(2, 6, 23, 0.50), 0 0 0 1px rgba(148, 163, 184, 0.12) !important;
+  }
+
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) !important;
+    gap: clamp(10px, 2.2vw, 14px) !important;
+    align-items: stretch !important;
+    overflow: hidden;
+  }
+
+  #app .primary-actions.primary-actions-stack.compact-shortcuts-row {
+    grid-column: 1;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(10px, 2.4vw, 12px) !important;
+    margin: 0 !important;
+  }
+
+  #app .header-top-right-grid {
+    grid-column: 2;
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: clamp(8px, 2vw, 10px) !important;
+    align-content: start;
+    min-width: 0;
+  }
+
+  #app .compact-shortcuts-row #addBtn,
+  #app .compact-shortcuts-row #goldGuideBtn,
+  #app .header-top-right-grid #settingsBtn.header-settings-btn,
+  #app .header-top-right-grid .analysis-quick-chip {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    border-radius: var(--ui-radius-btn) !important;
+  }
+
+  #app .compact-shortcuts-row #addBtn,
+  #app .compact-shortcuts-row #goldGuideBtn {
+    min-height: 82px !important;
+    padding: 12px 14px !important;
+    box-shadow: var(--ui-shadow-card) !important;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn,
+  #app .header-top-right-grid .analysis-quick-chip {
+    min-height: 58px !important;
+    padding: 10px 12px !important;
+    box-shadow: var(--ui-shadow-soft) !important;
+    justify-content: flex-start !important;
+  }
+
+  #app .header-top-right-grid #settingsBtn.header-settings-btn .hero-btn-copy,
+  #app .header-top-right-grid .status-chip-text,
+  .hero-btn-copy,
+  .item-title,
+  .item-meta,
+  .item-note {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .map-wrapper {
+    border-radius: var(--ui-radius-card);
+    overflow: hidden;
+  }
+
+  .map-header-card {
+    border-radius: var(--ui-radius-subcard) !important;
+    padding: clamp(12px, 2.4vw, 14px) !important;
+    margin-bottom: 10px !important;
+    box-shadow: var(--ui-shadow-soft) !important;
+  }
+
+  .map-stage {
+    border-radius: var(--ui-radius-card) !important;
+    padding: clamp(8px, 2.2vw, 10px);
+    overflow: hidden !important;
+    border: 1px solid rgba(148,163,184,0.26) !important;
+    box-shadow: 0 16px 34px rgba(2, 6, 23, 0.36) !important;
+  }
+
+  #map {
+    border-radius: calc(var(--ui-radius-card) - 5px) !important;
+    height: clamp(250px, 52vh, 460px) !important;
+  }
+
+  .map-hud {
+    top: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
+    gap: 8px !important;
+  }
+
+  .map-hud-left {
+    margin-left: 60px !important;
+    max-width: calc(100% - 60px) !important;
+  }
+
+  .leaflet-container { overflow: hidden; }
+
+  .leaflet-top,
+  .leaflet-bottom {
+    margin: 0 !important;
+  }
+
+  .leaflet-top .leaflet-control,
+  .leaflet-bottom .leaflet-control {
+    margin: 10px !important;
+  }
+
+  .leaflet-right .leaflet-control {
+    margin-right: 12px !important;
+  }
+
+  .leaflet-left .leaflet-control {
+    margin-left: 12px !important;
+  }
+
+  .leaflet-control-zoom,
+  .leaflet-control-layers {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+
+  .map-tools,
+  .map-tools.secondary {
+    gap: 10px !important;
+    margin-top: 10px !important;
+  }
+
+  .map-tools .btn-small,
+  .spot-detail-actions .btn-small,
+  .item-actions .btn-small {
+    min-height: 48px !important;
+    border-radius: var(--ui-radius-btn) !important;
+    padding: 10px 12px !important;
+    box-shadow: var(--ui-shadow-soft) !important;
+    align-items: center;
+  }
+
+  @media (max-width: 860px) {
+    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
+      grid-template-columns: 1fr !important;
+    }
+
+    #app .header-top-right-grid {
+      grid-column: 1;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #app .primary-actions.primary-actions-stack.compact-shortcuts-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 620px) {
+    #app .header-top-right-grid,
+    #app .primary-actions.primary-actions-stack.compact-shortcuts-row,
+    .map-presets,
+    .map-tools,
+    .map-tools.secondary {
+      grid-template-columns: 1fr !important;
+    }
+
+    #app .compact-shortcuts-row #addBtn,
+    #app .compact-shortcuts-row #goldGuideBtn {
+      min-height: 70px !important;
+    }
+
+    #app .header-top-right-grid #settingsBtn.header-settings-btn,
+    #app .header-top-right-grid .analysis-quick-chip {
+      min-height: 50px !important;
+    }
+
+    .map-hud {
+      left: 12px !important;
+      right: 12px !important;
+      top: 12px !important;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .map-hud-left {
+      margin-left: 48px !important;
+      max-width: calc(100% - 48px) !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding-left: max(8px, env(safe-area-inset-left));
+      padding-right: max(8px, env(safe-area-inset-right));
+    }
+
+    .app-shell {
+      border-radius: 20px !important;
+      padding: 10px !important;
+    }
+
+    #app .compact-shortcuts-row #addBtn,
+    #app .compact-shortcuts-row #goldGuideBtn {
+      min-height: 64px !important;
+      padding: 10px 12px !important;
+    }
+  }
+
+  @media (max-width: 360px) {
+    #app .header-top-right-grid #settingsBtn.header-settings-btn,
+    #app .header-top-right-grid .analysis-quick-chip,
+    .map-tools .btn-small,
+    .item-actions .btn-small {
+      font-size: 11px !important;
+    }
+
+    #app .compact-shortcuts-row .hero-btn-subtitle {
+      font-size: 10px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 
