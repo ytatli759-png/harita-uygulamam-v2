@@ -20910,537 +20910,166 @@ function updateHistoryPreview(rawText) {
 </script>
 
 
-<style id="reward-settings-ui-patch-v1">
-  #app .header-top-right-grid .analysis-quick-chip {
-    position: relative;
-    overflow: hidden;
-    min-height: 52px;
-    height: auto;
-    padding: 10px 12px;
-    border-radius: 18px;
-    align-items: center;
+<style id="reward-floating-pill-layout-v2">
+  #app .app-header {
+    margin-bottom: 8px !important;
   }
 
-  #app .header-top-right-grid .analysis-quick-chip::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions,
+  #app .header-top-right-grid {
+    display: none !important;
+  }
+
+  #app .app-header h1 {
+    margin-top: 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  #rewardFloatingDock {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+    z-index: 960;
     pointer-events: none;
-    opacity: .72;
   }
 
-  #app .header-top-right-grid .analysis-quick-chip .status-chip-text {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    line-height: 1.08;
+  #rewardFloatingDock.is-hidden {
+    display: none;
   }
 
-  #app .header-top-right-grid .analysis-quick-chip .status-chip-main {
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    color: #fff7d6;
+  #rewardFloatingDock #analysisQuickAccessBtn {
+    pointer-events: auto;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    width: auto !important;
+    max-width: min(78vw, 280px) !important;
+    border: 1px solid rgba(251, 191, 36, 0.55) !important;
+    background: linear-gradient(180deg, rgba(72, 45, 10, 0.94), rgba(33, 21, 8, 0.96)) !important;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.42) !important;
+    color: #fff2cf !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    letter-spacing: .01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  #rewardFloatingDock #analysisQuickAccessBtn .status-chip-sub,
+  #rewardFloatingDock #analysisQuickAccessBtn .hero-btn-copy,
+  #rewardFloatingDock #analysisQuickAccessBtn .status-chip-main {
+    display: none !important;
+  }
+
+  #rewardFloatingDock #analysisQuickAccessBtn .status-chip-text {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
-  #app .header-top-right-grid .analysis-quick-chip .status-chip-sub {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0;
-    color: rgba(254, 243, 199, 0.92);
-    white-space: nowrap;
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.ready {
-    border-color: rgba(245,158,11,0.58);
-    box-shadow: 0 16px 30px rgba(2,6,23,0.26), 0 0 0 1px rgba(245,158,11,0.10);
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.ready:not(:disabled) {
-    animation: rewardedChipPulse 2.6s ease-in-out infinite;
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.low.ready {
-    border-color: rgba(248,113,113,0.58);
-    box-shadow: 0 16px 30px rgba(2,6,23,0.28), 0 0 0 1px rgba(248,113,113,0.12);
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.full {
-    border-color: rgba(96,165,250,0.44);
-    color: #dbeafe;
-    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(37,99,235,0.16));
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.full::before {
-    border-color: rgba(96,165,250,0.26);
-    background-color: rgba(96,165,250,0.12);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dbeafe' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='14' rx='3'/%3E%3Cpath d='M8 9h8M8 13h5'/%3E%3C/svg%3E");
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.full .status-chip-main,
-  #app .header-top-right-grid .analysis-quick-chip.full .status-chip-sub {
-    color: #dbeafe;
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.disabled,
-  #app .header-top-right-grid .analysis-quick-chip.busy {
-    border-color: rgba(100,116,139,0.46);
-    color: #dbe7f9;
-    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(51,65,85,0.20));
-    box-shadow: 0 12px 24px rgba(2,6,23,0.20), inset 0 1px 0 rgba(255,255,255,0.03);
-    animation: none;
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.disabled::before,
-  #app .header-top-right-grid .analysis-quick-chip.busy::before {
-    border-color: rgba(148,163,184,0.26);
-    background-color: rgba(148,163,184,0.12);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dbe7f9' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 8v4l2.5 2.5'/%3E%3C/svg%3E");
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.disabled .status-chip-main,
-  #app .header-top-right-grid .analysis-quick-chip.busy .status-chip-main {
-    color: #e2e8f0;
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip.disabled .status-chip-sub,
-  #app .header-top-right-grid .analysis-quick-chip.busy .status-chip-sub {
-    color: #94a3b8;
-  }
-
-  #app .header-top-right-grid .analysis-quick-chip:disabled {
-    cursor: not-allowed;
-    filter: saturate(.92);
+  #rewardFloatingDock #analysisQuickAccessBtn:disabled {
+    opacity: .55;
+    filter: saturate(.82);
   }
 
   #app #settingsBtn.header-settings-btn {
-    min-height: 52px;
-    height: auto;
-    padding: 10px 12px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #1f3251 0%, #2b466f 58%, #3d6191 100%);
-    border-color: rgba(147,197,253,0.30);
-    box-shadow: 0 16px 30px rgba(2,6,23,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
   }
 
-  #app #settingsBtn.header-settings-btn .hero-btn-copy {
-    min-width: 0;
-    gap: 1px;
-  }
-
-  #app #settingsBtn.header-settings-btn .hero-btn-title,
-  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
+  #app #settingsBtn.header-settings-btn .hero-btn-copy,
+  #app #settingsBtn.header-settings-btn .settings-btn-text,
+  #app #settingsBtn.header-settings-btn .hero-btn-subtitle,
   #app #settingsBtn.header-settings-btn .hero-btn-title {
-    color: #f8fbff;
-    font-size: 12px;
-    font-weight: 900;
-  }
-
-  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
-    display: block;
-    color: #d6e6ff;
-    opacity: .88;
-    font-size: 10px;
-  }
-
-  #settingsPanel .analysis-usage-btn:disabled {
-    opacity: .72;
-    cursor: not-allowed;
-    filter: saturate(.9);
-  }
-
-  @keyframes rewardedChipPulse {
-    0%, 100% { box-shadow: 0 16px 30px rgba(2,6,23,0.26), 0 0 0 1px rgba(245,158,11,0.10); }
-    50% { box-shadow: 0 18px 34px rgba(2,6,23,0.30), 0 0 0 1px rgba(245,158,11,0.18), 0 0 0 8px rgba(245,158,11,0.06); }
-  }
-
-  @media (max-width: 720px) {
-    #app #settingsBtn.header-settings-btn .hero-btn-subtitle,
-    #app .header-top-right-grid .analysis-quick-chip .status-chip-sub {
-      display: none;
-    }
-
-    #app .header-top-right-grid .analysis-quick-chip,
-    #app #settingsBtn.header-settings-btn {
-      min-height: 48px;
-      padding-top: 8px;
-      padding-bottom: 8px;
-    }
+    display: none !important;
   }
 </style>
-<script id="reward-settings-ui-patch-script-v1">
+<script id="reward-floating-pill-layout-script-v2">
   (function () {
-    var rewardBusyTimer = null;
-
-    function htmlEscape(value) {
-      return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function getLangCode() {
-      return String(document.documentElement.lang || 'tr').toLowerCase();
-    }
-
-    function getUiCopy() {
-      var lang = getLangCode();
-      if (lang.indexOf('en') === 0) {
-        return {
-          settingsTitle: 'Settings',
-          settingsSub: 'Data, ads and premium',
-          settingsAria: 'Settings and data',
-          adReadyMain: 'Watch ad',
-          adReadySub: 'ready for +1 credit',
-          adReadyLowSub: 'low credits',
-          adReadyUrgentSub: 'no credits left',
-          notReadyMain: 'Ad not ready',
-          notReadySub: 'try again in the Android app',
-          androidOnlySub: 'available in Android app',
-          fullMain: 'Credits full',
-          fullSub: 'ad reward not needed',
-          busyMain: 'Ad opening',
-          busySub: 'waiting for reward result',
-          premiumMain: 'Premium active',
-          premiumSub: 'ads are disabled',
-          busyToast: 'The ad is already opening.',
-          notReadyToast: 'Rewarded ad is not ready yet. Try again in the Android app.'
-        };
-      }
-      if (lang.indexOf('es') === 0) {
-        return {
-          settingsTitle: 'Ajustes',
-          settingsSub: 'Datos, anuncios y premium',
-          settingsAria: 'Ajustes y datos',
-          adReadyMain: 'Ver anuncio',
-          adReadySub: 'listo para +1 crédito',
-          adReadyLowSub: 'créditos bajos',
-          adReadyUrgentSub: 'sin créditos',
-          notReadyMain: 'Anuncio no listo',
-          notReadySub: 'pruébalo en la app Android',
-          androidOnlySub: 'disponible en Android',
-          fullMain: 'Créditos completos',
-          fullSub: 'no hace falta anuncio',
-          busyMain: 'Abriendo anuncio',
-          busySub: 'esperando recompensa',
-          premiumMain: 'Premium activo',
-          premiumSub: 'anuncios desactivados',
-          busyToast: 'El anuncio ya se está abriendo.',
-          notReadyToast: 'El anuncio con recompensa no está listo todavía.'
-        };
-      }
-      if (lang.indexOf('pt') === 0) {
-        return {
-          settingsTitle: 'Ajustes',
-          settingsSub: 'Dados, anúncios e premium',
-          settingsAria: 'Ajustes e dados',
-          adReadyMain: 'Ver anúncio',
-          adReadySub: 'pronto para +1 crédito',
-          adReadyLowSub: 'créditos baixos',
-          adReadyUrgentSub: 'sem créditos',
-          notReadyMain: 'Anúncio indisponível',
-          notReadySub: 'tente no app Android',
-          androidOnlySub: 'disponível no Android',
-          fullMain: 'Créditos cheios',
-          fullSub: 'anúncio não é necessário',
-          busyMain: 'Abrindo anúncio',
-          busySub: 'aguardando recompensa',
-          premiumMain: 'Premium ativo',
-          premiumSub: 'anúncios desativados',
-          busyToast: 'O anúncio já está abrindo.',
-          notReadyToast: 'O anúncio recompensado ainda não está pronto.'
-        };
-      }
-      if (lang.indexOf('ar') === 0) {
-        return {
-          settingsTitle: 'الإعدادات',
-          settingsSub: 'البيانات والإعلانات والبريميوم',
-          settingsAria: 'الإعدادات والبيانات',
-          adReadyMain: 'شاهد الإعلان',
-          adReadySub: 'جاهز لـ +1 رصيد',
-          adReadyLowSub: 'الرصيد منخفض',
-          adReadyUrgentSub: 'لا يوجد رصيد',
-          notReadyMain: 'الإعلان غير جاهز',
-          notReadySub: 'جرّبه من تطبيق أندرويد',
-          androidOnlySub: 'متاح داخل أندرويد',
-          fullMain: 'الرصيد ممتلئ',
-          fullSub: 'لا حاجة لإعلان إضافي',
-          busyMain: 'جارٍ فتح الإعلان',
-          busySub: 'بانتظار نتيجة المكافأة',
-          premiumMain: 'البريميوم مفعل',
-          premiumSub: 'الإعلانات معطلة',
-          busyToast: 'الإعلان قيد الفتح بالفعل.',
-          notReadyToast: 'الإعلان المُكافأ غير جاهز بعد.'
-        };
-      }
-      return {
-        settingsTitle: 'Ayarlar',
-        settingsSub: 'Veri, reklam ve premium',
-        settingsAria: 'Ayarlar ve veri',
-        adReadyMain: 'Reklam izle',
-        adReadySub: '+1 hak kazanmaya hazır',
-        adReadyLowSub: 'hak azaldı',
-        adReadyUrgentSub: 'hak bitti',
-        notReadyMain: 'Reklam hazır değil',
-        notReadySub: 'Android uygulamada tekrar dene',
-        androidOnlySub: 'Android uygulama içinde açık',
-        fullMain: 'Hak dolu',
-        fullSub: 'ek reklama gerek yok',
-        busyMain: 'Reklam açılıyor',
-        busySub: 'ödül sonucu bekleniyor',
-        premiumMain: 'Premium açık',
-        premiumSub: 'reklam kapalı',
-        busyToast: 'Reklam zaten açılıyor.',
-        notReadyToast: 'Ödüllü reklam şu anda hazır değil. Android uygulamadan tekrar dene.'
-      };
-    }
-
     function getBridgeState() {
       var hasBridge = !!(window.AndroidAds && typeof window.AndroidAds.showRewardedAd === 'function');
-      var ready = hasBridge && !!window.__rewardedAdReady;
-      return { hasBridge: hasBridge, ready: ready };
+      return { hasBridge: hasBridge, ready: hasBridge && !!window.__rewardedAdReady };
     }
 
-    function getCreditsMax() {
-      var max = Number(window.ANALYSIS_MAX_CREDITS || 10);
-      return Number.isFinite(max) && max > 0 ? max : 10;
-    }
-
-    function getRewardAmount() {
-      var amount = Number(window.ANALYSIS_AD_REWARD_AMOUNT || 1);
-      return Number.isFinite(amount) && amount > 0 ? amount : 1;
-    }
-
-    function getRemainingCredits() {
+    function getRemaining() {
       if (typeof window.getRemainingAnalysisCount === 'function') {
-        var value = window.getRemainingAnalysisCount();
-        return Number.isFinite(value) ? value : Infinity;
+        var v = window.getRemainingAnalysisCount();
+        return Number.isFinite(v) ? v : Infinity;
       }
       return 0;
+    }
+
+    function getMax() {
+      var max = Number(window.ANALYSIS_MAX_CREDITS || 10);
+      return Number.isFinite(max) && max > 0 ? max : 10;
     }
 
     function isPremium() {
       return typeof window.isPremiumUnlocked === 'function' && !!window.isPremiumUnlocked();
     }
 
-    function setRewardBusy(isBusy) {
-      window.__rewardedAdBusy = !!isBusy;
-      if (rewardBusyTimer) {
-        clearTimeout(rewardBusyTimer);
-        rewardBusyTimer = null;
+    function ensureDock() {
+      var quickbar = document.getElementById('mobileQuickbar');
+      if (!quickbar) return null;
+      var dock = document.getElementById('rewardFloatingDock');
+      if (!dock) {
+        dock = document.createElement('div');
+        dock.id = 'rewardFloatingDock';
+        dock.className = 'is-hidden';
+        quickbar.parentNode.insertBefore(dock, quickbar);
       }
-      if (isBusy) {
-        rewardBusyTimer = setTimeout(function () {
-          window.__rewardedAdBusy = false;
-          syncTopActionsUi();
-        }, 18000);
-      }
+      return dock;
     }
 
-    function renderSettingsButton() {
-      var btn = document.getElementById('settingsBtn');
-      if (!btn) return;
-      var copy = getUiCopy();
-      var title = (typeof window.t === 'function' ? window.t('settings') : copy.settingsTitle) || copy.settingsTitle;
-      btn.classList.add('header-settings-btn', 'compact-chip-btn');
-      btn.setAttribute('aria-label', copy.settingsAria);
-      btn.title = copy.settingsAria;
-      btn.innerHTML = '' +
-        '<span class="hero-btn-icon" aria-hidden="true">' +
-          '<svg class="ui-icon-svg top-hero-svg" viewBox="0 0 24 24" focusable="false"><use href="#gi-data-stack"></use></svg>' +
-        '</span>' +
-        '<span class="hero-btn-copy">' +
-          '<span class="hero-btn-title">' + htmlEscape(title) + '</span>' +
-          '<span class="hero-btn-subtitle">' + htmlEscape(copy.settingsSub) + '</span>' +
-        '</span>';
+    function renderPillText(button, isReady) {
+      button.innerHTML = '<span class="status-chip-text">🎬 Reklam izle</span>';
+      button.title = isReady ? 'Reklam izle' : 'Reklam şu an hazır değil';
+      button.setAttribute('aria-label', isReady ? 'Reklam izle' : 'Reklam hazır değil');
     }
 
-    function renderQuickButton(main, sub, ariaLabel) {
+    function syncFloatingRewardPill() {
       var btn = document.getElementById('analysisQuickAccessBtn');
-      if (!btn) return;
-      btn.innerHTML = '' +
-        '<span class="status-chip-text">' +
-          '<span class="status-chip-main">' + htmlEscape(main) + '</span>' +
-          '<span class="status-chip-sub">' + htmlEscape(sub) + '</span>' +
-        '</span>';
-      btn.setAttribute('aria-label', ariaLabel || (main + ' · ' + sub));
-      btn.title = main + ' · ' + sub;
-    }
+      var dock = ensureDock();
+      if (!btn || !dock) return;
+      if (btn.parentElement !== dock) dock.appendChild(btn);
 
-    function syncTopActionsUi() {
-      renderSettingsButton();
-
-      var quickBtn = document.getElementById('analysisQuickAccessBtn');
-      var adBtn = document.getElementById('analysisAdBtn');
-      if (!quickBtn) return;
-
-      var copy = getUiCopy();
       var bridge = getBridgeState();
+      var remaining = getRemaining();
+      var max = getMax();
       var premium = isPremium();
-      var remaining = getRemainingCredits();
-      var max = getCreditsMax();
-      var reward = getRewardAmount();
-      var low = Number.isFinite(remaining) && remaining <= 2;
-      var main = '';
-      var sub = '';
-      var className = 'analysis-quick-chip';
-      var disableQuick = false;
+      var busy = !!window.__rewardedAdBusy;
+      var show = !premium && bridge.ready && remaining < max && !busy;
 
-      if (premium) {
-        main = copy.premiumMain;
-        sub = copy.premiumSub;
-        className += ' premium';
-        disableQuick = true;
-      } else if (window.__rewardedAdBusy) {
-        main = copy.busyMain;
-        sub = copy.busySub;
-        className += ' busy';
-        disableQuick = true;
-      } else if (Number.isFinite(remaining) && remaining >= max) {
-        main = copy.fullMain;
-        sub = remaining + '/' + max + ' · ' + copy.fullSub;
-        className += ' full';
-      } else if (!bridge.ready) {
-        main = copy.notReadyMain;
-        sub = bridge.hasBridge ? copy.notReadySub : copy.androidOnlySub;
-        className += ' disabled';
-      } else if (!Number.isFinite(remaining) || remaining <= 0) {
-        main = copy.adReadyMain;
-        sub = '+' + reward + ' · 0/' + max + ' · ' + copy.adReadyUrgentSub;
-        className += ' ready cta low';
-      } else if (low) {
-        main = copy.adReadyMain;
-        sub = '+' + reward + ' · ' + remaining + '/' + max + ' · ' + copy.adReadyLowSub;
-        className += ' ready low';
-      } else {
-        main = copy.adReadyMain;
-        sub = '+' + reward + ' · ' + remaining + '/' + max + ' · ' + copy.adReadySub;
-        className += ' ready';
-      }
-
-      quickBtn.className = className;
-      quickBtn.disabled = disableQuick;
-      if (disableQuick) quickBtn.setAttribute('aria-disabled', 'true');
-      else quickBtn.removeAttribute('aria-disabled');
-      renderQuickButton(main, sub, main + ' ' + sub);
-
-      if (adBtn) {
-        var disableAdBtn = premium || !!window.__rewardedAdBusy || !bridge.ready || (Number.isFinite(remaining) && remaining >= max);
-        adBtn.disabled = disableAdBtn;
-        adBtn.title = disableAdBtn
-          ? (premium ? copy.premiumSub : (!bridge.ready ? copy.notReadySub : copy.fullSub))
-          : copy.adReadySub;
-      }
+      renderPillText(btn, bridge.ready);
+      dock.classList.toggle('is-hidden', !show);
+      btn.classList.toggle('analysis-quick-chip', false);
+      btn.classList.add('floating-reward-pill');
+      btn.disabled = !bridge.ready || busy || premium || remaining >= max;
     }
 
-    function wrapFunction(name, afterFn) {
-      var original = window[name];
-      if (typeof original !== 'function' || original.__rewardSettingsWrapped) return;
-      var wrapped = function () {
-        var result = original.apply(this, arguments);
-        try { afterFn(); } catch (error) { console.warn(name + ' patch sync failed:', error); }
-        return result;
-      };
-      wrapped.__rewardSettingsWrapped = true;
-      window[name] = wrapped;
-    }
-
-    function wrapBridgeHooks() {
-      var updateAvailability = window.__updateRewardedAdAvailability;
-      if (typeof updateAvailability === 'function' && !updateAvailability.__rewardSettingsWrapped) {
-        var wrappedAvailability = function () {
-          var result = updateAvailability.apply(this, arguments);
-          try { syncTopActionsUi(); } catch (_) {}
-          return result;
-        };
-        wrappedAvailability.__rewardSettingsWrapped = true;
-        window.__updateRewardedAdAvailability = wrappedAvailability;
-      }
-
-      var handleResult = window.__handleRewardedAdResult;
-      if (typeof handleResult === 'function' && !handleResult.__rewardSettingsWrapped) {
-        var wrappedResult = function () {
-          var result = handleResult.apply(this, arguments);
-          setRewardBusy(false);
-          try { syncTopActionsUi(); } catch (_) {}
-          return result;
-        };
-        wrappedResult.__rewardSettingsWrapped = true;
-        window.__handleRewardedAdResult = wrappedResult;
-      }
-    }
-
-    function bindBusyProtection() {
-      var adBtn = document.getElementById('analysisAdBtn');
-      if (adBtn && !adBtn.dataset.rewardPatchBound) {
-        adBtn.dataset.rewardPatchBound = '1';
-        adBtn.addEventListener('click', function (event) {
-          var copy = getUiCopy();
-          if (window.__rewardedAdBusy) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            if (typeof window.showToast === 'function') window.showToast(copy.busyToast, 'info', 1600);
-            return;
-          }
-          var bridge = getBridgeState();
-          var remaining = getRemainingCredits();
-          var max = getCreditsMax();
-          if (!isPremium() && bridge.ready && (!Number.isFinite(remaining) || remaining < max)) {
-            setRewardBusy(true);
-            syncTopActionsUi();
-          }
-        }, true);
-      }
-
-      var quickBtn = document.getElementById('analysisQuickAccessBtn');
-      if (quickBtn && !quickBtn.dataset.rewardPatchBound) {
-        quickBtn.dataset.rewardPatchBound = '1';
-        quickBtn.addEventListener('click', function (event) {
-          var copy = getUiCopy();
-          if (window.__rewardedAdBusy) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            if (typeof window.showToast === 'function') window.showToast(copy.busyToast, 'info', 1600);
-            return;
-          }
-          var bridge = getBridgeState();
-          if (!bridge.ready && !isPremium() && typeof window.showToast === 'function') {
-            window.showToast(copy.notReadyToast, 'info', 2100);
-          }
-        }, true);
-      }
-    }
-
-    function bootPatch() {
-      wrapFunction('applyLanguage', syncTopActionsUi);
-      wrapFunction('updateAnalysisUsageUi', syncTopActionsUi);
-      wrapBridgeHooks();
-      bindBusyProtection();
-      syncTopActionsUi();
+    function boot() {
+      syncFloatingRewardPill();
+      setInterval(syncFloatingRewardPill, 900);
+      window.addEventListener('resize', syncFloatingRewardPill, { passive: true });
+      window.addEventListener('orientationchange', syncFloatingRewardPill, { passive: true });
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bootPatch, { once: true });
+      document.addEventListener('DOMContentLoaded', boot, { once: true });
     } else {
-      bootPatch();
+      boot();
     }
-
-    setTimeout(bootPatch, 0);
-    setTimeout(syncTopActionsUi, 320);
   })();
 </script>
 
@@ -21510,145 +21139,16 @@ function updateHistoryPreview(rawText) {
 
 
 
-<style id="header-utility-clean-layout-v2">
-  #app .app-header {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px !important;
-    margin-bottom: 10px !important;
-  }
 
-  #app .app-header .header-topbar {
-    position: static !important;
-    inset: auto !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    min-height: 46px !important;
-    margin: 0 !important;
-  }
 
-  #app .header-brand {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
 
-  #app #settingsBtn.header-settings-btn {
-    width: 46px !important;
-    min-width: 46px !important;
-    height: 46px !important;
-    min-height: 46px !important;
+<style id="reward-floating-final-overrides-v1">
+  #app .header-actions.layout-refresh-actions.compact-top-right-actions,
+  #app .header-top-right-grid {
+    display: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0 !important;
-    border-radius: 16px !important;
-    border: 1px solid rgba(96, 165, 250, 0.42) !important;
-    background: linear-gradient(180deg, rgba(16, 33, 62, 0.9), rgba(7, 14, 30, 0.95)) !important;
-    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.34), inset 0 1px 0 rgba(255,255,255,0.09) !important;
-    color: #e8f2ff !important;
-  }
-
-  #app #settingsBtn.header-settings-btn:hover,
-  #app #settingsBtn.header-settings-btn:focus-visible {
-    border-color: rgba(125, 211, 252, 0.66) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 16px 30px rgba(2, 6, 23, 0.42), 0 0 0 1px rgba(59,130,246,0.24) !important;
-  }
-
-  #app #settingsBtn.header-settings-btn:active {
-    transform: translateY(0);
-    filter: brightness(0.97);
-  }
-
-  #app #settingsBtn.header-settings-btn .hero-btn-copy,
-  #app #settingsBtn.header-settings-btn .settings-btn-text,
-  #app #settingsBtn.header-settings-btn .hero-btn-title,
-  #app #settingsBtn.header-settings-btn .hero-btn-subtitle {
-    display: none !important;
-  }
-
-  #app #settingsBtn.header-settings-btn .hero-btn-icon {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    border-radius: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  #app #settingsBtn.header-settings-btn .icon {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    border-radius: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #app .header-actions.layout-refresh-actions.compact-top-right-actions {
-    margin: 0 !important;
-  }
-
-  #app .header-top-right-grid {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 10px !important;
-  }
-
-  #app #analysisQuickAccessBtn.analysis-quick-chip {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 54px !important;
-    justify-content: flex-start !important;
-    padding: 11px 14px !important;
-    border-radius: 16px !important;
-    border: 1px solid rgba(245, 158, 11, 0.4) !important;
-    background: linear-gradient(180deg, rgba(58, 37, 10, 0.9), rgba(24, 15, 5, 0.94)) !important;
-    box-shadow: 0 12px 26px rgba(15, 9, 2, 0.32), inset 0 1px 0 rgba(255, 233, 177, 0.18) !important;
-  }
-
-  #app #analysisQuickAccessBtn.analysis-quick-chip:hover,
-  #app #analysisQuickAccessBtn.analysis-quick-chip:focus-visible {
-    border-color: rgba(251, 191, 36, 0.62) !important;
-    transform: translateY(-1px);
-  }
-
-  #app #analysisQuickAccessBtn.analysis-quick-chip:active {
-    transform: translateY(0);
-    filter: brightness(0.97);
-  }
-
-  #app #analysisQuickAccessBtn .status-chip-text {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-  }
-
-  #app #analysisQuickAccessBtn .status-chip-sub {
-    display: none !important;
-  }
-
-  @media (min-width: 820px) {
-    #app .app-header {
-      align-items: stretch;
-    }
-
-    #app .app-header .header-topbar,
-    #app .header-actions.layout-refresh-actions.compact-top-right-actions {
-      margin-left: auto;
-      width: min(420px, 100%);
-    }
+    min-height: 0 !important;
   }
 </style>
 
