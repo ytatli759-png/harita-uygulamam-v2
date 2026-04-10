@@ -9739,10 +9739,6 @@
             </div>
 
             <div class="map-fab-cluster" aria-label="Harita hızlı kontroller">
-                <button type="button" id="layerToggleBtn" class="map-icon-btn" aria-label="Katmanlar" title="Katmanlar">
-                    <span aria-hidden="true">🗂️</span>
-                    <span class="sr-only">Katmanlar</span>
-                </button>
                 <button type="button" id="locateBtn" class="map-icon-btn" aria-label="Buradayım" title="Buradayım">
                     <span aria-hidden="true">📍</span>
                     <span class="sr-only">Buradayım</span>
@@ -12185,6 +12181,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     let locateWatchId = null;
     let locatePending = false;
     let layerControlRef = null;
+    let customLayerToggleControlRef = null;
     let mapInitialized = false;
 
     let markingMode = false;
@@ -13173,11 +13170,24 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       updateMapToolTexts();
     }
 
+    function getLayerToggleButtons() {
+      return Array.from(document.querySelectorAll('#layerToggleBtn, .map-layer-toggle-btn'));
+    }
+
     function updateMapToolTexts() {
-      if (layerToggleBtn) {
+      const layerToggleButtons = getLayerToggleButtons();
+      if (layerToggleButtons.length) {
         const layerKey = isLayerControlExpanded() ? 'layersClose' : 'layersOpen';
-        setMapCompactButtonLabel(layerToggleBtn, "🗂️", t(layerKey));
-        layerToggleBtn.classList.toggle('main', isLayerControlExpanded());
+        layerToggleButtons.forEach((btn) => {
+          if (btn.classList.contains('map-layer-toggle-btn')) {
+            btn.classList.toggle('is-open', isLayerControlExpanded());
+            btn.setAttribute('aria-label', t(layerKey));
+            btn.setAttribute('title', t(layerKey));
+          } else {
+            setMapCompactButtonLabel(btn, "🗂️", t(layerKey));
+            btn.classList.toggle('main', isLayerControlExpanded());
+          }
+        });
       }
       if (markModeBtn) markModeBtn.textContent = markingMode ? t('markModeOn') : t('markModeOff');
       if (clearMarksBtn) clearMarksBtn.textContent = t('clearMarks');
@@ -13495,6 +13505,31 @@ function initMap() {
 
       const layerControl = L.control.layers(baseLayers, overlays, { collapsed: true, position: "topleft" }).addTo(map);
       layerControlRef = layerControl;
+      const layerContainer = layerControl.getContainer ? layerControl.getContainer() : null;
+      if (layerContainer) {
+        layerContainer.classList.add("map-layer-sheet");
+      }
+
+      const CustomLayerToggleControl = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd() {
+          const wrapper = L.DomUtil.create("div", "leaflet-control map-layer-toggle-control");
+          const button = L.DomUtil.create("button", "map-layer-toggle-btn", wrapper);
+          button.type = "button";
+          button.setAttribute("aria-label", t("layersOpen"));
+          button.setAttribute("title", t("layersOpen"));
+          button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 8 4-8 4-8-4 8-4Zm8 8-8 4-8-4m16 4-8 4-8-4"></path></svg>';
+          L.DomEvent.disableClickPropagation(wrapper);
+          L.DomEvent.on(button, "click", (ev) => {
+            L.DomEvent.stop(ev);
+            setMapOverflowOpen(false);
+            setLayerControlExpanded(!isLayerControlExpanded());
+          });
+          customLayerToggleControlRef = button;
+          return wrapper;
+        }
+      });
+      map.addControl(new CustomLayerToggleControl());
 
       map.on("baselayerchange", (e) => {
         currentBaseLayer = e.layer;
@@ -20092,6 +20127,7 @@ function updateHistoryPreview(rawText) {
       if (!layerContainer) return;
       if (layerContainer.contains(e.target)) return;
       if (layerToggleBtn && layerToggleBtn.contains(e.target)) return;
+      if (customLayerToggleControlRef && customLayerToggleControlRef.contains(e.target)) return;
       setLayerControlExpanded(false);
     });
 
@@ -21413,20 +21449,22 @@ function updateHistoryPreview(rawText) {
 <script id="mobile-layer-sheet-sync-v3">
   (function () {
     const root = document.body;
-    const layerBtn = document.getElementById("layerToggleBtn");
+    function getLayerButtons() {
+      return Array.from(document.querySelectorAll("#layerToggleBtn, .map-layer-toggle-btn"));
+    }
     function layerContainer() { return document.querySelector(".leaflet-control-layers"); }
     function syncLayerSheetState() {
       const container = layerContainer();
       const expanded = !!(container && container.classList.contains("leaflet-control-layers-expanded"));
       root.classList.toggle("layer-sheet-open", expanded);
-      if (layerBtn) layerBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+      getLayerButtons().forEach((btn) => btn.setAttribute("aria-expanded", expanded ? "true" : "false"));
     }
     document.addEventListener("click", function (event) {
       if (!root.classList.contains("layer-sheet-open")) return;
       const container = layerContainer();
       if (!container) return;
       if (container.contains(event.target)) return;
-      if (layerBtn && layerBtn.contains(event.target)) return;
+      if (getLayerButtons().some((btn) => btn.contains(event.target))) return;
       container.classList.remove("leaflet-control-layers-expanded");
       syncLayerSheetState();
     }, true);
@@ -21953,7 +21991,7 @@ function updateHistoryPreview(rawText) {
   #app .map-stage {
     --map-fab-stack-width: clamp(48px, 12vw, 56px);
     --map-control-gap: clamp(8px, 2.2vw, 12px);
-    --map-controls-top-safe: clamp(66px, 16vw, 92px);
+    --map-controls-top-safe: clamp(10px, 2.8vw, 14px);
     --map-controls-bottom-safe: calc(var(--map-overlay-bottom, 84px) + clamp(12px, 3vw, 18px));
     isolation: isolate;
     overflow: visible !important;
@@ -21966,7 +22004,7 @@ function updateHistoryPreview(rawText) {
 
   #app .leaflet-control-container {
     position: relative;
-    z-index: 980;
+    z-index: 1020;
   }
 
   #app .leaflet-top .leaflet-control {
@@ -21983,7 +22021,87 @@ function updateHistoryPreview(rawText) {
   }
 
   #app .leaflet-control-layers {
-    max-width: min(68vw, 280px);
+    max-width: min(72vw, 300px);
+    border-radius: 16px !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    background: linear-gradient(180deg, rgba(6, 12, 24, 0.94), rgba(2, 6, 23, 0.94)) !important;
+    box-shadow: 0 18px 32px rgba(2, 6, 23, 0.48) !important;
+    backdrop-filter: blur(10px);
+    padding: 8px !important;
+    z-index: 1030;
+  }
+
+  #app .leaflet-control-layers-toggle {
+    display: none !important;
+  }
+
+  #app .leaflet-control-layers .leaflet-control-layers-list {
+    display: none;
+  }
+
+  #app .leaflet-control-layers.leaflet-control-layers-expanded .leaflet-control-layers-list {
+    display: block;
+    max-height: min(48vh, 380px);
+    overflow: auto;
+    padding-right: 2px;
+  }
+
+  #app .leaflet-control-layers.leaflet-control-layers-expanded {
+    position: absolute;
+    left: clamp(8px, 2vw, 12px);
+    top: clamp(56px, 10vw, 64px);
+    margin: 0 !important;
+    width: min(76vw, 300px);
+  }
+
+  #app .leaflet-control-layers-base label,
+  #app .leaflet-control-layers-overlays label {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 10px;
+    align-items: center;
+    min-height: 42px;
+    color: #e7eefb;
+    border-radius: 10px;
+    padding: 7px 10px;
+  }
+
+  #app .map-layer-toggle-control {
+    margin-left: clamp(8px, 2vw, 12px) !important;
+    margin-top: clamp(8px, 2vw, 12px) !important;
+    z-index: 1040;
+  }
+
+  #app .map-layer-toggle-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 13px;
+    background: linear-gradient(180deg, rgba(3, 8, 18, 0.96), rgba(2, 6, 23, 0.98));
+    color: #dce7ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 22px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255,255,255,0.06);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #app .map-layer-toggle-btn svg {
+    width: 19px;
+    height: 19px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  #app .map-layer-toggle-btn.is-open,
+  #app .map-layer-toggle-btn:active {
+    border-color: rgba(56, 189, 248, 0.55);
+    color: #eef6ff;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2), 0 14px 26px rgba(8, 47, 73, 0.34);
   }
 
   #app .map-fab-cluster {
@@ -21992,11 +22110,12 @@ function updateHistoryPreview(rawText) {
 
   @media (max-width: 640px) {
     #app .leaflet-control-layers.leaflet-control-layers-expanded {
-      left: 10px !important;
-      right: 10px !important;
-      top: auto !important;
-      bottom: calc(var(--map-overlay-bottom, 84px) + 8px) !important;
-      z-index: 1100 !important;
+      left: 8px !important;
+      right: auto !important;
+      top: 56px !important;
+      bottom: auto !important;
+      width: min(82vw, 300px) !important;
+      z-index: 1030 !important;
     }
 
     #app .leaflet-bottom .leaflet-control {
