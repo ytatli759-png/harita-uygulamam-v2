@@ -8981,28 +8981,10 @@
                         <span>Arazide Noktalarım</span>
                     </div>
                 </div>
-                <button type="button" id="utilityTriggerBtn" class="utility-trigger-btn" aria-label="Hızlı araç menüsü" title="Hızlı araç menüsü" aria-expanded="false">☰</button>
             </div>
             <div class="header-actions layout-refresh-actions compact-top-right-actions" hidden></div>
             <h1><span class="icon"><span class="icon-core" aria-hidden="true"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#gi-crosshair-scan"></use></svg></span></span>Nokta ve saha notları</h1>
         </div>
-
-        <div id="utilitySheetBackdrop" class="utility-sheet-backdrop" hidden></div>
-        <aside id="utilitySheet" class="utility-sheet" aria-hidden="true">
-            <div class="utility-sheet-head">
-                <div class="utility-sheet-title">Hızlı Araçlar</div>
-                <button type="button" id="utilitySheetCloseBtn" class="utility-sheet-close" aria-label="Paneli kapat">✕</button>
-            </div>
-            <div class="utility-sheet-actions">
-                <button type="button" id="settingsBtn" class="utility-sheet-item" aria-label="Ayarlar" title="Ayarlar">⚙️ Ayarlar</button>
-                <button type="button" id="analysisQuickAccessBtn" class="utility-sheet-item" aria-label="Reklam izle ve +1 hak al" title="Reklam izle ve +1 hak al"><span class="status-chip-text">🎬 Reklam izle</span></button>
-                <button type="button" id="utilityExportBtn" class="utility-sheet-item">⬇️ Dışa aktar</button>
-                <button type="button" id="utilityImportBtn" class="utility-sheet-item">⬆️ İçe aktar</button>
-                <button type="button" id="utilityLayersBtn" class="utility-sheet-item">🗂 Katmanlar</button>
-                <button type="button" id="utilityAnalysisBtn" class="utility-sheet-item">✦ Analiz</button>
-            </div>
-            <div id="utilityAdStatus" class="utility-ad-status">Reklam durumu kontrol ediliyor…</div>
-        </aside>
 
         <!-- 🏞 Altın tozu rehberi paneli -->
         <div id="goldPanel">
@@ -10002,6 +9984,38 @@
   }
 </style>
 
+
+<div id="utilityOverlayRoot" class="utility-overlay-root" data-open="false">
+    <button type="button" id="utilityTriggerBtn" class="utility-floating-trigger" aria-label="Hızlı araç menüsü" title="Hızlı araç menüsü" aria-expanded="false" aria-controls="utilityPanel">
+        <svg class="ui-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><use href="#gi-settings"></use></svg>
+    </button>
+    <aside id="utilityPanel" class="utility-floating-panel" aria-hidden="true" role="menu" aria-label="Hızlı araçlar">
+        <button type="button" id="settingsBtn" class="utility-action-item" role="menuitem" aria-label="Ayarlar" title="Ayarlar">
+            <span class="utility-item-icon" aria-hidden="true">⚙️</span>
+            <span class="utility-item-copy"><strong>Ayarlar</strong><small>Tercihleri düzenle</small></span>
+        </button>
+        <button type="button" id="analysisQuickAccessBtn" class="utility-action-item utility-action-ad" role="menuitem" aria-label="Reklam izle ve +1 hak al" title="Reklam izle ve +1 hak al">
+            <span class="utility-item-icon" aria-hidden="true">🎬</span>
+            <span class="utility-item-copy"><strong>Reklam / hak kazan</strong><small id="utilityAdStatus">Durum kontrol ediliyor</small></span>
+        </button>
+        <button type="button" id="utilityLayersBtn" class="utility-action-item" role="menuitem">
+            <span class="utility-item-icon" aria-hidden="true">🗂️</span>
+            <span class="utility-item-copy"><strong>Katmanlar</strong><small>Harita katman seçimi</small></span>
+        </button>
+        <button type="button" id="utilityExportBtn" class="utility-action-item" role="menuitem">
+            <span class="utility-item-icon" aria-hidden="true">⬇️</span>
+            <span class="utility-item-copy"><strong>Dışa aktar</strong><small>Verileri yedekle</small></span>
+        </button>
+        <button type="button" id="utilityImportBtn" class="utility-action-item" role="menuitem">
+            <span class="utility-item-icon" aria-hidden="true">⬆️</span>
+            <span class="utility-item-copy"><strong>İçe aktar</strong><small>Yedeği geri yükle</small></span>
+        </button>
+        <button type="button" id="utilityAnalysisBtn" class="utility-action-item" role="menuitem">
+            <span class="utility-item-icon" aria-hidden="true">✦</span>
+            <span class="utility-item-copy"><strong>Analiz</strong><small>Altın rehberini aç</small></span>
+        </button>
+    </aside>
+</div>
 
 <script>
     const STORAGE_KEY = "arazi_noktalarim_basit";
@@ -11183,7 +11197,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function renderAnalysisQuickChip(text) {
       if (!analysisQuickAccessBtn) return;
-      analysisQuickAccessBtn.innerHTML = `<span class="status-chip-text">${escapeHtml(String(text || ""))}</span>`;
+      const statusEl = document.getElementById("utilityAdStatus");
+      if (statusEl) statusEl.textContent = String(text || "");
     }
 
     const appContainer = document.getElementById("app");
@@ -11813,7 +11828,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         if (analysisPremiumBtn) analysisPremiumBtn.textContent = "Premium açık";
         if (analysisQuickAccessBtn) {
           renderAnalysisQuickChip("Premium açık");
-          analysisQuickAccessBtn.className = "analysis-quick-chip premium";
+          analysisQuickAccessBtn.className = "utility-action-item utility-action-ad is-premium";
         }
         return;
       }
@@ -11829,13 +11844,13 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (analysisQuickAccessBtn) {
         if (remaining >= ANALYSIS_MAX_CREDITS) {
           renderAnalysisQuickChip(`🎬 Hak dolu · ${remaining}/${ANALYSIS_MAX_CREDITS}`);
-          analysisQuickAccessBtn.className = "analysis-quick-chip";
+          analysisQuickAccessBtn.className = "utility-action-item utility-action-ad";
         } else if (remaining > 0) {
           renderAnalysisQuickChip(`🎬 Reklam izle · ${remaining}/${ANALYSIS_MAX_CREDITS}`);
-          analysisQuickAccessBtn.className = `analysis-quick-chip${low ? ' low' : ''}`;
+          analysisQuickAccessBtn.className = `utility-action-item utility-action-ad${low ? " is-low" : ""}`;
         } else {
           renderAnalysisQuickChip(`🎬 Reklam izle · 0/${ANALYSIS_MAX_CREDITS}`);
-          analysisQuickAccessBtn.className = "analysis-quick-chip cta low";
+          analysisQuickAccessBtn.className = "utility-action-item utility-action-ad is-cta is-low";
         }
       }
     }
@@ -20915,163 +20930,185 @@ function updateHistoryPreview(rawText) {
 </script>
 
 
-<style id="reward-floating-pill-layout-v2">
-  #app .app-header {
-    margin-bottom: 6px !important;
+<style id="reward-floating-overlay-v3">
+  :root {
+    --utility-z-panel: 2600;
+    --utility-z-trigger: 2610;
+    --utility-overlay-top: max(16px, env(safe-area-inset-top, 0px));
+    --utility-overlay-right: 16px;
   }
 
-  #app .app-header h1 {
-    margin-top: 2px !important;
-    margin-bottom: 0 !important;
-  }
-
-  #utilityTriggerBtn.utility-trigger-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.38);
-    background: linear-gradient(145deg, rgba(18, 26, 44, 0.9), rgba(6, 12, 26, 0.92));
-    color: #f8fafc;
-    font-weight: 800;
-    font-size: 19px;
-    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.36);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-
-  #utilitySheetBackdrop.utility-sheet-backdrop {
+  #utilityOverlayRoot.utility-overlay-root {
     position: fixed;
     inset: 0;
-    background: rgba(2, 6, 23, 0.58);
-    backdrop-filter: blur(4px);
-    z-index: 1198;
+    pointer-events: none;
+    z-index: var(--utility-z-panel);
   }
 
-  #utilitySheet.utility-sheet {
+  #utilityTriggerBtn.utility-floating-trigger {
     position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
-    z-index: 1199;
-    border-radius: 22px;
-    border: 1px solid rgba(148, 163, 184, 0.32);
-    background: linear-gradient(160deg, rgba(9, 16, 32, 0.95), rgba(3, 8, 20, 0.96));
-    box-shadow: 0 24px 44px rgba(2, 6, 23, 0.52);
+    top: var(--utility-overlay-top);
+    right: var(--utility-overlay-right);
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: linear-gradient(145deg, rgba(20, 32, 55, 0.9), rgba(5, 11, 24, 0.92));
+    color: #eff6ff;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: var(--utility-z-trigger);
+    pointer-events: auto;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+
+  #utilityTriggerBtn.utility-floating-trigger .ui-icon-svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    fill: none;
+  }
+
+  #utilityTriggerBtn.utility-floating-trigger:hover,
+  #utilityTriggerBtn.utility-floating-trigger:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(125, 211, 252, 0.6);
+    box-shadow: 0 16px 30px rgba(2, 6, 23, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.3);
+  }
+
+  #utilityTriggerBtn.utility-floating-trigger:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  #utilityPanel.utility-floating-panel {
+    position: fixed;
+    top: calc(var(--utility-overlay-top) + 56px);
+    right: var(--utility-overlay-right);
+    width: min(300px, calc(100vw - 24px));
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: linear-gradient(170deg, rgba(9, 16, 34, 0.94), rgba(3, 8, 20, 0.96));
+    box-shadow: 0 26px 46px rgba(2, 6, 23, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.07);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    padding: 14px;
-    transform: translateY(18px);
+    padding: 10px;
+    display: grid;
+    gap: 8px;
     opacity: 0;
+    transform: translateY(-6px) scale(0.98);
     pointer-events: none;
-    transition: opacity .2s ease, transform .2s ease;
+    z-index: var(--utility-z-panel);
+    transition: opacity .18s ease, transform .18s ease;
   }
 
-  body.utility-sheet-open #utilitySheet.utility-sheet {
+  #utilityOverlayRoot[data-open="true"] #utilityPanel.utility-floating-panel {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     pointer-events: auto;
   }
 
-  .utility-sheet-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    color: #f8fafc;
-  }
-
-  .utility-sheet-title {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: .02em;
-    text-transform: uppercase;
-    opacity: .9;
-  }
-
-  .utility-sheet-close {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    border: 1px solid rgba(148, 163, 184, 0.36);
-    background: rgba(15, 23, 42, 0.72);
-    color: #e2e8f0;
-    font-size: 16px;
-  }
-
-  .utility-sheet-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  #app .utility-sheet-item {
+  .utility-action-item {
     width: 100%;
-    min-height: 46px;
-    border-radius: 13px;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: linear-gradient(145deg, rgba(22, 32, 52, 0.72), rgba(10, 16, 30, 0.78));
-    color: #e6edf8;
-    font-weight: 700;
+    min-height: 54px;
+    border-radius: 14px;
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    background: linear-gradient(160deg, rgba(17, 29, 50, 0.84), rgba(8, 14, 28, 0.9));
+    color: #e6efff;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    gap: 10px;
     text-align: left;
-    padding: 0 14px;
-    font-size: 14px;
+    padding: 10px 11px;
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
   }
 
-  #utilitySheet #settingsBtn,
-  #utilitySheet #analysisQuickAccessBtn {
-    min-height: 46px !important;
-    height: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 13px !important;
-    padding: 0 14px !important;
+  .utility-item-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: rgba(37, 99, 235, 0.22);
+    font-size: 15px;
+    flex: 0 0 auto;
   }
 
-  #app #analysisQuickAccessBtn.utility-sheet-item[disabled] {
-    opacity: 0.52;
+  .utility-item-copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
   }
 
-  .utility-ad-status {
-    margin-top: 10px;
-    font-size: 12px;
-    color: rgba(191, 219, 254, 0.86);
+  .utility-item-copy strong {
+    font-size: 13px;
+    line-height: 1.25;
+    font-weight: 700;
   }
 
-  @media (min-width: 769px) {
-    #utilitySheet.utility-sheet {
-      max-width: 360px;
-      left: auto;
-      right: 16px;
-      bottom: 16px;
-    }
+  .utility-item-copy small {
+    font-size: 11px;
+    line-height: 1.3;
+    color: rgba(191, 219, 254, 0.78);
+  }
+
+  .utility-action-item:hover,
+  .utility-action-item:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(125, 211, 252, 0.48);
+    box-shadow: 0 14px 24px rgba(2, 6, 23, 0.34);
+  }
+
+  .utility-action-item:active {
+    transform: scale(0.99);
+  }
+
+  .utility-action-ad {
+    border-color: rgba(245, 158, 11, 0.34);
+    background: linear-gradient(165deg, rgba(66, 40, 8, 0.76), rgba(25, 16, 6, 0.84));
+  }
+
+  .utility-action-ad .utility-item-icon {
+    background: rgba(245, 158, 11, 0.24);
+  }
+
+  .utility-action-ad[disabled] {
+    opacity: .7;
+    filter: saturate(.75);
+    border-color: rgba(148, 163, 184, 0.26);
+  }
+
+  .utility-action-ad[disabled] .utility-item-copy strong {
+    color: #d4deef;
+    font-weight: 600;
   }
 </style>
-<script id="reward-floating-pill-layout-script-v2">
+<script id="reward-floating-overlay-script-v3">
   (function () {
     function byId(id) { return document.getElementById(id); }
-
     function isAdReady() {
       return !!(window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function" && window.__rewardedAdReady);
     }
 
     function setOpen(open) {
-      document.body.classList.toggle("utility-sheet-open", !!open);
-      const sheet = byId("utilitySheet");
-      const backdrop = byId("utilitySheetBackdrop");
+      const root = byId("utilityOverlayRoot");
       const trigger = byId("utilityTriggerBtn");
-      if (sheet) sheet.setAttribute("aria-hidden", open ? "false" : "true");
-      if (backdrop) backdrop.hidden = !open;
+      const panel = byId("utilityPanel");
+      if (root) root.dataset.open = open ? "true" : "false";
       if (trigger) trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      if (panel) panel.setAttribute("aria-hidden", open ? "false" : "true");
     }
 
     function syncAdState() {
       const status = byId("utilityAdStatus");
       const adBtn = byId("analysisQuickAccessBtn");
       const ready = isAdReady();
-      if (status) status.textContent = ready ? "Reklam hazır • +1 hak kazanabilirsin." : "Reklam şu anda hazır değil.";
+      if (status) status.textContent = ready ? "Reklam hazır • +1 hak al" : "Şu an hazır değil";
       if (adBtn) {
         adBtn.disabled = !ready;
         adBtn.title = ready ? "Reklam izle ve +1 hak al" : "Reklam şu anda hazır değil";
@@ -21081,42 +21118,51 @@ function updateHistoryPreview(rawText) {
 
     function boot() {
       const trigger = byId("utilityTriggerBtn");
-      const closeBtn = byId("utilitySheetCloseBtn");
-      const backdrop = byId("utilitySheetBackdrop");
-      const sheet = byId("utilitySheet");
+      const panel = byId("utilityPanel");
       const exportBtn = byId("exportBtn");
       const importBtn = byId("importBtn");
       const layerBtn = byId("layerToggleBtn");
       const goldBtn = byId("goldGuideBtn");
+      const settingsBtn = byId("settingsBtn");
+      const settingsModal = byId("settingsModal");
+      setOpen(false);
 
-      trigger?.addEventListener("click", () => {
-        const open = !document.body.classList.contains("utility-sheet-open");
+      trigger?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const open = trigger.getAttribute("aria-expanded") !== "true";
         setOpen(open);
         if (open) syncAdState();
       });
-      closeBtn?.addEventListener("click", () => setOpen(false));
-      backdrop?.addEventListener("click", () => setOpen(false));
+
+      document.addEventListener("click", (event) => {
+        const open = trigger?.getAttribute("aria-expanded") === "true";
+        if (!open) return;
+        if (event.target.closest("#utilityTriggerBtn") || event.target.closest("#utilityPanel")) return;
+        setOpen(false);
+      });
+
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") setOpen(false);
       });
-      sheet?.addEventListener("click", (event) => {
-        if (event.target && event.target.closest(".utility-sheet-item")) setOpen(false);
+
+      panel?.addEventListener("click", (event) => {
+        if (event.target.closest(".utility-action-item")) setOpen(false);
       });
 
+      settingsBtn?.addEventListener("click", () => {
+        settingsModal?.classList.remove("hidden");
+      });
       byId("utilityExportBtn")?.addEventListener("click", () => exportBtn?.click());
       byId("utilityImportBtn")?.addEventListener("click", () => importBtn?.click());
       byId("utilityLayersBtn")?.addEventListener("click", () => layerBtn?.click());
       byId("utilityAnalysisBtn")?.addEventListener("click", () => goldBtn?.click());
 
       syncAdState();
-      setInterval(syncAdState, 1200);
+      setInterval(syncAdState, 1500);
     }
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", boot, { once: true });
-    } else {
-      boot();
-    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true });
+    else boot();
   })();
 </script>
 
@@ -21126,10 +21172,8 @@ function updateHistoryPreview(rawText) {
   #app .header-actions.layout-refresh-actions.compact-top-right-actions { display: flex !important; flex-direction: column !important; align-items: stretch; gap: 0 !important; margin: 0 !important; min-width: 0; }
   #app .primary-actions.primary-actions-stack.compact-shortcuts-row { grid-area: main; display: grid !important; grid-template-columns: 1fr; gap: clamp(8px, 2.2vw, 10px) !important; min-width: 0; margin: 0 !important; }
   #app .header-top-right-grid { display: grid !important; grid-template-columns: 1fr; gap: 10px; min-width: 0; align-content: start; }
-  #app .compact-shortcuts-row #addBtn, #app .compact-shortcuts-row #goldGuideBtn, #app #analysisQuickAccessBtn { width: 100% !important; min-width: 0 !important; max-width: 100% !important; overflow: hidden; }
-  #app .compact-shortcuts-row #addBtn, #app .compact-shortcuts-row #goldGuideBtn { min-height: clamp(76px, 20vw, 92px) !important; padding: clamp(11px, 2.8vw, 15px) !important; border-radius: 20px !important; }
-  #app #analysisQuickAccessBtn { min-height: clamp(52px, 14vw, 62px) !important; border-radius: 16px !important; padding: 10px 14px !important; }
-  #app .hero-btn-copy, #app .status-chip-text { min-width: 0; }
+    #app .compact-shortcuts-row #addBtn, #app .compact-shortcuts-row #goldGuideBtn { min-height: clamp(76px, 20vw, 92px) !important; padding: clamp(11px, 2.8vw, 15px) !important; border-radius: 20px !important; }
+    #app .hero-btn-copy, #app .status-chip-text { min-width: 0; }
   #app .hero-btn-title, #app .hero-btn-subtitle, #app .status-chip-main, #app .status-chip-sub { overflow-wrap: anywhere; word-break: break-word; }
   #app .map-wrapper { border-radius: 22px; padding: clamp(10px, 2.8vw, 14px); border: 1px solid rgba(140, 164, 196, 0.24); background: linear-gradient(180deg, rgba(8, 14, 26, 0.88), rgba(2, 6, 20, 0.82)); box-shadow: 0 18px 34px rgba(2, 6, 23, 0.34); min-width: 0; }
   #app .map-stage { border-radius: 18px !important; padding: clamp(8px, 2.2vw, 10px) !important; background: rgba(6, 12, 24, 0.72) !important; }
