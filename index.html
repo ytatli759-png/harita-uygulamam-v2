@@ -9707,6 +9707,7 @@
             <div class="map-tools secondary">
                 <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
                 <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
+                <button type="button" id="openRecordsBtn" class="btn-small">📍 Kayıtlara git</button>
             </div>
 
             <div id="coordBar" class="is-empty" aria-hidden="true">İmleç: –</div>
@@ -9721,7 +9722,7 @@
     <button type="button" data-quickbar-action="map"><span>🗺️</span><small>Harita</small></button>
     <button type="button" data-quickbar-action="add" class="quickbar-primary"><span>＋</span><small>Yeni</small></button>
     <button type="button" data-quickbar-action="guide"><span><svg class="ui-icon-svg quickbar-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#gi-flow-wave"></use></svg></span><small>Analiz</small></button>
-    <button type="button" data-quickbar-action="records"><span>📍</span><small>Kayıtlar</small></button>
+    <button type="button" data-quickbar-action="settings"><span><svg class="ui-icon-svg quickbar-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#gi-settings"></use></svg></span><small>Ayarlar</small></button>
 </div>
 
 <style id="mobile-first-layout-refresh-v2">
@@ -10023,6 +10024,17 @@
         </button>
     </aside>
 </div>
+
+<style id="utility-floating-cleanup-v1">
+  #utilityTriggerBtn.utility-floating-trigger,
+  #utilityPanel.utility-floating-panel {
+    display: none !important;
+  }
+
+  #utilityOverlayRoot.utility-overlay-root {
+    pointer-events: none;
+  }
+</style>
 
 <script>
     const STORAGE_KEY = "arazi_noktalarim_basit";
@@ -11239,6 +11251,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const coordBar = document.getElementById("coordBar");
     const fitAllBtn = document.getElementById("fitAllBtn");
     const focusMapBtn = document.getElementById("focusMapBtn");
+    const openRecordsBtn = document.getElementById("openRecordsBtn");
     const mapHudZoomEl = document.getElementById("mapHudZoom");
     const mapHudCountEl = document.getElementById("mapHudCount");
     const mapHudThemeEl = document.getElementById("mapHudTheme");
@@ -19942,6 +19955,10 @@ function updateHistoryPreview(rawText) {
       setMapFocusMode(!(mapWrapper && mapWrapper.classList.contains("focus-mode")));
     });
 
+    safeBindClick(openRecordsBtn, "openRecordsBtn", () => {
+      document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
     safeBindClick(mapPresetVoyagerBtn, "mapPresetVoyagerBtn", () => applyBaseLayerByTheme("voyager"));
     safeBindClick(mapPresetTopoBtn, "mapPresetTopoBtn", () => applyBaseLayerByTheme("topo"));
     safeBindClick(mapPresetSatelliteBtn, "mapPresetSatelliteBtn", () => applyBaseLayerByTheme("satellite"));
@@ -20108,7 +20125,7 @@ function updateHistoryPreview(rawText) {
       if (!quickbar) return;
 
       const buttons = Array.from(quickbar.querySelectorAll('button[data-quickbar-action]'));
-      const allowedManual = new Set(['add', 'guide']);
+      const allowedManual = new Set(['add', 'guide', 'settings']);
 
       function setActive(action) {
         buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.quickbarAction === action));
@@ -20165,8 +20182,8 @@ function updateHistoryPreview(rawText) {
             syncActiveSection();
           }, 180);
         },
-        records() {
-          document.getElementById('list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        settings() {
+          document.getElementById('settingsBtn')?.click();
         }
       };
 
