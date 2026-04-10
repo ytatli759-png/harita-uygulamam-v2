@@ -13387,6 +13387,7 @@ function initMap() {
         zoomAnimation: !compactViewport,
         fadeAnimation: !compactViewport,
         markerZoomAnimation: !compactViewport,
+        zoomControl: false,
         tap: false
       }).setView(savedView.center, savedView.zoom);
 
@@ -13492,7 +13493,7 @@ function initMap() {
         "Benim İşaretlerim": freeMarkersLayer
       };
 
-      const layerControl = L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
+      const layerControl = L.control.layers(baseLayers, overlays, { collapsed: true, position: "topleft" }).addTo(map);
       layerControlRef = layerControl;
 
       map.on("baselayerchange", (e) => {
@@ -13508,7 +13509,8 @@ function initMap() {
         updateMapHud({ themeKey: themeName });
       });
 
-      L.control.scale({ metric: true, imperial: false }).addTo(map);
+      L.control.zoom({ position: "bottomleft" }).addTo(map);
+      L.control.scale({ metric: true, imperial: false, position: "bottomleft" }).addTo(map);
 
       mapInitialized = true;
       updateMapToolTexts();
@@ -21946,5 +21948,61 @@ function updateHistoryPreview(rawText) {
   }
 </style>
 
+
+<style id="map-control-layout-fix-v1">
+  #app .map-stage {
+    --map-fab-stack-width: clamp(48px, 12vw, 56px);
+    --map-control-gap: clamp(8px, 2.2vw, 12px);
+    --map-controls-top-safe: clamp(66px, 16vw, 92px);
+    --map-controls-bottom-safe: calc(var(--map-overlay-bottom, 84px) + clamp(12px, 3vw, 18px));
+    isolation: isolate;
+    overflow: visible !important;
+  }
+
+  #app #map,
+  #app .leaflet-container {
+    overflow: hidden;
+  }
+
+  #app .leaflet-control-container {
+    position: relative;
+    z-index: 980;
+  }
+
+  #app .leaflet-top .leaflet-control {
+    margin-top: var(--map-controls-top-safe) !important;
+  }
+
+  #app .leaflet-top.leaflet-right .leaflet-control,
+  #app .leaflet-right .leaflet-control {
+    margin-right: calc(var(--map-fab-stack-width) + (var(--map-control-gap) * 2)) !important;
+  }
+
+  #app .leaflet-bottom .leaflet-control {
+    margin-bottom: var(--map-controls-bottom-safe) !important;
+  }
+
+  #app .leaflet-control-layers {
+    max-width: min(68vw, 280px);
+  }
+
+  #app .map-fab-cluster {
+    z-index: 940;
+  }
+
+  @media (max-width: 640px) {
+    #app .leaflet-control-layers.leaflet-control-layers-expanded {
+      left: 10px !important;
+      right: 10px !important;
+      top: auto !important;
+      bottom: calc(var(--map-overlay-bottom, 84px) + 8px) !important;
+      z-index: 1100 !important;
+    }
+
+    #app .leaflet-bottom .leaflet-control {
+      margin-bottom: calc(var(--map-overlay-bottom, 84px) + clamp(58px, 14vw, 76px)) !important;
+    }
+  }
+</style>
 </body>
 </html>
