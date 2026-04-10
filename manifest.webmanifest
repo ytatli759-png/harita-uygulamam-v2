@@ -4,12 +4,20 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "background_color": "#060b16",
-  "theme_color": "#0f172a",
+  "display_override": [
+    "fullscreen",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "background_color": "#030712",
+  "theme_color": "#060b16",
   "lang": "tr",
   "description": "Harita tabanlı saha noktası kaydetme ve analiz uygulaması.",
-  "categories": ["productivity", "navigation"],
+  "categories": [
+    "productivity",
+    "navigation"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {

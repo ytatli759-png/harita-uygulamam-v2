@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <title>Alan Defteri</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- Standalone HTML için kırık asset referansları kaldırıldı -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 x2=%271%27 y1=%270%27 y2=%271%27%3E%3Cstop stop-color=%27%230ea5e9%27/%3E%3Cstop offset=%271%27 stop-color=%27%2322c55e%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230f172a%27/%3E%3Cpath d=%27M18 42l10-20 7 12 6-8 5 16H18z%27 fill=%27url(%23g)%27/%3E%3Ccircle cx=%2750%27 cy=%2718%27 r=%276%27 fill=%27%23facc15%27/%3E%3C/svg%3E">
     <meta name="theme-color" content="#0f172a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="./manifest.webmanifest" />
 
     <!-- Leaflet (harita) -->
@@ -21409,6 +21412,172 @@ function updateHistoryPreview(rawText) {
     #app .map-tools,
     #app .map-tools.secondary {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 359px) {
+    #app .map-tools,
+    #app .map-tools.secondary {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>
+
+
+<style id="android-immersive-map-v1">
+  :root {
+    --bottom-nav-height: clamp(62px, 15vw, 74px);
+    --bottom-nav-gap: clamp(8px, 2.4vw, 12px);
+    --map-overlay-bottom: calc(var(--bottom-nav-height) + var(--bottom-nav-gap) + env(safe-area-inset-bottom, 0px));
+  }
+
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+    overflow-x: clip;
+  }
+
+  @supports (height: 100dvh) {
+    body {
+      min-height: 100dvh !important;
+    }
+  }
+
+  body {
+    margin: 0 !important;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) calc(var(--map-overlay-bottom) + 6px) env(safe-area-inset-left, 0px) !important;
+    display: block !important;
+    background: #060b16 !important;
+  }
+
+  #app {
+    width: 100%;
+    min-height: calc(var(--vvh, 1vh) * 100);
+  }
+
+  #app .app-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    padding: clamp(6px, 2vw, 10px) clamp(6px, 2vw, 12px) calc(var(--map-overlay-bottom) + 8px) clamp(6px, 2vw, 12px) !important;
+    box-shadow: none !important;
+    background: linear-gradient(180deg, rgba(6, 11, 22, 0.98), rgba(6, 11, 22, 1)) !important;
+  }
+
+  #app .map-wrapper {
+    position: relative;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #app .map-stage {
+    margin: 0 !important;
+    border-radius: clamp(12px, 2.8vw, 16px) !important;
+    border: 1px solid rgba(95, 135, 196, 0.24) !important;
+    box-shadow: 0 12px 30px rgba(2, 6, 23, 0.45) !important;
+    overflow: hidden !important;
+  }
+
+  #app #map,
+  #app .leaflet-container {
+    width: 100% !important;
+    height: clamp(420px, 70dvh, 860px) !important;
+    min-height: clamp(380px, 64svh, 680px) !important;
+    border-radius: inherit !important;
+  }
+
+  #app .map-wrapper.focus-mode #map,
+  #app .map-wrapper.focus-mode .leaflet-container {
+    height: clamp(500px, 78dvh, 940px) !important;
+  }
+
+  #app .map-hud {
+    inset: env(safe-area-inset-top, 0px) clamp(8px, 2vw, 12px) auto clamp(8px, 2vw, 12px) !important;
+    z-index: 540 !important;
+  }
+
+  #app .map-tools,
+  #app .map-tools.secondary {
+    position: absolute !important;
+    left: clamp(8px, 2vw, 12px);
+    right: clamp(8px, 2vw, 12px);
+    bottom: calc(var(--map-overlay-bottom) + clamp(92px, 20vw, 124px));
+    z-index: 560;
+    margin: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    pointer-events: none;
+  }
+
+  #app .map-tools.secondary {
+    bottom: calc(var(--map-overlay-bottom) + clamp(28px, 7vw, 42px));
+  }
+
+  #app .map-tools .btn-small,
+  #app .map-tools.secondary .btn-small {
+    pointer-events: auto;
+    min-height: clamp(42px, 10vw, 50px) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+    background: rgba(7, 14, 27, 0.84) !important;
+    border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  }
+
+  #app #coordBar,
+  #app #list,
+  #app #mapEvalCard {
+    margin-top: clamp(10px, 2.8vw, 14px) !important;
+  }
+
+  #mobileQuickbar.mobile-quickbar {
+    display: grid !important;
+    left: max(8px, env(safe-area-inset-left, 0px)) !important;
+    right: max(8px, env(safe-area-inset-right, 0px)) !important;
+    width: auto !important;
+    transform: none !important;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+    border-radius: clamp(16px, 4vw, 20px) !important;
+    background: rgba(5, 10, 20, 0.84) !important;
+    backdrop-filter: blur(16px) saturate(130%);
+    box-shadow: 0 12px 26px rgba(2, 6, 23, 0.48) !important;
+    z-index: 1200 !important;
+  }
+
+  #utilityTriggerBtn.utility-floating-trigger {
+    bottom: calc(var(--map-overlay-bottom) + 2px) !important;
+    right: max(10px, env(safe-area-inset-right, 0px)) !important;
+    z-index: 1210 !important;
+  }
+
+  #utilityPanel.utility-floating-panel {
+    bottom: calc(var(--map-overlay-bottom) + clamp(54px, 12vw, 62px)) !important;
+    right: max(10px, env(safe-area-inset-right, 0px)) !important;
+    max-height: min(54dvh, 360px) !important;
+    z-index: 1215 !important;
+  }
+
+  @media (min-width: 860px) {
+    #app .app-shell {
+      max-width: min(1100px, 100vw) !important;
+      margin-inline: auto !important;
+      border-radius: clamp(14px, 1.4vw, 20px) !important;
+      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      box-shadow: 0 20px 40px rgba(2, 6, 23, 0.32) !important;
+      padding-bottom: clamp(20px, 2.4vw, 26px) !important;
+    }
+
+    #app .map-tools,
+    #app .map-tools.secondary {
+      position: static !important;
+      pointer-events: auto;
+      margin-top: 10px !important;
     }
   }
 
