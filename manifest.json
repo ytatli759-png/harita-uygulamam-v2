@@ -4,8 +4,8 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#050914",
-  "theme_color": "#070b16",
+  "background_color": "#030712",
+  "theme_color": "#060b16",
   "description": "Arazi analiz ve nokta kayıt PWA uygulaması",
   "lang": "tr",
   "icons": [
@@ -15,5 +15,11 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "display_override": [
+    "fullscreen",
+    "standalone",
+    "minimal-ui",
+    "browser"
   ]
 }
