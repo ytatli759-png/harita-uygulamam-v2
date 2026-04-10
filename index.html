@@ -9738,23 +9738,28 @@
                 </div>
             </div>
 
-            <div class="map-tools">
-                <button type="button" id="layerToggleBtn" class="btn-small">Katmanlar</button>
-                <button type="button" id="markModeBtn" class="btn-small">
-                    📌 İşaret koyma: Kapalı
+            <div class="map-fab-cluster" aria-label="Harita hızlı kontroller">
+                <button type="button" id="layerToggleBtn" class="map-icon-btn" aria-label="Katmanlar" title="Katmanlar">
+                    <span aria-hidden="true">🗂️</span>
+                    <span class="sr-only">Katmanlar</span>
                 </button>
-                <button type="button" id="clearMarksBtn" class="btn-small danger">
-                    🧹 İşaretleri temizle
+                <button type="button" id="locateBtn" class="map-icon-btn" aria-label="Buradayım" title="Buradayım">
+                    <span aria-hidden="true">📍</span>
+                    <span class="sr-only">Buradayım</span>
                 </button>
-                <button type="button" id="locateBtn" class="btn-small">
-                    📍 Buradayım
+                <button type="button" id="fitAllBtn" class="map-icon-btn" aria-label="Tüm noktaları göster" title="Tüm noktaları göster">
+                    <span aria-hidden="true">🧭</span>
+                    <span class="sr-only">Tüm noktaları göster</span>
                 </button>
-            </div>
-
-            <div class="map-tools secondary">
-                <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
-                <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
-                <button type="button" id="openRecordsBtn" class="btn-small">📍 Kayıtlara git</button>
+                <button type="button" id="mapOverflowBtn" class="map-icon-btn" aria-label="Diğer harita araçları" title="Diğer araçlar" aria-expanded="false" aria-controls="mapOverflowMenu">
+                    <span aria-hidden="true">⋯</span>
+                    <span class="sr-only">Diğer harita araçları</span>
+                </button>
+                <div id="mapOverflowMenu" class="map-overflow-menu" aria-hidden="true">
+                    <button type="button" id="markModeBtn" class="map-overflow-btn">📌 İşaret koyma: Kapalı</button>
+                    <button type="button" id="clearMarksBtn" class="map-overflow-btn">🧹 İşaretleri temizle</button>
+                    <button type="button" id="focusMapBtn" class="map-overflow-btn">🖥️ Haritayı büyüt</button>
+                </div>
             </div>
 
             <div id="coordBar" class="is-empty" aria-hidden="true">İmleç: –</div>
@@ -11349,7 +11354,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const coordBar = document.getElementById("coordBar");
     const fitAllBtn = document.getElementById("fitAllBtn");
     const focusMapBtn = document.getElementById("focusMapBtn");
-    const openRecordsBtn = document.getElementById("openRecordsBtn");
+    const mapOverflowBtn = document.getElementById("mapOverflowBtn");
+    const mapOverflowMenu = document.getElementById("mapOverflowMenu");
     const mapHudZoomEl = document.getElementById("mapHudZoom");
     const mapHudCountEl = document.getElementById("mapHudCount");
     const mapHudThemeEl = document.getElementById("mapHudTheme");
@@ -11513,6 +11519,25 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (el && el.tagName === "BUTTON" && !el.getAttribute("type")) el.setAttribute("type", "button");
     }
 
+    function setMapCompactButtonLabel(btn, icon, label) {
+      if (!btn) return;
+      if (btn.classList.contains("map-icon-btn")) {
+        btn.innerHTML = `<span aria-hidden="true">${icon}</span><span class="sr-only">${escapeHtml(label)}</span>`;
+        btn.setAttribute("aria-label", label);
+        btn.setAttribute("title", label);
+        return;
+      }
+      btn.textContent = `${icon} ${label}`;
+    }
+
+    function setMapOverflowOpen(nextOpen) {
+      if (!mapOverflowMenu || !mapOverflowBtn) return;
+      const open = !!nextOpen;
+      mapOverflowMenu.classList.toggle("show", open);
+      mapOverflowMenu.setAttribute("aria-hidden", open ? "false" : "true");
+      mapOverflowBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
     function setMapStatus(message, kind = "info", showRetry = false) {
       if (!mapStatusEl) return;
       mapStatusEl.className = `map-status show ${kind}`;
@@ -11528,7 +11553,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function setMapFocusMode(enabled) {
       const on = !!enabled;
       if (mapWrapper) mapWrapper.classList.toggle("focus-mode", on);
-      if (focusMapBtn) focusMapBtn.textContent = on ? `🗕 ${mapUi('mapNormal')}` : `🖥️ ${mapUi('mapBig')}`;
+      if (focusMapBtn) setMapCompactButtonLabel(focusMapBtn, on ? "🗕" : "🖥️", on ? mapUi('mapNormal') : mapUi('mapBig'));
       try { localStorage.setItem(MAP_FOCUS_STORAGE_KEY, on ? "1" : "0"); } catch {}
       if (map) {
         setTimeout(() => {
@@ -11605,8 +11630,10 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       mapPresetButtons.forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.theme === themeKey);
       });
-      if (fitAllBtn) fitAllBtn.textContent = `🧭 ${mapUi('fitAll')}`;
-      if (focusMapBtn) focusMapBtn.textContent = (mapWrapper && mapWrapper.classList.contains("focus-mode")) ? `🗕 ${mapUi('mapNormal')}` : `🖥️ ${mapUi('mapBig')}`;
+      if (fitAllBtn) setMapCompactButtonLabel(fitAllBtn, "🧭", mapUi('fitAll'));
+      if (focusMapBtn) setMapCompactButtonLabel(focusMapBtn, (mapWrapper && mapWrapper.classList.contains("focus-mode")) ? "🗕" : "🖥️", (mapWrapper && mapWrapper.classList.contains("focus-mode")) ? mapUi('mapNormal') : mapUi('mapBig'));
+      if (locateBtn) setMapCompactButtonLabel(locateBtn, "📍", t('locateMe'));
+      if (layerToggleBtn) setMapCompactButtonLabel(layerToggleBtn, "🗂️", isLayerControlExpanded() ? t('layersClose') : t('layersOpen'));
     }
 
     function applyBaseLayerByTheme(themeKey) {
@@ -13149,12 +13176,13 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function updateMapToolTexts() {
       if (layerToggleBtn) {
         const layerKey = isLayerControlExpanded() ? 'layersClose' : 'layersOpen';
-        layerToggleBtn.textContent = t(layerKey);
+        setMapCompactButtonLabel(layerToggleBtn, "🗂️", t(layerKey));
         layerToggleBtn.classList.toggle('main', isLayerControlExpanded());
       }
       if (markModeBtn) markModeBtn.textContent = markingMode ? t('markModeOn') : t('markModeOff');
       if (clearMarksBtn) clearMarksBtn.textContent = t('clearMarks');
-      if (locateBtn) locateBtn.textContent = t('locateMe');
+      if (locateBtn) setMapCompactButtonLabel(locateBtn, "📍", t('locateMe'));
+      if (fitAllBtn) setMapCompactButtonLabel(fitAllBtn, "🧭", mapUi('fitAll'));
     }
 
     function updateMapToolStates() {
@@ -20052,6 +20080,11 @@ function updateHistoryPreview(rawText) {
     });
 
     document.addEventListener("click", (e) => {
+      if (mapOverflowMenu && mapOverflowMenu.classList.contains("show")) {
+        if (!(mapOverflowMenu.contains(e.target) || (mapOverflowBtn && mapOverflowBtn.contains(e.target)))) {
+          setMapOverflowOpen(false);
+        }
+      }
       if (!isLayerControlExpanded()) return;
       const layerContainer = layerControlRef && layerControlRef.getContainer ? layerControlRef.getContainer() : null;
       if (!layerContainer) return;
@@ -20063,7 +20096,15 @@ function updateHistoryPreview(rawText) {
     if (layerToggleBtn) {
       safeBindClick(layerToggleBtn, "layerToggleBtn", () => {
         if (!mapInitialized) return;
+        setMapOverflowOpen(false);
         setLayerControlExpanded(!isLayerControlExpanded());
+      });
+    }
+
+    if (mapOverflowBtn) {
+      safeBindClick(mapOverflowBtn, "mapOverflowBtn", () => {
+        const shouldOpen = !(mapOverflowMenu && mapOverflowMenu.classList.contains("show"));
+        setMapOverflowOpen(shouldOpen);
       });
     }
 
@@ -20102,10 +20143,6 @@ function updateHistoryPreview(rawText) {
 
     safeBindClick(focusMapBtn, "focusMapBtn", () => {
       setMapFocusMode(!(mapWrapper && mapWrapper.classList.contains("focus-mode")));
-    });
-
-    safeBindClick(openRecordsBtn, "openRecordsBtn", () => {
-      document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
     safeBindClick(mapPresetVoyagerBtn, "mapPresetVoyagerBtn", () => applyBaseLayerByTheme("voyager"));
@@ -21754,6 +21791,112 @@ function updateHistoryPreview(rawText) {
     #app .map-tools,
     #app .map-tools.secondary {
       grid-template-columns: 1fr !important;
+    }
+  }
+</style>
+
+<style id="map-minimal-controls-v1">
+  #app .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  #app .map-fab-cluster {
+    position: absolute;
+    right: clamp(10px, 3vw, 14px);
+    top: clamp(10px, 3vw, 14px);
+    z-index: 940;
+    display: grid;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  #app .map-icon-btn,
+  #app .map-overflow-btn {
+    pointer-events: auto;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    background: rgba(7, 12, 23, 0.84);
+    color: #eef5ff;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.34);
+    backdrop-filter: blur(10px);
+  }
+
+  #app .map-icon-btn {
+    width: clamp(40px, 10vw, 46px);
+    height: clamp(40px, 10vw, 46px);
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(16px, 4vw, 18px);
+    line-height: 1;
+  }
+
+  #app .map-icon-btn.main {
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.22), 0 10px 22px rgba(8, 47, 73, 0.45);
+  }
+
+  #app .map-overflow-menu {
+    display: none;
+    min-width: min(74vw, 220px);
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(5, 10, 20, 0.94);
+    padding: 8px;
+    box-shadow: 0 16px 38px rgba(2, 6, 23, 0.46);
+    gap: 7px;
+  }
+
+  #app .map-overflow-menu.show {
+    display: grid;
+  }
+
+  #app .map-overflow-btn {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 10px;
+    padding: 9px 10px;
+    text-align: left;
+    font-weight: 650;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  #app .map-overflow-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+  }
+
+  #app .map-tools,
+  #app .map-tools.secondary {
+    display: none !important;
+  }
+
+  #app .map-stage {
+    padding: clamp(6px, 1.8vw, 10px) !important;
+  }
+
+  #app #map {
+    height: clamp(340px, 62vh, 620px) !important;
+  }
+
+  @media (max-width: 430px) {
+    #app #map {
+      height: clamp(360px, 66vh, 680px) !important;
+    }
+
+    #app .map-fab-cluster {
+      gap: 7px;
+      right: 10px;
+      top: 10px;
     }
   }
 </style>
