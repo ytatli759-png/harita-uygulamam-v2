@@ -2185,6 +2185,8 @@
         #goldPanel,
         #settingsPanel {
           display: none;
+          position: relative;
+          z-index: 2605;
           margin-top: 10px;
           margin-bottom: 8px;
           border-radius: 14px;
@@ -2195,6 +2197,9 @@
           transform: translateY(8px) scale(.992);
           transition: opacity .2s var(--ease-smooth-out), transform .2s var(--ease-smooth-out);
           will-change: transform, opacity;
+          max-height: min(82dvh, calc(100dvh - 110px - env(safe-area-inset-bottom)));
+          overflow-y: auto;
+          overscroll-behavior: contain;
         }
         #goldPanel.is-open,
         #settingsPanel.is-open {
@@ -9063,6 +9068,11 @@
                 </ol>
             </div>
 
+            <div class="gold-guide-content-wrap">
+                <div class="guide-howto-title">Saha rehberi</div>
+                <div id="goldGuideContent" class="gold-guide-content" role="region" aria-live="polite" aria-label="Altın tozu rehberi bölümleri"></div>
+            </div>
+
             <!-- PREMIUM REFACTOR: Analiz kontrol yüzeyi -->
             <div class="gem-card compact-gold-map-card gold-command-surface">
                 <div class="gem-desc gold-command-intro">
@@ -9117,6 +9127,43 @@
             margin: 0 0 12px;
             border: 1px solid rgba(148, 163, 184, 0.2);
             background: rgba(2, 6, 23, 0.52);
+          }
+          #goldPanel .gold-guide-content-wrap {
+            margin: 0 0 12px;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: linear-gradient(180deg, rgba(8, 16, 32, 0.72), rgba(2, 10, 24, 0.52));
+          }
+          #goldPanel .gold-guide-content {
+            display: grid;
+            gap: 10px;
+            margin-top: 8px;
+          }
+          #goldPanel .gold-guide-card {
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.52);
+            padding: 10px 11px;
+          }
+          #goldPanel .gold-guide-card h4 {
+            margin: 0 0 5px;
+            font-size: 13px;
+            color: #f8fafc;
+          }
+          #goldPanel .gold-guide-card p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.55;
+            color: #d4deeb;
+          }
+          #goldPanel .gold-guide-fallback {
+            padding: 11px 10px;
+            border-radius: 12px;
+            border: 1px dashed rgba(148, 163, 184, 0.32);
+            color: #cbd5e1;
+            font-size: 12px;
+            background: rgba(2, 6, 23, 0.38);
           }
           #goldPanel .gold-step-list { margin: 0; padding: 0; display: grid; gap: 8px; list-style: none; }
           #goldPanel .gold-step-list li {
@@ -11225,21 +11272,72 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const splashStartedAt = Date.now();
     let splashClosed = false;
 
-    function openSurfacePanel(panel) {
+    const surfacePanelState = {
+      activePanel: null,
+      closeTimers: new WeakMap()
+    };
+
+    function clearPanelCloseTimer(panel) {
       if (!panel) return;
-      panel.classList.remove("is-closing");
-      panel.style.display = "block";
-      requestAnimationFrame(() => panel.classList.add("is-open"));
+      const activeTimer = surfacePanelState.closeTimers.get(panel);
+      if (activeTimer) {
+        clearTimeout(activeTimer);
+        surfacePanelState.closeTimers.delete(panel);
+      }
     }
 
-    function closeSurfacePanel(panel) {
+    function setBodySurfaceLock(locked) {
+      if (!document.body) return;
+      if (locked) {
+        document.body.classList.add("modal-open");
+        return;
+      }
+      const hasOtherBlockingUi = !!document.querySelector(
+        ".spot-detail-modal.show, .confirm-sheet.show, .photo-lightbox.show, .analysis-premium-modal.show"
+      );
+      if (!hasOtherBlockingUi && !surfacePanelState.activePanel) {
+        document.body.classList.remove("modal-open");
+      }
+    }
+
+    function closeSurfacePanel(panel, opts = {}) {
       if (!panel) return;
+      const immediate = !!opts.immediate;
+      clearPanelCloseTimer(panel);
       panel.classList.remove("is-open");
       panel.classList.add("is-closing");
-      setTimeout(() => {
+      const finishClose = () => {
         panel.classList.remove("is-closing");
         panel.style.display = "none";
-      }, PANEL_ANIMATION_MS);
+        panel.setAttribute("aria-hidden", "true");
+      };
+      if (immediate) {
+        finishClose();
+      } else {
+        const timer = setTimeout(() => {
+          finishClose();
+          surfacePanelState.closeTimers.delete(panel);
+        }, PANEL_ANIMATION_MS);
+        surfacePanelState.closeTimers.set(panel, timer);
+      }
+      if (surfacePanelState.activePanel === panel) {
+        surfacePanelState.activePanel = null;
+        setBodySurfaceLock(false);
+      }
+    }
+
+    function openSurfacePanel(panel) {
+      if (!panel) return;
+      if (surfacePanelState.activePanel && surfacePanelState.activePanel !== panel) {
+        closeSurfacePanel(surfacePanelState.activePanel, { immediate: true });
+      }
+      clearPanelCloseTimer(panel);
+      panel.classList.remove("is-closing");
+      panel.style.display = "block";
+      panel.setAttribute("aria-hidden", "false");
+      requestAnimationFrame(() => panel.classList.add("is-open"));
+      surfacePanelState.activePanel = panel;
+      setBodySurfaceLock(true);
     }
 
     const autoHistoryBtn = document.getElementById("autoHistoryBtn");
@@ -11613,7 +11711,31 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const goldMicroToggleBtn = document.getElementById("goldMicroToggleBtn");
     const goldStatusEl = document.getElementById("goldStatus");
     const goldResultEl = document.getElementById("goldResult");
+    const goldGuideContentEl = document.getElementById("goldGuideContent");
     let goldLastMarkup = "";
+    const GOLD_GUIDE_SECTIONS = [
+      { title: "Hangi bölgelerde aranır", body: "Eski dere yatakları, yamaç kırıkları ve alüvyon birikimi olan geçiş alanlarında sinyal daha anlamlı olur." },
+      { title: "Toprak yapısı", body: "Koyu renkli kum-çakıl karışımı, iri taş cepleri ve demir oksitli damar geçişleri sahada önceliklendirilebilir." },
+      { title: "Dere yatakları", body: "Menderes iç kıvrımı, doğal eşik altı ve akışın yavaşladığı ceplerde birikim olasılığı artar." },
+      { title: "Renk ve mineral ipuçları", body: "Kuvars parçaları, pas rengi lekeler ve manyetik mineral yoğunluğu birlikte görülüyorsa not al ve ikinci doğrulama yap." },
+      { title: "Uyarılar", body: "Koruma altındaki bölgelerde kazı yapmak yasaktır. Rehber çıktısı yön gösterir; kesin sonuç için yasal ve teknik doğrulama gerekir." },
+      { title: "Sahada hızlı kontrol", body: "Kısa akış: Konumu işaretle → su hattı yakınlığını kontrol et → foto + not ekle → tekrar ziyaret planı oluştur." }
+    ];
+
+    function renderGoldGuideContent() {
+      if (!goldGuideContentEl) return;
+      if (!Array.isArray(GOLD_GUIDE_SECTIONS) || !GOLD_GUIDE_SECTIONS.length) {
+        goldGuideContentEl.innerHTML = '<div class="gold-guide-fallback">Rehber içeriği hazırlanamadı. Lütfen daha sonra tekrar dene.</div>';
+        return;
+      }
+      goldGuideContentEl.innerHTML = GOLD_GUIDE_SECTIONS
+        .map((section) => {
+          const title = escapeHtml(String(section?.title || "Başlık"));
+          const body = escapeHtml(String(section?.body || ""));
+          return `<article class="gold-guide-card"><h4>${title}</h4><p>${body || "İçerik bulunamadı."}</p></article>`;
+        })
+        .join("");
+    }
     const analysisUsageBanner = document.getElementById("analysisUsageBanner");
     const analysisUsageTitle = document.getElementById("analysisUsageTitle");
     const analysisUsageSub = document.getElementById("analysisUsageSub");
@@ -19839,7 +19961,7 @@ function updateHistoryPreview(rawText) {
     }, { passive: true });
     updateSelectedAnalysisPlanUi();
     updateAnalysisUsageUi();
-    safeBindClick(goldGuideBtn, "goldGuideBtn", () => {
+    function openGoldGuidePanel() {
       if (!goldPanel) return;
       formContainer.style.display = "none";
       resetMapEvaluationCard();
@@ -19849,11 +19971,24 @@ function updateHistoryPreview(rawText) {
       setTimeout(() => {
         try { map && map.invalidateSize(true); } catch {}
       }, 120);
-    });
-    safeBindClick(goldCloseBtn, "goldCloseBtn", () => {
+    }
+
+    function closeGoldGuidePanel() {
       if (goldPanel) closeSurfacePanel(goldPanel);
       setGoldMode(false);
+    }
+
+    if (goldGuideBtn) {
+      safeBindClick(goldGuideBtn, "goldGuideBtn", openGoldGuidePanel);
+    }
+    safeBindClick(document.getElementById("utilityAnalysisBtn"), "utilityAnalysisBtn", openGoldGuidePanel);
+    document.querySelectorAll('[data-quickbar-action="guide"]').forEach((btn, index) => {
+      safeBindClick(btn, `quickbarGuideBtn_${index}`, openGoldGuidePanel);
     });
+    window.openGoldGuidePanel = openGoldGuidePanel;
+    window.closeGoldGuidePanel = closeGoldGuidePanel;
+
+    safeBindClick(goldCloseBtn, "goldCloseBtn", closeGoldGuidePanel);
     safeBindClick(goldEarlyAccessCloseBtn, "goldEarlyAccessCloseBtn", () => {
       hideGoldEarlyAccessNotice(true);
     });
@@ -19890,8 +20025,22 @@ function updateHistoryPreview(rawText) {
       closeSurfacePanel(settingsPanel);
     });
 
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (goldPanel && goldPanel.style.display === "block") closeGoldGuidePanel();
+      if (settingsPanel && settingsPanel.style.display === "block") closeSurfacePanel(settingsPanel);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!goldPanel || goldPanel.style.display !== "block") return;
+      const clickedInsidePanel = goldPanel.contains(event.target);
+      const clickedGuideTrigger = event.target.closest("#goldGuideBtn, #utilityAnalysisBtn, [data-quickbar-action='guide']");
+      if (!clickedInsidePanel && !clickedGuideTrigger) closeGoldGuidePanel();
+    });
+
     renderHistoryVerificationSummary();
     resetMapEvaluationCard();
+    renderGoldGuideContent();
 
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".gem-photo-btn, .sign-photo-btn");
@@ -20177,7 +20326,8 @@ function updateHistoryPreview(rawText) {
           setTimeout(syncActiveSection, 700);
         },
         guide() {
-          document.getElementById('goldGuideBtn')?.click();
+          if (typeof window.openGoldGuidePanel === 'function') window.openGoldGuidePanel();
+          else document.getElementById('goldGuideBtn')?.click();
           setTimeout(() => {
             syncActiveSection();
           }, 180);
@@ -21146,7 +21296,6 @@ function updateHistoryPreview(rawText) {
       const exportBtn = byId("exportBtn");
       const importBtn = byId("importBtn");
       const layerBtn = byId("layerToggleBtn");
-      const goldBtn = byId("goldGuideBtn");
       const settingsBtn = byId("settingsBtn");
       const settingsModal = byId("settingsModal");
       setOpen(false);
@@ -21179,7 +21328,10 @@ function updateHistoryPreview(rawText) {
       byId("utilityExportBtn")?.addEventListener("click", () => exportBtn?.click());
       byId("utilityImportBtn")?.addEventListener("click", () => importBtn?.click());
       byId("utilityLayersBtn")?.addEventListener("click", () => layerBtn?.click());
-      byId("utilityAnalysisBtn")?.addEventListener("click", () => goldBtn?.click());
+      byId("utilityAnalysisBtn")?.addEventListener("click", () => {
+        if (typeof window.openGoldGuidePanel === "function") window.openGoldGuidePanel();
+        else byId("goldGuideBtn")?.click();
+      });
 
       syncAdState();
       setInterval(syncAdState, 1500);
