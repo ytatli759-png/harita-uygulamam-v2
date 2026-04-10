@@ -21632,9 +21632,12 @@ function updateHistoryPreview(rawText) {
 
 <style id="android-immersive-map-v1">
   :root {
-    --bottom-nav-height: clamp(62px, 15vw, 74px);
+    --bottom-nav-height: clamp(74px, 19vw, 88px);
     --bottom-nav-gap: clamp(8px, 2.4vw, 12px);
+    --bottom-nav-extra-space: clamp(12px, 3vw, 18px);
     --map-overlay-bottom: calc(var(--bottom-nav-height) + var(--bottom-nav-gap) + env(safe-area-inset-bottom, 0px));
+    --z-content-base: 1;
+    --z-mobile-quickbar: 2400;
   }
 
   html,
@@ -21653,7 +21656,7 @@ function updateHistoryPreview(rawText) {
 
   body {
     margin: 0 !important;
-    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) calc(var(--map-overlay-bottom) + 6px) env(safe-area-inset-left, 0px) !important;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) calc(var(--map-overlay-bottom) + var(--bottom-nav-extra-space)) env(safe-area-inset-left, 0px) !important;
     display: block !important;
     background: #060b16 !important;
   }
@@ -21664,14 +21667,28 @@ function updateHistoryPreview(rawText) {
   }
 
   #app .app-shell {
+    position: relative !important;
+    isolation: isolate;
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
     border-radius: 0 !important;
     border: 0 !important;
-    padding: clamp(6px, 2vw, 10px) clamp(6px, 2vw, 12px) calc(var(--map-overlay-bottom) + 8px) clamp(6px, 2vw, 12px) !important;
+    padding: clamp(6px, 2vw, 10px) clamp(6px, 2vw, 12px) calc(var(--map-overlay-bottom) + var(--bottom-nav-extra-space)) clamp(6px, 2vw, 12px) !important;
     box-shadow: none !important;
     background: linear-gradient(180deg, rgba(6, 11, 22, 0.98), rgba(6, 11, 22, 1)) !important;
+  }
+
+  #app #coordBar,
+  #app #list,
+  #app #mapEvalCard,
+  #app .map-eval-card,
+  #app .analysis-usage-banner,
+  #app .field-card,
+  #app .history-stat-card,
+  #app .gold-summary-card {
+    position: relative;
+    z-index: var(--z-content-base);
   }
 
   #app .map-wrapper {
@@ -21743,6 +21760,7 @@ function updateHistoryPreview(rawText) {
   }
 
   #mobileQuickbar.mobile-quickbar {
+    position: fixed !important;
     display: grid !important;
     left: max(8px, env(safe-area-inset-left, 0px)) !important;
     right: max(8px, env(safe-area-inset-right, 0px)) !important;
@@ -21753,7 +21771,24 @@ function updateHistoryPreview(rawText) {
     background: rgba(5, 10, 20, 0.84) !important;
     backdrop-filter: blur(16px) saturate(130%);
     box-shadow: 0 12px 26px rgba(2, 6, 23, 0.48) !important;
-    z-index: 1200 !important;
+    z-index: var(--z-mobile-quickbar) !important;
+    pointer-events: auto !important;
+  }
+
+  #mobileQuickbar.mobile-quickbar button {
+    min-height: clamp(56px, 13vw, 64px) !important;
+    padding: 8px 6px !important;
+    overflow: visible;
+  }
+
+  #mobileQuickbar.mobile-quickbar button[data-quickbar-action="settings"] {
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  #mobileQuickbar.mobile-quickbar button[data-quickbar-action="settings"] small {
+    line-height: 1.1;
+    white-space: nowrap;
   }
 
   #utilityTriggerBtn.utility-floating-trigger {
@@ -21791,6 +21826,16 @@ function updateHistoryPreview(rawText) {
     #app .map-tools,
     #app .map-tools.secondary {
       grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 430px) {
+    #app .app-shell {
+      padding-bottom: calc(var(--map-overlay-bottom) + clamp(16px, 5vw, 24px)) !important;
+    }
+
+    body {
+      padding-bottom: calc(var(--map-overlay-bottom) + clamp(16px, 5vw, 24px)) !important;
     }
   }
 </style>
