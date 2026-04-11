@@ -21937,8 +21937,10 @@ function updateHistoryPreview(rawText) {
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
+    left: auto;
     width: min(280px, calc(100vw - 24px));
     max-width: calc(100vw - 24px);
+    max-height: min(62vh, 320px);
     border-radius: 14px;
     border: 1px solid rgba(148, 163, 184, 0.3);
     background: rgba(5, 10, 20, 0.94);
@@ -21946,8 +21948,11 @@ function updateHistoryPreview(rawText) {
     box-shadow: 0 16px 38px rgba(2, 6, 23, 0.46);
     display: grid;
     gap: 7px;
+    overflow: auto;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
+    transform-origin: top right;
     transform: translateY(-6px);
     transition: .18s ease;
     z-index: 3001;
@@ -21955,6 +21960,7 @@ function updateHistoryPreview(rawText) {
 
   .map-overflow-menu.open {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
     transform: translateY(0);
   }
@@ -21963,9 +21969,11 @@ function updateHistoryPreview(rawText) {
     position: fixed;
     top: 16px;
     right: 16px;
+    width: clamp(40px, 10vw, 46px);
     z-index: 3000;
     display: grid;
     gap: 0;
+    overflow: visible;
     pointer-events: none;
   }
 
