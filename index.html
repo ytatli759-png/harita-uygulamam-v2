@@ -9747,15 +9747,6 @@
                     <span aria-hidden="true">🧭</span>
                     <span class="sr-only">Tüm noktaları göster</span>
                 </button>
-                <button type="button" id="mapOverflowBtn" class="map-icon-btn" aria-label="Diğer harita araçları" title="Diğer araçlar" aria-expanded="false" aria-controls="mapOverflowMenu">
-                    <span aria-hidden="true">⋯</span>
-                    <span class="sr-only">Diğer harita araçları</span>
-                </button>
-                <div id="mapOverflowMenu" class="map-overflow-menu" aria-hidden="true">
-                    <button type="button" id="markModeBtn" class="map-overflow-btn">📌 İşaret koyma: Kapalı</button>
-                    <button type="button" id="clearMarksBtn" class="map-overflow-btn">🧹 İşaretleri temizle</button>
-                    <button type="button" id="focusMapBtn" class="map-overflow-btn">🖥️ Haritayı büyüt</button>
-                </div>
             </div>
 
             <div id="coordBar" class="is-empty" aria-hidden="true">İmleç: –</div>
@@ -9771,6 +9762,18 @@
     <button type="button" data-quickbar-action="add" class="quickbar-primary"><span>＋</span><small>Yeni</small></button>
     <button type="button" data-quickbar-action="guide"><span><svg class="ui-icon-svg quickbar-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#gi-flow-wave"></use></svg></span><small>Analiz</small></button>
     <button type="button" data-quickbar-action="settings"><span><svg class="ui-icon-svg quickbar-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#gi-settings"></use></svg></span><small>Ayarlar</small></button>
+</div>
+
+<div class="fab-menu-wrap" aria-label="Diğer harita araçları">
+    <button type="button" id="mapOverflowBtn" class="map-icon-btn fab-btn" aria-label="Diğer harita araçları" title="Diğer araçlar" aria-expanded="false" aria-controls="mapOverflowMenu">
+        <span aria-hidden="true">⋯</span>
+        <span class="sr-only">Diğer harita araçları</span>
+    </button>
+    <div id="mapOverflowMenu" class="map-overflow-menu" aria-hidden="true">
+        <button type="button" id="markModeBtn" class="map-overflow-btn">📌 İşaret koyma: Kapalı</button>
+        <button type="button" id="clearMarksBtn" class="map-overflow-btn">🧹 İşaretleri temizle</button>
+        <button type="button" id="focusMapBtn" class="map-overflow-btn">🖥️ Haritayı büyüt</button>
+    </div>
 </div>
 
 <style id="mobile-first-layout-refresh-v2">
@@ -11529,7 +11532,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function setMapOverflowOpen(nextOpen) {
       if (!mapOverflowMenu || !mapOverflowBtn) return;
       const open = !!nextOpen;
-      mapOverflowMenu.classList.toggle("show", open);
+      mapOverflowMenu.classList.toggle("open", open);
       mapOverflowMenu.setAttribute("aria-hidden", open ? "false" : "true");
       mapOverflowBtn.setAttribute("aria-expanded", open ? "true" : "false");
     }
@@ -20117,7 +20120,7 @@ function updateHistoryPreview(rawText) {
     });
 
     document.addEventListener("click", (e) => {
-      if (mapOverflowMenu && mapOverflowMenu.classList.contains("show")) {
+      if (mapOverflowMenu && mapOverflowMenu.classList.contains("open")) {
         if (!(mapOverflowMenu.contains(e.target) || (mapOverflowBtn && mapOverflowBtn.contains(e.target)))) {
           setMapOverflowOpen(false);
         }
@@ -20141,7 +20144,7 @@ function updateHistoryPreview(rawText) {
 
     if (mapOverflowBtn) {
       safeBindClick(mapOverflowBtn, "mapOverflowBtn", () => {
-        const shouldOpen = !(mapOverflowMenu && mapOverflowMenu.classList.contains("show"));
+        const shouldOpen = !(mapOverflowMenu && mapOverflowMenu.classList.contains("open"));
         setMapOverflowOpen(shouldOpen);
       });
     }
@@ -21904,7 +21907,8 @@ function updateHistoryPreview(rawText) {
   }
 
   #app .map-icon-btn,
-  #app .map-overflow-btn {
+  .map-overflow-btn,
+  .fab-btn {
     pointer-events: auto;
     border: 1px solid rgba(148, 163, 184, 0.32);
     background: rgba(7, 12, 23, 0.84);
@@ -21929,22 +21933,59 @@ function updateHistoryPreview(rawText) {
     box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.22), 0 10px 22px rgba(8, 47, 73, 0.45);
   }
 
-  #app .map-overflow-menu {
-    display: none;
-    min-width: min(74vw, 220px);
+  .map-overflow-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(280px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
     border-radius: 14px;
     border: 1px solid rgba(148, 163, 184, 0.3);
     background: rgba(5, 10, 20, 0.94);
     padding: 8px;
     box-shadow: 0 16px 38px rgba(2, 6, 23, 0.46);
-    gap: 7px;
-  }
-
-  #app .map-overflow-menu.show {
     display: grid;
+    gap: 7px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: .18s ease;
+    z-index: 3001;
   }
 
-  #app .map-overflow-btn {
+  .map-overflow-menu.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .fab-menu-wrap {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 3000;
+    display: grid;
+    gap: 0;
+    pointer-events: none;
+  }
+
+  .fab-menu-wrap .fab-btn {
+    width: clamp(40px, 10vw, 46px);
+    height: clamp(40px, 10vw, 46px);
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(16px, 4vw, 18px);
+    line-height: 1;
+    justify-self: end;
+  }
+
+  .fab-menu-wrap button {
+    pointer-events: auto;
+  }
+
+  .map-overflow-btn {
     width: 100%;
     min-height: 40px;
     border-radius: 10px;
@@ -21955,7 +21996,7 @@ function updateHistoryPreview(rawText) {
     line-height: 1.25;
   }
 
-  #app .map-overflow-btn:disabled {
+  .map-overflow-btn:disabled {
     opacity: 0.48;
     cursor: not-allowed;
   }
@@ -21982,6 +22023,19 @@ function updateHistoryPreview(rawText) {
       gap: 7px;
       right: 10px;
       top: 10px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .fab-menu-wrap {
+      top: 12px;
+      right: 12px;
+    }
+
+    .map-overflow-menu {
+      right: 0;
+      left: auto;
+      width: min(260px, calc(100vw - 24px));
     }
   }
 </style>
