@@ -252,6 +252,52 @@
           outline-offset: 2px;
         }
 
+        .feedback-action-pulse {
+          animation: feedbackActionPulse .2s var(--ease-smooth-out);
+        }
+
+        .feedback-success-pulse {
+          animation: feedbackSuccessPulse .22s var(--ease-premium);
+        }
+
+        .feedback-active-settle {
+          animation: feedbackActiveSettle .22s var(--ease-premium);
+        }
+
+        .feedback-surface-confirm {
+          animation: feedbackSurfaceConfirm .24s var(--ease-premium);
+        }
+
+        .is-processing-feedback {
+          border-color: rgba(96,165,250,0.62) !important;
+          box-shadow: 0 0 0 1px rgba(56,189,248,0.26), 0 12px 24px rgba(2,6,23,0.24) !important;
+          filter: saturate(1.04);
+        }
+
+        @keyframes feedbackActionPulse {
+          0% { transform: translateY(0) scale(1); }
+          55% { transform: translateY(-1px) scale(0.992); }
+          100% { transform: translateY(0) scale(1); }
+        }
+
+        @keyframes feedbackSuccessPulse {
+          0% { transform: translateY(0) scale(1); box-shadow: inherit; }
+          50% { transform: translateY(-1px) scale(1.01); box-shadow: 0 0 0 1px rgba(74,222,128,0.34), 0 16px 30px rgba(22,163,74,0.20); }
+          100% { transform: translateY(0) scale(1); box-shadow: inherit; }
+        }
+
+        @keyframes feedbackActiveSettle {
+          0% { transform: translateY(0) scale(1); }
+          48% { transform: translateY(-1px) scale(1.02); }
+          100% { transform: translateY(0) scale(1); }
+        }
+
+        @keyframes feedbackSurfaceConfirm {
+          0% { box-shadow: 0 0 0 0 rgba(76,195,138,0); border-color: rgba(120,139,167,0.28); }
+          52% { box-shadow: 0 0 0 1px rgba(76,195,138,0.30), 0 16px 32px rgba(22,163,74,0.16); border-color: rgba(76,195,138,0.42); }
+          100% { box-shadow: 0 0 0 0 rgba(76,195,138,0); border-color: rgba(120,139,167,0.28); }
+        }
+
         .ui-card-reveal {
           opacity: 0;
           transform: translateY(7px);
@@ -776,6 +822,7 @@
           background: linear-gradient(135deg, rgba(20,83,45,0.92), rgba(22,163,74,0.28));
           color: #ecfdf5;
           box-shadow: 0 0 0 1px rgba(74,222,128,0.18), 0 12px 24px rgba(2,6,23,0.20);
+          transform: translateY(-1px);
         }
 
         .quick-tag-tip {
@@ -2533,6 +2580,17 @@
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
             scroll-behavior: auto !important;
+          }
+          .feedback-action-pulse,
+          .feedback-success-pulse,
+          .feedback-active-settle,
+          .feedback-surface-confirm {
+            animation: none !important;
+            transform: none !important;
+          }
+          .is-processing-feedback {
+            filter: none !important;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.22) !important;
           }
         }
 
@@ -9762,6 +9820,25 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       return out;
     }
 
+    const reduceMotionQuery = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    function prefersReducedMotion() {
+      return !!(reduceMotionQuery && reduceMotionQuery.matches);
+    }
+
+    function applyTransientFeedback(el, className, duration = 220) {
+      if (!el || !className) return;
+      el.classList.remove(className);
+      void el.offsetWidth;
+      el.classList.add(className);
+      const life = prefersReducedMotion() ? 90 : Math.max(110, duration | 0);
+      setTimeout(() => el.classList.remove(className), life);
+    }
+
+    function setProcessingFeedback(el, isProcessing) {
+      if (!el) return;
+      el.classList.toggle("is-processing-feedback", !!isProcessing);
+    }
+
     function showToast(msg, type = "info", delay = 1700) {
       if (!toastEl) return;
       const now = Date.now();
@@ -9944,7 +10021,14 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     quickTagOptions?.addEventListener("click", (event) => {
       const btn = event.target.closest("[data-tag]");
       if (!btn) return;
+      const wasActive = btn.classList.contains("active");
       toggleFormTag(btn.getAttribute("data-tag"));
+      const isActive = btn.classList.contains("active");
+      if (isActive && !wasActive) {
+        applyTransientFeedback(btn, "feedback-active-settle");
+      } else if (!isActive && wasActive) {
+        applyTransientFeedback(btn, "feedback-action-pulse", 190);
+      }
     });
 
     const PHOTO_TAG = "Fotoğraf alındı";
@@ -10527,6 +10611,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       a.remove();
       URL.revokeObjectURL(url);
       showToast(ux('export_done'), 'success');
+      applyTransientFeedback(exportBtn, "feedback-success-pulse");
     }
 
     function isValidSpot(s) {
@@ -10580,6 +10665,8 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       merged.forEach((spot) => enqueueSyncOperation({ op: "upsert", spot: { ...spot, updatedAt: Date.now() } }));
       render();
       showToast(ux('import_done_count', { count: importedCount }), 'success', 1900);
+      applyTransientFeedback(importBtn, "feedback-success-pulse");
+      applyTransientFeedback(formContainer, "feedback-surface-confirm", 240);
     }
 
     function formatDate(ts) {
@@ -16820,6 +16907,7 @@ function updateHistoryPreview(rawText) {
       const photos = getFormPhotos();
       const id = spotIdInput.value;
       const isEdit = Boolean(id);
+      const saveActionBtn = spotForm?.querySelector(".btn-primary");
 
       if (!name) {
         alert(t('titleEmpty'));
@@ -16863,6 +16951,8 @@ function updateHistoryPreview(rawText) {
       closeForm();
       scheduleRender();
       showToast(isEdit ? ux('save_updated') : ux('save_created'), 'success');
+      applyTransientFeedback(saveActionBtn, "feedback-success-pulse");
+      applyTransientFeedback(formContainer, "feedback-surface-confirm", 240);
     });
 
     safeBindClick(photoPickBtn, "photoPickBtn", () => photoInput && photoInput.click());
@@ -16926,6 +17016,7 @@ function updateHistoryPreview(rawText) {
     safeBindClick(addBtn, "addBtn", openFormNew);
     safeBindClick(cancelBtn, "cancelBtn", closeForm);
     safeBindClick(exportBtn, "exportBtn", () => {
+      applyTransientFeedback(exportBtn, "feedback-action-pulse", 190);
       exportSpots();
     });
     safeBindClick(mapEvalSaveBtn, "mapEvalSaveBtn", openQuickSelectionInForm);
@@ -16988,17 +17079,20 @@ function updateHistoryPreview(rawText) {
       if (event.target === analysisPremiumModal) closeAnalysisPremiumModal();
     });
     safeBindClick(importBtn, "importBtn", () => {
+      applyTransientFeedback(importBtn, "feedback-action-pulse", 190);
       importFile && importFile.click();
     });
     importFile?.addEventListener("change", async () => {
       const file = importFile.files?.[0];
       if (!file) return;
       showToast(ux('import_select'), 'info');
+      setProcessingFeedback(importBtn, true);
       try {
         await importSpotsFromFile(file);
       } catch {
         showToast(t('invalidJson'), 'error', 1900);
       } finally {
+        setProcessingFeedback(importBtn, false);
         importFile.value = "";
       }
     });
@@ -17025,13 +17119,18 @@ function updateHistoryPreview(rawText) {
     safeBindClick(authLoginBtn, "authLoginBtn", () => handleAuthLogin("login"));
     safeBindClick(authLogoutBtn, "authLogoutBtn", handleAuthLogout);
     safeBindClick(syncNowBtn, "syncNowBtn", async () => {
+      setProcessingFeedback(syncNowBtn, true);
+      applyTransientFeedback(syncNowBtn, "feedback-action-pulse", 190);
       try {
         await syncQueueWithRemote();
         await pullLatestFromRemote();
         showToast("Senkronizasyon tamamlandı.", "success", 1800);
+        applyTransientFeedback(syncNowBtn, "feedback-success-pulse");
       } catch (err) {
         console.error(err);
         showToast("Senkronizasyon başarısız, tekrar dene.", "error", 2200);
+      } finally {
+        setProcessingFeedback(syncNowBtn, false);
       }
     });
 
