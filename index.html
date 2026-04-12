@@ -18712,6 +18712,11 @@ function updateHistoryPreview(rawText) {
     --motion-ease-standard: cubic-bezier(.22,.78,.26,1);
     --motion-ease-soft: cubic-bezier(.24,.72,.22,1);
     --motion-ease-press: cubic-bezier(.3,.9,.36,1);
+    --motion-hover-lift: -1px;
+    --motion-hero-lift: -2px;
+    --motion-press-scale: .984;
+    --motion-focus-ring: 0 0 0 2px rgba(147,197,253,0.55), 0 0 0 5px rgba(59,130,246,0.22);
+    --motion-hero-sheen: linear-gradient(112deg, transparent 24%, rgba(255,255,255,0.22) 48%, transparent 72%);
   }
 
   #app {
@@ -18729,7 +18734,14 @@ function updateHistoryPreview(rawText) {
   .quick-tag-btn,
   .photo-upload-trigger,
   .photo-clear-btn,
+  .map-preset-btn,
+  .map-mini-btn,
+  .tabbar button,
+  .mobile-quickbar button,
   .map-tools .btn-small,
+  .map-tools.secondary .btn-small,
+  .spot-detail-actions .btn-small,
+  .settings-data-actions button,
   .item-actions .btn-small {
     transition:
       transform var(--motion-duration-button) var(--motion-ease-soft),
@@ -18738,6 +18750,34 @@ function updateHistoryPreview(rawText) {
       border-color var(--motion-duration-button) var(--motion-ease-soft),
       filter var(--motion-duration-button) var(--motion-ease-soft) !important;
     transform: translateZ(0);
+  }
+
+  #addBtn,
+  #goldGuideBtn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  #addBtn::after,
+  #goldGuideBtn::after {
+    content: "";
+    position: absolute;
+    inset: -35% -40%;
+    background: var(--motion-hero-sheen);
+    transform: translateX(-120%) rotate(6deg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+    transition:
+      transform var(--motion-duration-button) var(--motion-ease-soft),
+      opacity var(--motion-duration-button) var(--motion-ease-soft);
+  }
+
+  #addBtn > *,
+  #goldGuideBtn > * {
+    position: relative;
+    z-index: 1;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -18752,9 +18792,27 @@ function updateHistoryPreview(rawText) {
     .quick-tag-btn:hover,
     .photo-upload-trigger:hover,
     .photo-clear-btn:hover,
+    .map-preset-btn:hover,
+    .map-mini-btn:hover,
+    .tabbar button:hover,
+    .mobile-quickbar button:hover,
     .map-tools .btn-small:hover,
+    .map-tools.secondary .btn-small:hover,
+    .spot-detail-actions .btn-small:hover,
+    .settings-data-actions button:hover,
     .item-actions .btn-small:hover {
-      transform: translateY(-1px);
+      transform: translateY(var(--motion-hover-lift));
+    }
+
+    #addBtn:hover,
+    #goldGuideBtn:hover {
+      transform: translateY(var(--motion-hero-lift));
+    }
+
+    #addBtn:hover::after,
+    #goldGuideBtn:hover::after {
+      opacity: .92;
+      transform: translateX(120%) rotate(6deg);
     }
   }
 
@@ -18769,11 +18827,84 @@ function updateHistoryPreview(rawText) {
   .quick-tag-btn:active,
   .photo-upload-trigger:active,
   .photo-clear-btn:active,
+  .map-preset-btn:active,
+  .map-mini-btn:active,
+  .tabbar button:active,
+  .mobile-quickbar button:active,
   .map-tools .btn-small:active,
+  .map-tools.secondary .btn-small:active,
+  .spot-detail-actions .btn-small:active,
+  .settings-data-actions button:active,
   .item-actions .btn-small:active {
-    transform: translateY(0) scale(.985);
+    transform: translateY(0) scale(var(--motion-press-scale));
     transition-duration: var(--motion-duration-press) !important;
     transition-timing-function: var(--motion-ease-press) !important;
+  }
+
+  #addBtn:active::after,
+  #goldGuideBtn:active::after {
+    opacity: .7;
+    transform: translateX(36%) rotate(6deg);
+  }
+
+  #addBtn:focus-visible,
+  #goldGuideBtn:focus-visible,
+  #settingsBtn:focus-visible,
+  #exportBtn:focus-visible,
+  #importBtn:focus-visible,
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible,
+  .inline-btn:focus-visible,
+  .quick-tag-btn:focus-visible,
+  .photo-upload-trigger:focus-visible,
+  .photo-clear-btn:focus-visible,
+  .map-preset-btn:focus-visible,
+  .map-mini-btn:focus-visible,
+  .tabbar button:focus-visible,
+  .mobile-quickbar button:focus-visible,
+  .map-tools .btn-small:focus-visible,
+  .map-tools.secondary .btn-small:focus-visible,
+  .spot-detail-actions .btn-small:focus-visible,
+  .settings-data-actions button:focus-visible,
+  .item-actions .btn-small:focus-visible {
+    outline: none;
+    box-shadow: var(--motion-focus-ring), 0 10px 20px rgba(2,6,23,0.24) !important;
+  }
+
+  #addBtn:focus-visible::after,
+  #goldGuideBtn:focus-visible::after {
+    opacity: .92;
+    transform: translateX(115%) rotate(6deg);
+  }
+
+  #addBtn .hero-btn-icon,
+  #goldGuideBtn .hero-btn-icon,
+  #settingsBtn .icon,
+  #exportBtn .icon,
+  #importBtn .icon,
+  .photo-upload-trigger .icon,
+  .map-tools .btn-small .icon {
+    transition: transform var(--motion-duration-micro) var(--motion-ease-soft), filter var(--motion-duration-micro) var(--motion-ease-soft);
+    transform: translateZ(0);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    #addBtn:hover .hero-btn-icon,
+    #goldGuideBtn:hover .hero-btn-icon,
+    #settingsBtn:hover .icon,
+    #exportBtn:hover .icon,
+    #importBtn:hover .icon {
+      transform: translateY(-1px) scale(1.03);
+      filter: saturate(1.05);
+    }
+  }
+
+  #addBtn:active .hero-btn-icon,
+  #goldGuideBtn:active .hero-btn-icon,
+  #settingsBtn:active .icon,
+  #exportBtn:active .icon,
+  #importBtn:active .icon {
+    transform: scale(.96);
   }
 
   .ui-press-pop {
@@ -18820,7 +18951,7 @@ function updateHistoryPreview(rawText) {
   .quick-tag-btn.active,
   .map-preset-btn.active,
   .item.active {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(.997);
     box-shadow: 0 0 0 1px rgba(79,156,255,0.24), 0 10px 22px rgba(2,6,23,0.2) !important;
   }
 
@@ -18841,6 +18972,11 @@ function updateHistoryPreview(rawText) {
     .ui-press-pop {
       animation: none !important;
     }
+
+    #addBtn::after,
+    #goldGuideBtn::after {
+      display: none;
+    }
   }
 </style>
 
@@ -18859,7 +18995,14 @@ function updateHistoryPreview(rawText) {
       ".quick-tag-btn",
       ".photo-upload-trigger",
       ".photo-clear-btn",
+      ".map-preset-btn",
+      ".map-mini-btn",
+      ".tabbar button",
+      ".mobile-quickbar button",
       ".map-tools .btn-small",
+      ".map-tools.secondary .btn-small",
+      ".spot-detail-actions .btn-small",
+      ".settings-data-actions button",
       ".item-actions .btn-small",
       "#syncNowBtn",
       "#mapEvalSaveBtn"
