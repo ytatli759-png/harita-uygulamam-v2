@@ -9389,7 +9389,14 @@
 
     const goldPanel = document.getElementById("goldPanel");
     const settingsPanel = document.getElementById("settingsPanel");
-    const PANEL_ANIMATION_MS = 220;
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const getMotionMs = (tokenName, fallback) => {
+      if (reducedMotionQuery.matches) return 0;
+      const rawValue = getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim();
+      const parsed = Number.parseFloat(rawValue);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+    const PANEL_ANIMATION_MS = getMotionMs("--motion-duration-panel", 220);
 
     const goldCloseBtn = document.getElementById("goldCloseBtn");
     const goldEarlyAccessNotice = document.getElementById("goldEarlyAccessNotice");
@@ -18694,9 +18701,197 @@ function updateHistoryPreview(rawText) {
     })();
 </script>
 
+<style id="motion-interaction-system-v2">
+  :root {
+    --motion-duration-micro: 120ms;
+    --motion-duration-press: 160ms;
+    --motion-duration-button: 200ms;
+    --motion-duration-card: 240ms;
+    --motion-duration-panel: 220ms;
+    --motion-duration-splash: 340ms;
+    --motion-ease-standard: cubic-bezier(.22,.78,.26,1);
+    --motion-ease-soft: cubic-bezier(.24,.72,.22,1);
+    --motion-ease-press: cubic-bezier(.3,.9,.36,1);
+  }
+
+  #app {
+    transition: opacity var(--motion-duration-card) var(--motion-ease-standard), transform var(--motion-duration-card) var(--motion-ease-standard);
+  }
+
+  #addBtn,
+  #goldGuideBtn,
+  #settingsBtn,
+  #exportBtn,
+  #importBtn,
+  .btn-primary,
+  .btn-secondary,
+  .inline-btn,
+  .quick-tag-btn,
+  .photo-upload-trigger,
+  .photo-clear-btn,
+  .map-tools .btn-small,
+  .item-actions .btn-small {
+    transition:
+      transform var(--motion-duration-button) var(--motion-ease-soft),
+      opacity var(--motion-duration-button) var(--motion-ease-soft),
+      box-shadow var(--motion-duration-button) var(--motion-ease-soft),
+      border-color var(--motion-duration-button) var(--motion-ease-soft),
+      filter var(--motion-duration-button) var(--motion-ease-soft) !important;
+    transform: translateZ(0);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    #addBtn:hover,
+    #goldGuideBtn:hover,
+    #settingsBtn:hover,
+    #exportBtn:hover,
+    #importBtn:hover,
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .inline-btn:hover,
+    .quick-tag-btn:hover,
+    .photo-upload-trigger:hover,
+    .photo-clear-btn:hover,
+    .map-tools .btn-small:hover,
+    .item-actions .btn-small:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  #addBtn:active,
+  #goldGuideBtn:active,
+  #settingsBtn:active,
+  #exportBtn:active,
+  #importBtn:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .inline-btn:active,
+  .quick-tag-btn:active,
+  .photo-upload-trigger:active,
+  .photo-clear-btn:active,
+  .map-tools .btn-small:active,
+  .item-actions .btn-small:active {
+    transform: translateY(0) scale(.985);
+    transition-duration: var(--motion-duration-press) !important;
+    transition-timing-function: var(--motion-ease-press) !important;
+  }
+
+  .ui-press-pop {
+    animation: uiPressPop var(--motion-duration-press) var(--motion-ease-press);
+  }
+
+  @keyframes uiPressPop {
+    0% { transform: translateY(0) scale(1); }
+    45% { transform: translateY(0) scale(.985); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  #goldPanel,
+  #settingsPanel,
+  #formContainer {
+    transition:
+      transform var(--motion-duration-panel) var(--motion-ease-standard),
+      opacity var(--motion-duration-panel) var(--motion-ease-standard),
+      box-shadow var(--motion-duration-card) var(--motion-ease-soft) !important;
+    will-change: transform, opacity;
+  }
+
+  .records-toolbar,
+  .item,
+  .map-stage,
+  .map-eval-card,
+  .spot-detail-card {
+    transition:
+      transform var(--motion-duration-card) var(--motion-ease-soft),
+      opacity var(--motion-duration-card) var(--motion-ease-soft),
+      box-shadow var(--motion-duration-card) var(--motion-ease-soft),
+      border-color var(--motion-duration-card) var(--motion-ease-soft) !important;
+  }
+
+  .splash-screen {
+    transition: opacity var(--motion-duration-splash) var(--motion-ease-standard), visibility var(--motion-duration-splash) var(--motion-ease-standard);
+  }
+
+  .splash-card {
+    animation-duration: var(--motion-duration-card);
+    animation-timing-function: var(--motion-ease-standard);
+  }
+
+  .quick-tag-btn.active,
+  .map-preset-btn.active,
+  .item.active {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 1px rgba(79,156,255,0.24), 0 10px 22px rgba(2,6,23,0.2) !important;
+  }
+
+  body.ui-feedback-success #toast.show {
+    box-shadow: 0 0 0 1px rgba(76,195,138,0.34), 0 10px 22px rgba(15,85,58,0.24);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --motion-duration-micro: 1ms;
+      --motion-duration-press: 1ms;
+      --motion-duration-button: 1ms;
+      --motion-duration-card: 1ms;
+      --motion-duration-panel: 1ms;
+      --motion-duration-splash: 1ms;
+    }
+
+    .ui-press-pop {
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  (function initUiMotionFeedback() {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pressableSelector = [
+      "#addBtn",
+      "#goldGuideBtn",
+      "#settingsBtn",
+      "#exportBtn",
+      "#importBtn",
+      ".btn-primary",
+      ".btn-secondary",
+      ".inline-btn",
+      ".quick-tag-btn",
+      ".photo-upload-trigger",
+      ".photo-clear-btn",
+      ".map-tools .btn-small",
+      ".item-actions .btn-small",
+      "#syncNowBtn",
+      "#mapEvalSaveBtn"
+    ].join(",");
+
+    document.addEventListener("click", (event) => {
+      if (reduced) return;
+      const target = event.target.closest(pressableSelector);
+      if (!target) return;
+      target.classList.remove("ui-press-pop");
+      requestAnimationFrame(() => target.classList.add("ui-press-pop"));
+      setTimeout(() => target.classList.remove("ui-press-pop"), 220);
+    }, { passive: true });
+
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    const feedbackClasses = ["ui-feedback-success", "ui-feedback-error", "ui-feedback-info"];
+    const clearFeedback = () => document.body.classList.remove(...feedbackClasses);
+    new MutationObserver(() => {
+      if (!toast.classList.contains("show")) return;
+      clearFeedback();
+      if (toast.classList.contains("success")) document.body.classList.add("ui-feedback-success");
+      else if (toast.classList.contains("error")) document.body.classList.add("ui-feedback-error");
+      else document.body.classList.add("ui-feedback-info");
+      setTimeout(clearFeedback, reduced ? 120 : 420);
+    }).observe(toast, { attributes: true, attributeFilter: ["class"] });
+  })();
+</script>
+
 </body>
 </html>
 
 <style>
-#app .records-toolbar.records-toolbar-clean{display:none !important;}
+  #app .records-toolbar.records-toolbar-clean { display: none !important; }
 </style>
