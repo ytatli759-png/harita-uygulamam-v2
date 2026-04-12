@@ -9397,6 +9397,7 @@
       return Number.isFinite(parsed) ? parsed : fallback;
     };
     const PANEL_ANIMATION_MS = getMotionMs("--motion-duration-panel", 220);
+    const SURFACE_ANIMATION_MS = Math.max(PANEL_ANIMATION_MS, getMotionMs("--motion-duration-card", 240));
 
     const goldCloseBtn = document.getElementById("goldCloseBtn");
     const goldEarlyAccessNotice = document.getElementById("goldEarlyAccessNotice");
@@ -9468,8 +9469,17 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     const splashStartedAt = Date.now();
     let splashClosed = false;
 
+    function clearSurfaceCloseTimer(panel) {
+      if (!panel) return;
+      if (panel.__closeTimer) {
+        clearTimeout(panel.__closeTimer);
+        panel.__closeTimer = null;
+      }
+    }
+
     function openSurfacePanel(panel) {
       if (!panel) return;
+      clearSurfaceCloseTimer(panel);
       panel.classList.remove("is-closing");
       panel.style.display = "block";
       requestAnimationFrame(() => panel.classList.add("is-open"));
@@ -9479,9 +9489,11 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       if (!panel) return;
       panel.classList.remove("is-open");
       panel.classList.add("is-closing");
-      setTimeout(() => {
+      clearSurfaceCloseTimer(panel);
+      panel.__closeTimer = setTimeout(() => {
         panel.classList.remove("is-closing");
         panel.style.display = "none";
+        panel.__closeTimer = null;
       }, PANEL_ANIMATION_MS);
     }
 
@@ -10346,6 +10358,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
     function revealMainApp() {
       if (!appContainer) return;
       appContainer.classList.add("is-ready");
+      appContainer.classList.add("is-revealed");
     }
 
     function closeSplash(force = false) {
@@ -10555,7 +10568,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         photoLightbox.classList.remove("is-closing");
         photoLightbox.setAttribute("aria-hidden", "true");
         photoLightboxImg.src = "";
-      }, 220);
+      }, SURFACE_ANIMATION_MS);
     }
 
 
@@ -10572,7 +10585,7 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         spotDetailModal.classList.remove("is-closing");
         spotDetailModal.setAttribute("aria-hidden", "true");
         document.body.classList.remove("modal-open");
-      }, 240);
+      }, SURFACE_ANIMATION_MS);
     }
 
     function openSpotDetail(id) {
@@ -14264,7 +14277,13 @@ out tags geom qt;`;
       setFormPhotos([]);
       setFormTags([]);
       updateHistoryPreview("");
+      if (formContainer.__closeTimer) {
+        clearTimeout(formContainer.__closeTimer);
+        formContainer.__closeTimer = null;
+      }
       formContainer.style.display = "block";
+      formContainer.classList.remove("is-closing");
+      requestAnimationFrame(() => formContainer.classList.add("is-open"));
       formContainer.scrollIntoView({ behavior: "smooth", block: "start" });
       nameInput.focus();
     }
@@ -14284,15 +14303,28 @@ out tags geom qt;`;
       setFormTags(spot.tags || []);
       syncPhotoTagWithFormPhotos();
       updateHistoryPreview(historicalNoteInput.value);
+      if (formContainer.__closeTimer) {
+        clearTimeout(formContainer.__closeTimer);
+        formContainer.__closeTimer = null;
+      }
       formContainer.style.display = "block";
+      formContainer.classList.remove("is-closing");
+      requestAnimationFrame(() => formContainer.classList.add("is-open"));
       nameInput.focus();
     }
 
     function closeForm() {
-      formContainer.style.display = "none";
-      setFormPhotos([]);
-      setFormTags([]);
-      updateHistoryPreview("");
+      formContainer.classList.remove("is-open");
+      formContainer.classList.add("is-closing");
+      if (formContainer.__closeTimer) clearTimeout(formContainer.__closeTimer);
+      formContainer.__closeTimer = setTimeout(() => {
+        formContainer.classList.remove("is-closing");
+        formContainer.style.display = "none";
+        setFormPhotos([]);
+        setFormTags([]);
+        updateHistoryPreview("");
+        formContainer.__closeTimer = null;
+      }, PANEL_ANIMATION_MS);
     }
 
     async function removeSpot(id) {
@@ -18037,11 +18069,11 @@ function updateHistoryPreview(rawText) {
 
     function applyInitialCardReveal() {
       const nodes = document.querySelectorAll(
-        ".map-header-card, .map-stage, .records-toolbar, #list .item, #formContainer, .search-shell, .empty-state-card"
+        ".map-header-card, .map-stage, .records-toolbar, #formContainer, #goldPanel, #settingsPanel, #list .item, .search-shell, .empty-state-card"
       );
       nodes.forEach((node, index) => {
         if (!node || node.classList.contains("ui-card-reveal")) return;
-        node.style.setProperty("--card-delay", `${Math.min(index, 4) * 26}ms`);
+        node.style.setProperty("--card-delay", `${Math.min(index, 7) * 22}ms`);
         node.classList.add("ui-card-reveal");
       });
     }
@@ -18723,6 +18755,11 @@ function updateHistoryPreview(rawText) {
     transition: opacity var(--motion-duration-card) var(--motion-ease-standard), transform var(--motion-duration-card) var(--motion-ease-standard);
   }
 
+  #app.is-revealed {
+    transition-duration: var(--motion-duration-splash), var(--motion-duration-splash);
+    transition-timing-function: var(--motion-ease-standard), var(--motion-ease-soft);
+  }
+
   #addBtn,
   #goldGuideBtn,
   #settingsBtn,
@@ -18925,6 +18962,42 @@ function updateHistoryPreview(rawText) {
       opacity var(--motion-duration-panel) var(--motion-ease-standard),
       box-shadow var(--motion-duration-card) var(--motion-ease-soft) !important;
     will-change: transform, opacity;
+    transform-origin: top center;
+    backface-visibility: hidden;
+  }
+
+  #goldPanel,
+  #settingsPanel {
+    opacity: 0;
+    transform: translateY(10px) scale(.992);
+  }
+
+  #goldPanel.is-open,
+  #settingsPanel.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 18px 36px rgba(2,6,23,0.34), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  #goldPanel.is-closing,
+  #settingsPanel.is-closing {
+    opacity: 0;
+    transform: translateY(8px) scale(.994);
+  }
+
+  #formContainer {
+    opacity: 0;
+    transform: translateY(8px) scale(.993);
+  }
+
+  #formContainer.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  #formContainer.is-closing {
+    opacity: 0;
+    transform: translateY(7px) scale(.994);
   }
 
   .records-toolbar,
@@ -18939,13 +19012,74 @@ function updateHistoryPreview(rawText) {
       border-color var(--motion-duration-card) var(--motion-ease-soft) !important;
   }
 
+  .records-toolbar {
+    transform-origin: top center;
+  }
+
+  .map-stage {
+    transform: translateZ(0);
+  }
+
+  .item.item-enter {
+    animation: itemEnter var(--motion-duration-card) var(--motion-ease-standard) forwards;
+  }
+
+  .ui-card-reveal {
+    animation-duration: var(--motion-duration-card);
+    animation-timing-function: var(--motion-ease-standard);
+  }
+
+  @keyframes cardReveal {
+    from { opacity: 0; transform: translateY(7px) scale(.996); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes itemEnter {
+    from { opacity: 0; transform: translateY(7px) scale(.995); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   .splash-screen {
     transition: opacity var(--motion-duration-splash) var(--motion-ease-standard), visibility var(--motion-duration-splash) var(--motion-ease-standard);
+  }
+
+  .splash-screen.is-hidden {
+    transform: translateY(-4px);
   }
 
   .splash-card {
     animation-duration: var(--motion-duration-card);
     animation-timing-function: var(--motion-ease-standard);
+  }
+
+  .photo-lightbox,
+  .spot-detail-modal {
+    transition:
+      opacity var(--motion-duration-panel) var(--motion-ease-standard),
+      visibility var(--motion-duration-panel) var(--motion-ease-standard) !important;
+  }
+
+  .photo-lightbox-card,
+  .spot-detail-card {
+    transition:
+      transform var(--motion-duration-panel) var(--motion-ease-standard),
+      opacity var(--motion-duration-panel) var(--motion-ease-standard) !important;
+    transform-origin: bottom center;
+  }
+
+  .photo-lightbox-card {
+    transform: translateY(10px) scale(.992);
+    opacity: 0;
+  }
+
+  .photo-lightbox.show .photo-lightbox-card {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .photo-lightbox.is-closing .photo-lightbox-card {
+    transform: translateY(8px) scale(.994);
+    opacity: 0;
   }
 
   .quick-tag-btn.active,
@@ -18970,6 +19104,17 @@ function updateHistoryPreview(rawText) {
     }
 
     .ui-press-pop {
+      animation: none !important;
+    }
+
+    #formContainer,
+    #goldPanel,
+    #settingsPanel,
+    .photo-lightbox-card,
+    .spot-detail-card,
+    .item.item-enter {
+      transform: none !important;
+      opacity: 1 !important;
       animation: none !important;
     }
 
