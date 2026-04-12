@@ -9490,6 +9490,11 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
       panel.classList.remove("is-open");
       panel.classList.add("is-closing");
       clearSurfaceCloseTimer(panel);
+      if (PANEL_ANIMATION_MS <= 0) {
+        panel.classList.remove("is-closing");
+        panel.style.display = "none";
+        return;
+      }
       panel.__closeTimer = setTimeout(() => {
         panel.classList.remove("is-closing");
         panel.style.display = "none";
@@ -10553,6 +10558,10 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function openPhotoLightbox(dataUrl, caption = "Saha fotoğrafı") {
       if (!photoLightbox || !photoLightboxImg || !photoLightboxCaption) return;
+      if (photoLightbox.__closeTimer) {
+        clearTimeout(photoLightbox.__closeTimer);
+        photoLightbox.__closeTimer = null;
+      }
       photoLightboxImg.src = dataUrl;
       photoLightboxCaption.textContent = caption;
       photoLightbox.classList.remove("is-closing");
@@ -10562,12 +10571,23 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     function closePhotoLightbox() {
       if (!photoLightbox || !photoLightboxImg) return;
+      if (photoLightbox.__closeTimer) {
+        clearTimeout(photoLightbox.__closeTimer);
+        photoLightbox.__closeTimer = null;
+      }
       photoLightbox.classList.add("is-closing");
       photoLightbox.classList.remove("show");
-      setTimeout(() => {
+      if (SURFACE_ANIMATION_MS <= 0) {
         photoLightbox.classList.remove("is-closing");
         photoLightbox.setAttribute("aria-hidden", "true");
         photoLightboxImg.src = "";
+        return;
+      }
+      photoLightbox.__closeTimer = setTimeout(() => {
+        photoLightbox.classList.remove("is-closing");
+        photoLightbox.setAttribute("aria-hidden", "true");
+        photoLightboxImg.src = "";
+        photoLightbox.__closeTimer = null;
       }, SURFACE_ANIMATION_MS);
     }
 
@@ -11092,6 +11112,12 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
 
     // ✅ Import: version + geriye uyum
     async function importSpotsFromFile(file) {
+      const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
+      const MAX_IMPORT_RECORDS = 2000;
+      if (Number(file?.size || 0) > MAX_IMPORT_FILE_BYTES) {
+        showToast("Dosya çok büyük. En fazla 2MB JSON yükleyebilirsin.", "error", 2400);
+        return;
+      }
       let data;
       try {
         const text = await file.text();
@@ -11107,6 +11133,10 @@ const historyPreviewFootnote = document.getElementById("historyPreviewFootnote")
         incoming = data; // çok eski format desteği
       } else if (Array.isArray(data?.spots)) {
         incoming = data.spots; // yeni format
+      }
+      if (incoming.length > MAX_IMPORT_RECORDS) {
+        showToast(`İçe aktarma limiti aşıldı (maksimum ${MAX_IMPORT_RECORDS} kayıt).`, "error", 2400);
+        return;
       }
 
       if (!incoming.length) {
@@ -14317,6 +14347,15 @@ out tags geom qt;`;
       formContainer.classList.remove("is-open");
       formContainer.classList.add("is-closing");
       if (formContainer.__closeTimer) clearTimeout(formContainer.__closeTimer);
+      if (PANEL_ANIMATION_MS <= 0) {
+        formContainer.classList.remove("is-closing");
+        formContainer.style.display = "none";
+        setFormPhotos([]);
+        setFormTags([]);
+        updateHistoryPreview("");
+        formContainer.__closeTimer = null;
+        return;
+      }
       formContainer.__closeTimer = setTimeout(() => {
         formContainer.classList.remove("is-closing");
         formContainer.style.display = "none";
@@ -18853,6 +18892,37 @@ function updateHistoryPreview(rawText) {
     }
   }
 
+  @media (hover: none), (pointer: coarse) {
+    #addBtn:hover,
+    #goldGuideBtn:hover,
+    #settingsBtn:hover,
+    #exportBtn:hover,
+    #importBtn:hover,
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .inline-btn:hover,
+    .quick-tag-btn:hover,
+    .photo-upload-trigger:hover,
+    .photo-clear-btn:hover,
+    .map-preset-btn:hover,
+    .map-mini-btn:hover,
+    .tabbar button:hover,
+    .mobile-quickbar button:hover,
+    .map-tools .btn-small:hover,
+    .map-tools.secondary .btn-small:hover,
+    .spot-detail-actions .btn-small:hover,
+    .settings-data-actions button:hover,
+    .item-actions .btn-small:hover {
+      transform: none !important;
+    }
+
+    #addBtn:hover::after,
+    #goldGuideBtn:hover::after {
+      opacity: 0 !important;
+      transform: translateX(-120%) rotate(6deg) !important;
+    }
+  }
+
   #addBtn:active,
   #goldGuideBtn:active,
   #settingsBtn:active,
@@ -19166,13 +19236,21 @@ function updateHistoryPreview(rawText) {
     if (!toast) return;
     const feedbackClasses = ["ui-feedback-success", "ui-feedback-error", "ui-feedback-info"];
     const clearFeedback = () => document.body.classList.remove(...feedbackClasses);
+    let feedbackClearTimer = 0;
     new MutationObserver(() => {
       if (!toast.classList.contains("show")) return;
+      if (feedbackClearTimer) {
+        clearTimeout(feedbackClearTimer);
+        feedbackClearTimer = 0;
+      }
       clearFeedback();
       if (toast.classList.contains("success")) document.body.classList.add("ui-feedback-success");
       else if (toast.classList.contains("error")) document.body.classList.add("ui-feedback-error");
       else document.body.classList.add("ui-feedback-info");
-      setTimeout(clearFeedback, reduced ? 120 : 420);
+      feedbackClearTimer = setTimeout(() => {
+        clearFeedback();
+        feedbackClearTimer = 0;
+      }, reduced ? 120 : 420);
     }).observe(toast, { attributes: true, attributeFilter: ["class"] });
   })();
 </script>
