@@ -8245,25 +8245,29 @@
                 </div>
             </div>
 
-            <div class="map-tools">
-                <button type="button" id="layerToggleBtn" class="btn-small">🗂 Katmanlar</button>
-                <button type="button" id="markModeBtn" class="btn-small">
-                    📌 İşaret koyma: Kapalı
-                </button>
-                <button type="button" id="clearMarksBtn" class="btn-small danger">
-                    🧹 İşaretleri temizle
-                </button>
+            <div class="map-tools-tier-title">Ana araçlar</div>
+            <div class="map-tools map-tools-primary">
+                <button type="button" id="layerToggleBtn" class="btn-small">🗂 Katmanları aç</button>
                 <button type="button" id="locateBtn" class="btn-small">
                     📍 Buradayım
                 </button>
             </div>
 
-            <div class="map-tools secondary">
-                <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
+            <div class="map-tools-tier-title">İkincil araçlar</div>
+            <div class="map-tools secondary map-tools-secondary">
+                <button type="button" id="markModeBtn" class="btn-small">
+                    📌 İşaret koyma: Kapalı
+                </button>
                 <button type="button" id="focusMapBtn" class="btn-small">🖥️ Haritayı büyüt</button>
+                <button type="button" id="clearMarksBtn" class="btn-small danger">
+                    🧹 İşaretleri temizle
+                </button>
+                <div id="coordBar">İmleç: –</div>
             </div>
 
-            <div id="coordBar">İmleç: –</div>
+            <div class="map-tools secondary map-tools-support">
+                <button type="button" id="fitAllBtn" class="btn-small">🧭 Tüm noktaları göster</button>
+            </div>
         </div>
 
         <ul id="list"></ul>
@@ -8283,16 +8287,141 @@
 <style id="header-quick-actions-cleanup-patch">
   #app .header-actions.layout-refresh-actions #addBtn,
   #app .header-actions.layout-refresh-actions #goldGuideBtn {
-    display: none !important;
+    display: inline-flex !important;
+  }
+
+  #app .header-actions.layout-refresh-actions .primary-actions.primary-actions-stack #addBtn {
+    min-height: 86px;
+    box-shadow: 0 20px 36px rgba(2, 6, 23, 0.34);
+  }
+
+  #app .header-actions.layout-refresh-actions .primary-actions.primary-actions-stack #goldGuideBtn {
+    min-height: 70px;
+    filter: saturate(.92);
+    box-shadow: 0 14px 26px rgba(2, 6, 23, 0.24);
   }
 
   #app .header-actions.layout-refresh-actions .secondary-hero-row {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   #app .header-actions.layout-refresh-actions .main-status-stack {
     min-width: 0;
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid rgba(71, 85, 105, 0.52);
+    background: rgba(8, 13, 24, 0.54);
+  }
+
+  #app .header-actions.layout-refresh-actions .count-badge.count-badge-main,
+  #app .header-actions.layout-refresh-actions .analysis-quick-chip {
+    min-height: 38px;
+    border-radius: 12px;
+    font-size: 11px;
+    box-shadow: none;
+  }
+
+  #app .map-tools-tier-title {
+    margin: 2px 0 8px;
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+
+  #app .map-tools {
+    margin-bottom: 10px;
+  }
+
+  #app .map-tools.map-tools-primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #app .map-tools.secondary.map-tools-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #app .map-tools.secondary.map-tools-support {
+    grid-template-columns: 1fr;
+  }
+
+  #app #clearMarksBtn {
+    border-color: rgba(224, 107, 115, 0.28);
+    background: linear-gradient(180deg, rgba(39, 15, 20, 0.78), rgba(23, 10, 13, 0.92));
+    color: #f5d1d3;
+  }
+
+  #app #clearMarksBtn:hover,
+  #app #clearMarksBtn:focus-visible {
+    border-color: rgba(224, 107, 115, 0.44);
+    background: linear-gradient(180deg, rgba(58, 18, 26, 0.82), rgba(30, 11, 15, 0.94));
+  }
+
+  #app #coordBar {
+    margin: 0;
+    border-radius: 12px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid rgba(71, 85, 105, 0.56);
+    background: rgba(8, 13, 24, 0.62);
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  #app .empty-state-card {
+    display: grid;
+    gap: 10px;
+    text-align: left;
+    padding: 16px;
+  }
+
+  #app .empty-state-card .empty-state-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  #app .empty-state-card .empty-state-copy {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  #app .empty-state-card .empty-state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #app .empty-state-card .empty-state-action {
+    border: 1px solid rgba(79, 156, 255, 0.48);
+    background: rgba(79, 156, 255, 0.12);
+    color: #dbeafe;
+    border-radius: 12px;
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  @media (max-width: 720px) {
+    #app .header-actions.layout-refresh-actions .main-status-stack {
+      grid-template-columns: 1fr;
+    }
+
+    #app .map-tools.map-tools-primary,
+    #app .map-tools.secondary.map-tools-secondary {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
@@ -14171,7 +14300,17 @@ out tags geom qt;`;
       if (!allSpots.length) {
         const li = document.createElement("li");
         li.className = "empty-state-card";
-        li.textContent = q ? t('noResults') : t('noRecords');
+        const emptyMessage = q ? t('noResults') : t('noRecords');
+        li.innerHTML = `
+          <div class="empty-state-title">${escapeHtml(emptyMessage)}</div>
+          <div class="empty-state-copy">Başlamak için önce <strong>Yeni nokta ekle</strong> ile bir yer seç, sonra harita araçlarıyla hızlı kontrol yap.</div>
+          <div class="empty-state-actions">
+            <button type="button" class="empty-state-action" data-empty-action="add">＋ Yeni nokta ekle</button>
+            <button type="button" class="empty-state-action" data-empty-action="guide">✦ Altın tozu rehberi</button>
+          </div>
+        `;
+        li.querySelector('[data-empty-action="add"]')?.addEventListener("click", openFormNew);
+        li.querySelector('[data-empty-action="guide"]')?.addEventListener("click", () => goldGuideBtn?.click());
         listFrag.appendChild(li);
         listEl.appendChild(listFrag);
         return;
